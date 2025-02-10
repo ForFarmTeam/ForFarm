@@ -1,0 +1,46 @@
+services:
+  go-api:
+    container_name: go-api
+    # image: goapi
+    build:
+      context: ./backend
+      dockerfile: go.dockerfile
+    environment:
+      DATABASE_URL: 'postgres://postgres:@Password123@psqldb:5432/postgres?sslmode=disable'
+    ports:
+      - '8000:8000'
+    volumes:  
+        - ./backend:/app
+    depends_on:
+      - psqldb
+
+  psqldb:
+    container_name: psqldb
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: '@Password123'
+      POSTGRES_DB: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgsqldata:/var/lib/postgres/data
+
+  next-frontend:
+    container_name: next-frontend
+    # image: nextfront
+    build:
+      context: ./frontend
+      dockerfile: next.dockerfile
+    environment:
+      NEXT_PUBLIC_API_URL: 'localhost:8000/api'
+    ports:
+      - '3000:3000'
+    volumes:  
+          - ./frontend:/app
+    depends_on:
+      - go-api
+
+volumes:
+  pgsqldata:
