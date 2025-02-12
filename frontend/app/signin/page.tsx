@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ForgotPasswordModal from "./forgot-password-modal";
+import WaterDrop from "./waterdrop";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -8,9 +9,26 @@ import Image from "next/image";
 export default function Signin() {
   return (
     <div>
-      <div className="grid grid-cols-[1fr_1.5fr] gap-0  h-screen">
-        <div className=" bg-red-200"></div>
-        <div className="bg-green-200 flex justify-center items-center">
+      <div className="grid grid-cols-[1.25fr_1fr] gap-0  h-screen overflow-hidden">
+        <div className="flex justify-center">
+          <div className="flex items-center">
+            <Image
+              src="/water-pot.png"
+              alt="Water Pot"
+              width={500}
+              height={500}
+            />
+            <div className="absolute top-[500px] left-[750px] overflow-hidden">
+              <WaterDrop />
+            </div>
+            <div className="absolute top-[500px] left-[720px] overflow-hidden">
+              <WaterDrop />
+            </div>
+          </div>
+          <div></div>
+        </div>
+
+        <div className="flex justify-center items-center">
           {/* login box */}
           <div className="w-[560px] h-[600px] bg-yellow-200">
             <div className="flex flex-col gap-5  justify-center items-center">
@@ -57,7 +75,7 @@ export default function Signin() {
               <ForgotPasswordModal />
             </div>
             <div className="flex justify-center mt-5">
-              <Button>Submit</Button>
+              <Button className="rounded-full w-20 h-12">Submit</Button>
             </div>
           </div>
         </div>

@@ -18,7 +18,7 @@ export default function ForgotPasswordModal() {
     <div className="mt-5">
       <Dialog>
         <DialogTrigger asChild>
-          <Button className=" whitespace-nowrap flex items-start ml-24 bg-transparent border-none hover:bg-transparent shadow-none">
+          <Button className=" whitespace-nowrap flex  ml-20 bg-transparent border-none hover:bg-transparent shadow-none">
             <h1 className="text-green-600">Forgot password?</h1>
           </Button>
         </DialogTrigger>

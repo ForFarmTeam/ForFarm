@@ -56,6 +56,25 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      keyframes: {
+        dropAnimation: {
+          "0%": {
+            transform: "translateY(-50px)",
+            borderRadius: "50%",
+            width: "1.5rem",
+            height: "1.5rem",
+          },
+          "100%": {
+            transform: "translateY(100vh)",
+            borderRadius: "50% 50% 50% 50%",
+            width: "1rem",
+            height: "2rem",
+          },
+        },
+      },
+      animation: {
+        drop: "dropAnimation 2s ease-in-out infinite",
+      },
     },
   },
   plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
