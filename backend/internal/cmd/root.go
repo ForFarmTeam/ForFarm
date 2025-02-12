@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"net/http"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -19,10 +18,6 @@ func Execute(ctx context.Context) int {
 
 	rootCmd.AddCommand(APICmd(ctx))
 	rootCmd.AddCommand(MigrateCmd(ctx, "pgx", os.Getenv("DATABASE_URL")))
-
-	go func() {
-		_ = http.ListenAndServe("localhost:8000", nil)
-	}()
 
 	if err := rootCmd.Execute(); err != nil {
 		return 1
