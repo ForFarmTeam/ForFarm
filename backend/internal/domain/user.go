@@ -9,8 +9,6 @@ import (
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
-const UserRefreshInterval = 2 * time.Minute
-
 type User struct {
 	ID        int64
 	UUID      string
