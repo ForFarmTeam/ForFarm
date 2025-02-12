@@ -15,19 +15,18 @@ import { Label } from "@/components/ui/label";
 
 export default function ForgotPasswordModal() {
   return (
-    <div className="mt-5">
+    <div>
       <Dialog>
         <DialogTrigger asChild>
-          <Button className=" whitespace-nowrap flex  ml-20 bg-transparent border-none hover:bg-transparent shadow-none">
-            <h1 className="text-green-600">Forgot password?</h1>
+          <Button className=" whitespace-nowrap flex bg-transparent border-none hover:bg-transparent shadow-none">
+            <h1 className="text-green-600 underline">Forgot password?</h1>
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>What&apos;s your email?</DialogTitle>
             <DialogDescription>
-              Please verify your email for us. Once you do, we&apos;ll send
-              instructions to reset your password
+              Please verify your email for us. Once you do, we&apos;ll send instructions to reset your password
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center space-x-2">
@@ -35,11 +34,7 @@ export default function ForgotPasswordModal() {
               <Label htmlFor="link" className="sr-only">
                 Link
               </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your.email@gmail.com"
-              />
+              <Input id="email" type="email" placeholder="your.email@gmail.com" />
             </div>
           </div>
           <DialogFooter className="sm:justify-start">
