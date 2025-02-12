@@ -2,7 +2,7 @@
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     uuid UUID NOT NULL,
-    username TEXT NOT NULL,
+    username TEXT NULL,
     password TEXT NOT NULL,
     email TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

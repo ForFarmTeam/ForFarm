@@ -27,7 +27,7 @@ func (u *User) NormalizedUsername() string {
 func (u *User) Validate() error {
 	return validation.ValidateStruct(u,
 		validation.Field(&u.UUID, validation.Required),
-		validation.Field(&u.Username, validation.Required, validation.Length(3, 20)),
+		validation.Field(&u.Username, validation.Length(3, 20)),
 		validation.Field(&u.Password, validation.Required, validation.Length(6, 100)),
 		validation.Field(&u.Email, validation.Required, is.Email),
 	)
@@ -36,6 +36,7 @@ func (u *User) Validate() error {
 type UserRepository interface {
 	GetByID(context.Context, int64) (User, error)
 	GetByUsername(context.Context, string) (User, error)
+	GetByEmail(context.Context, string) (User, error)
 	CreateOrUpdate(context.Context, *User) error
 	Delete(context.Context, int64) error
 }
