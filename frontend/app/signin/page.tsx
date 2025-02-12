@@ -1,3 +1,5 @@
+import { Input } from "@/components/ui/input";
+
 export default function Signin() {
   return (
     <div>
@@ -5,8 +7,23 @@ export default function Signin() {
         <div className=" bg-red-200"></div>
         <div className="bg-green-200 flex justify-center items-center">
           {/* login box */}
-          <div className="flex w-[600px] h-[600px] bg-yellow-200 ">
-            <h1 className="text-3xl">Login</h1>
+          <div className="w-[560px] h-[600px] bg-yellow-200">
+            <div className="flex flex-col gap-5  justify-center items-center">
+              <h1 className="text-4xl mt-5 font-semibold">Login</h1>
+              <div className="flex whitespace-nowrap gap-x-2">
+                <span>Don&apos;t have an account?</span>
+                <span className="text-green-600">Sign up</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col mt-10">
+              <h1 className="whitespace-nowrap flex items-start">
+                EMAIL <span className="text-red-500">*</span>
+              </h1>
+              <div className="flex flex-col items-center">
+                <Input className="w-2/3" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
