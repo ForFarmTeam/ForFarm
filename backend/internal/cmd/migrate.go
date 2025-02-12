@@ -11,7 +11,7 @@ import (
 	"github.com/pressly/goose/v3"
 	"github.com/spf13/cobra"
 
-	migrations "github.com/forfarm/backend/internal"
+	"github.com/forfarm/backend/migrations"
 )
 
 func MigrateCmd(ctx context.Context, dbDriver, dbSource string) *cobra.Command {
@@ -29,7 +29,7 @@ func MigrateCmd(ctx context.Context, dbDriver, dbSource string) *cobra.Command {
 
 			goose.SetBaseFS(migrations.EmbedMigrations)
 
-			if err := goose.UpContext(ctx, db, "migrations"); err != nil {
+			if err := goose.UpContext(ctx, db, "."); err != nil {
 				return fmt.Errorf("failed to run migrations: %w", err)
 			}
 
