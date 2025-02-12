@@ -48,13 +48,7 @@ export default function Signin() {
             <div className="flex flex-col items-center mt-10 gap-x-5">
               {/* Google */}
               <div className="flex justify-center  rounded-full bg-gray-200 hover:bg-gray-300 duration-300 w-[90] h-[55] cursor-pointer ">
-                <Image
-                  src="/google-logo.png"
-                  alt="Google Logo"
-                  width={35}
-                  height={35}
-                  className="object-contain"
-                />
+                <Image src="/google-logo.png" alt="Google Logo" width={35} height={35} className="object-contain" />
               </div>
             </div>
 
