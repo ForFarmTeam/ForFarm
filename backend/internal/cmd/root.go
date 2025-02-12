@@ -2,16 +2,31 @@ package cmd
 
 import (
 	"context"
-	"fmt"
+	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
+	"github.com/spf13/cobra"
 )
 
-// Execute is a placeholder function that represents the central execution point of the application.
-// It accepts a context for managing cancellation and timeouts and returns an integer exit code.
-// Currently, it simply prints a message and returns 0.
 func Execute(ctx context.Context) int {
-	fmt.Println("Execute placeholder logic runs here!")
+	_ = godotenv.Load()
 
-	// Future code should check for context cancellation or incorporate your application's logic.
+	rootCmd := &cobra.Command{
+		Use:   "forfarm",
+		Short: "A smart farming software uses AI, weather data, and analytics to help farmers make better decisions and improve productivity",
+	}
+
+	rootCmd.AddCommand(APICmd(ctx))
+	rootCmd.AddCommand(MigrateCmd(ctx, "pgx", os.Getenv("DATABASE_URL")))
+
+	go func() {
+		_ = http.ListenAndServe("localhost:8000", nil)
+	}()
+
+	if err := rootCmd.Execute(); err != nil {
+		return 1
+	}
 
 	return 0
 }
