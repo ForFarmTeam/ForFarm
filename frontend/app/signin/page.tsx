@@ -9,28 +9,31 @@ import Image from "next/image";
 export default function Signin() {
   return (
     <div>
-      <div className="grid grid-cols-[1.25fr_1fr] gap-0  h-screen overflow-hidden">
-        <div className="flex justify-center">
-          <div className="flex items-center">
+      <div className="grid grid-cols-[1.3fr_1.2fr] gap-0  h-screen overflow-hidden">
+        <div className="flex bg-[url('/plant-background.jpeg')] bg-cover  bg-center">
+          {/* <div className="flex flex-col gap-y-10 mt-40 ml-40">
+            <h1 className="text-5xl">Welcome back!</h1>
+            <p>Log in to personalize your planting adventure!</p>
+          </div> */}
+          {/* water pot and dripping animation */}
+          {/* <div className="absolute items-center mt-96 ">
             <Image
               src="/water-pot.png"
               alt="Water Pot"
-              width={500}
-              height={500}
+              width={300}
+              height={300}
+              className=" ml-72"
             />
-            <div className="absolute top-[500px] left-[750px] overflow-hidden">
+            <div className="absolute top-[150px] left-[560px] overflow-hidden">
               <WaterDrop />
             </div>
-            <div className="absolute top-[500px] left-[720px] overflow-hidden">
-              <WaterDrop />
-            </div>
-          </div>
+          </div> */}
           <div></div>
         </div>
 
-        <div className="flex justify-center items-center">
+        <div className="flex justify-center items-center ">
           {/* login box */}
-          <div className="w-[560px] h-[600px] bg-yellow-200">
+          <div className="w-[560px] h-[600px]">
             <div className="flex flex-col gap-5  justify-center items-center">
               <h1 className="text-4xl mt-5 font-semibold">Log In</h1>
               <div className="flex whitespace-nowrap gap-x-2">
@@ -51,7 +54,7 @@ export default function Signin() {
                   width={35}
                   height={35}
                   className="object-contain"
-                ></Image>
+                />
               </div>
             </div>
 
