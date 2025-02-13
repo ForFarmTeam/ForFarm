@@ -17,9 +17,11 @@ import { z } from "zod";
 
 import { useRouter } from "next/navigation";
 
+import { registerUser } from "@/api/authentication";
+
 export default function SignupPage() {
-  const [serverError, setServerError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const router = useRouter();
 
   const {
@@ -38,28 +40,13 @@ export default function SignupPage() {
   const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
     setServerError(null);
     setSuccessMessage(null);
+
     try {
-      const response = await fetch("http://localhost:8000/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          Email: values.email,
-          Password: values.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to register.");
-      }
+      const data = await registerUser(values.email, values.password);
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", values.email);
 
-      // Assume registration returns a token or user data.
       console.log("Registration successful:", data);
       setSuccessMessage("Registration successful! You can now sign in.");
 

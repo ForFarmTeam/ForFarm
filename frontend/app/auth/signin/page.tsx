@@ -18,8 +18,11 @@ import { z } from "zod";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { loginUser } from "@/api/authentication";
+
 export default function SigninPage() {
-  const [serverError, setServerError] = useState(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const {
@@ -35,32 +38,20 @@ export default function SigninPage() {
   });
 
   const onSubmit = async (values: z.infer<typeof signInSchema>) => {
-    setServerError(null); // reset previous errors
+    setServerError(null);
+    setIsLoading(true);
+
     try {
-      const response = await fetch("http://localhost:8000/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          Email: values.email,
-          Password: values.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to log in.");
-      }
-
+      const data = await loginUser(values.email, values.password);
       localStorage.setItem("token", data.Token);
       localStorage.setItem("user", values.email);
 
       router.push("/setup");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error logging in:", error);
       setServerError(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -99,8 +90,8 @@ export default function SigninPage() {
                 {errors.password && <p className="text-red-600 text-sm">{errors.password.message}</p>}
               </div>
 
-              <Button type="submit" className="mt-5 rounded-full">
-                Log in
+              <Button type="submit" className="mt-5 rounded-full" disabled={isLoading}>
+                {isLoading ? "Logging in..." : "Log in"}
               </Button>
             </form>
 
