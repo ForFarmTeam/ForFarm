@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const plantingDetailsSchema = z.object({
+const plantingDetailsFormSchema = z.object({
   daysToEmerge: z.number().int().min(0, "Days to emerge must be at least 0"),
   plantSpacing: z.number().min(0, "Plant spacing must be positive"),
   rowSpacing: z.number().min(0, "Row spacing must be positive"),
@@ -15,7 +15,7 @@ const plantingDetailsSchema = z.object({
   autoCreateTasks: z.boolean(),
 });
 
-const harvestDetailsSchema = z.object({
+const harvestDetailsFormSchema = z.object({
   daysToFlower: z.number().int().min(0, "Days to flower must be at least 0"),
   daysToMaturity: z
     .number()
@@ -36,4 +36,4 @@ const harvestDetailsSchema = z.object({
     .min(0, "Expected yield per acre must be positive"),
 });
 
-export { plantingDetailsSchema, harvestDetailsSchema };
+export { plantingDetailsFormSchema, harvestDetailsFormSchema };
