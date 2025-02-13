@@ -6,6 +6,18 @@ export interface Crop {
   status: "growing" | "harvested" | "planned";
 }
 
+export interface CropAnalytics {
+  cropId: string;
+  humidity: number;
+  temperature: number;
+  sunlight: number;
+  waterLevel: number;
+  growthProgress: number;
+  plantHealth: "good" | "warning" | "critical";
+  nextAction: string;
+  nextActionDue: Date;
+}
+
 export interface Farm {
   id: string;
   name: string;
