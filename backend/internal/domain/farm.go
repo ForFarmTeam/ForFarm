@@ -2,19 +2,20 @@ package domain
 
 import (
 	"context"
-	"time"
-
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/google/uuid"
+	"time"
 )
 
 type Farm struct {
-	UUID      string
-	Name      string
-	Lat       float64
-	Lon       float64
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	OwnerID   string
+	UUID       string
+	Name       string
+	Lat        []float64
+	Lon        []float64
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	OwnerID    string
+	PlantTypes []uuid.UUID
 }
 
 func (f *Farm) Validate() error {
@@ -28,6 +29,7 @@ func (f *Farm) Validate() error {
 
 type FarmRepository interface {
 	GetByID(context.Context, string) (Farm, error)
+	GetByOwnerID(context.Context, string) ([]Farm, error)
 	CreateOrUpdate(context.Context, *Farm) error
 	Delete(context.Context, string) error
 }

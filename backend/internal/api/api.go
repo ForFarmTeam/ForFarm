@@ -10,6 +10,7 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/forfarm/backend/internal/domain"
@@ -23,6 +24,7 @@ type api struct {
 
 	userRepo domain.UserRepository
 	cropRepo domain.CroplandRepository
+	farmRepo domain.FarmRepository
 }
 
 func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
@@ -32,6 +34,7 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
 	// Initialize repositories for users and croplands
 	userRepository := repository.NewPostgresUser(pool)
 	croplandRepository := repository.NewPostgresCropland(pool)
+	farmRepository := repository.NewPostgresFarm(pool)
 
 	return &api{
 		logger:     logger,
@@ -39,6 +42,7 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
 
 		userRepo: userRepository,
 		cropRepo: croplandRepository,
+		farmRepo: farmRepository,
 	}
 }
 
@@ -51,6 +55,17 @@ func (a *api) Server(port int) *http.Server {
 func (a *api) Routes() *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
+
+	router.Use(cors.Handler(cors.Options{
+		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+		AllowedOrigins: []string{"https://*", "http://*"},
+		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
 
 	config := huma.DefaultConfig("ForFarm Public API", "v1.0.0")
 	api := humachi.New(router, config)
@@ -65,6 +80,8 @@ func (a *api) Routes() *chi.Mux {
 	router.Group(func(r chi.Router) {
 		// Apply Authentication middleware to the Cropland routes
 		api.UseMiddleware(m.AuthMiddleware(api))
+		a.registerHelloRoutes(r, api)
+		a.registerFarmRoutes(r, api)
 	})
 
 	return router

@@ -3,6 +3,8 @@ import { Open_Sans, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
+import { SessionProvider } from "@/context/SessionContext";
+
 const openSans = Open_Sans({
   subsets: ["latin"],
   display: "swap",
@@ -33,13 +35,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
-      <body className={`${openSans.variable} ${robotoMono.variable} font-sans antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <div className="relative flex min-h-screen flex-col">
-            <div className="flex-1 bg-background">{children}</div>
-          </div>
-        </ThemeProvider>
-      </body>
+      <SessionProvider>
+        <body className={`${openSans.variable} ${robotoMono.variable} antialiased`}>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <div className="relative flex min-h-screen flex-col">
+              <div className="flex-1 bg-background">{children}</div>
+            </div>
+          </ThemeProvider>
+        </body>
+      </SessionProvider>
     </html>
   );
 }

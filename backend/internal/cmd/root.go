@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"context"
-	"os"
 
+	"github.com/forfarm/backend/internal/config"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
 func Execute(ctx context.Context) int {
 	_ = godotenv.Load()
+	config.Load()
 
 	rootCmd := &cobra.Command{
 		Use:   "forfarm",
@@ -17,7 +18,7 @@ func Execute(ctx context.Context) int {
 	}
 
 	rootCmd.AddCommand(APICmd(ctx))
-	rootCmd.AddCommand(MigrateCmd(ctx, "pgx", os.Getenv("DATABASE_URL")))
+	rootCmd.AddCommand(MigrateCmd(ctx, "pgx", config.DATABASE_URL))
 
 	if err := rootCmd.Execute(); err != nil {
 		return 1
