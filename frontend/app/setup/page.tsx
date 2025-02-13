@@ -1,6 +1,7 @@
 import PlantingDetailsForm from "./planting-detail-form";
 import HarvestDetailsForm from "./harvest-detail-form";
 import { Separator } from "@/components/ui/separator";
+import GoogleMapWithDrawing from "./google-map-with-drawing";
 
 export default function SetupPage() {
   return (
@@ -18,6 +19,15 @@ export default function SetupPage() {
       <Separator className="mt-3" />
       <div className="mt-10 flex justify-center">
         <HarvestDetailsForm />
+      </div>
+      <div className="mt-10">
+        <div className=" flex justify-center mt-20">
+          <h1 className="flex text-2xl ">Map</h1>
+        </div>
+        <Separator className="mt-3" />
+        <div className="mt-10">
+          <GoogleMapWithDrawing />
+        </div>
       </div>
     </div>
   );
