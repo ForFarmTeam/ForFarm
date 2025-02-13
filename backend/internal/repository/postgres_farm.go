@@ -2,11 +2,10 @@ package repository
 
 import (
 	"context"
-	"strings"
-
-	"github.com/google/uuid"
-
 	"github.com/forfarm/backend/internal/domain"
+	"github.com/google/uuid"
+	"github.com/lib/pq"
+	"strings"
 )
 
 type postgresFarmRepository struct {
@@ -27,6 +26,7 @@ func (p *postgresFarmRepository) fetch(ctx context.Context, query string, args .
 	var farms []domain.Farm
 	for rows.Next() {
 		var f domain.Farm
+		var plantTypes pq.StringArray
 		if err := rows.Scan(
 			&f.UUID,
 			&f.Name,
@@ -35,9 +35,19 @@ func (p *postgresFarmRepository) fetch(ctx context.Context, query string, args .
 			&f.CreatedAt,
 			&f.UpdatedAt,
 			&f.OwnerID,
+			&plantTypes,
 		); err != nil {
 			return nil, err
 		}
+
+		for _, plantTypeStr := range plantTypes {
+			plantTypeUUID, err := uuid.Parse(plantTypeStr)
+			if err != nil {
+				return nil, err
+			}
+			f.PlantTypes = append(f.PlantTypes, plantTypeUUID)
+		}
+
 		farms = append(farms, f)
 	}
 	return farms, nil
@@ -45,7 +55,7 @@ func (p *postgresFarmRepository) fetch(ctx context.Context, query string, args .
 
 func (p *postgresFarmRepository) GetByID(ctx context.Context, uuid string) (domain.Farm, error) {
 	query := `
-		SELECT uuid, name, lat, lon, created_at, updated_at, owner_id
+		SELECT uuid, name, lat, lon, created_at, updated_at, owner_id, plant_types
 		FROM farms
 		WHERE uuid = $1`
 
@@ -61,7 +71,7 @@ func (p *postgresFarmRepository) GetByID(ctx context.Context, uuid string) (doma
 
 func (p *postgresFarmRepository) GetByOwnerID(ctx context.Context, ownerID string) ([]domain.Farm, error) {
 	query := `
-		SELECT uuid, name, lat, lon, created_at, updated_at, owner_id
+		SELECT uuid, name, lat, lon, created_at, updated_at, owner_id, plant_types
 		FROM farms
 		WHERE owner_id = $1`
 
@@ -73,15 +83,21 @@ func (p *postgresFarmRepository) CreateOrUpdate(ctx context.Context, f *domain.F
 		f.UUID = uuid.New().String()
 	}
 
+	plantTypes := make([]string, len(f.PlantTypes))
+	for i, pt := range f.PlantTypes {
+		plantTypes[i] = pt.String()
+	}
+
 	query := `  
-		INSERT INTO farms (uuid, name, lat, lon, created_at, updated_at, owner_id)  
-		VALUES ($1, $2, $3, $4, NOW(), NOW(), $5)
+		INSERT INTO farms (uuid, name, lat, lon, created_at, updated_at, owner_id, plant_types)  
+		VALUES ($1, $2, $3, $4, NOW(), NOW(), $5, $6)
 		ON CONFLICT (uuid) DO UPDATE
 		SET name = EXCLUDED.name,
 		    lat = EXCLUDED.lat,
 		    lon = EXCLUDED.lon,
 		    updated_at = NOW(),
-		    owner_id = EXCLUDED.owner_id
+		    owner_id = EXCLUDED.owner_id,
+		    plant_types = EXCLUDED.plant_types
 		RETURNING uuid, created_at, updated_at`
 
 	return p.conn.QueryRow(
@@ -92,7 +108,8 @@ func (p *postgresFarmRepository) CreateOrUpdate(ctx context.Context, f *domain.F
 		f.Lat,
 		f.Lon,
 		f.OwnerID,
-	).Scan(&f.CreatedAt, &f.UpdatedAt)
+		pq.StringArray(plantTypes),
+	).Scan(&f.UUID, &f.CreatedAt, &f.UpdatedAt)
 }
 
 func (p *postgresFarmRepository) Delete(ctx context.Context, uuid string) error {
