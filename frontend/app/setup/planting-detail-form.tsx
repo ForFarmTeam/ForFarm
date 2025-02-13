@@ -32,7 +32,7 @@ export default function PlantingDetailsForm() {
   });
   return (
     <Form {...form}>
-      <form className="space-y-5">
+      <form className="grid grid-cols-3 gap-5">
         <FormField
           control={form.control}
           name="daysToEmerge"
