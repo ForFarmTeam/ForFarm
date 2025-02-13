@@ -5,24 +5,27 @@ import { useForm } from "react-hook-form";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 
 import { signUpSchema } from "@/schema/authSchema";
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { z } from "zod";
 
 import { useRouter } from "next/navigation";
 
 import { registerUser } from "@/api/authentication";
+import { SessionContext } from "@/context/SessionContext";
 
 export default function SignupPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   const router = useRouter();
+  const session = useContext(SessionContext);
 
   const {
     register,
@@ -40,20 +43,25 @@ export default function SignupPage() {
   const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
     setServerError(null);
     setSuccessMessage(null);
+    setIsLoading(true);
 
     try {
       const data = await registerUser(values.email, values.password);
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", values.email);
+      if (!data) {
+        setServerError("An error occurred while registering. Please try again.");
+        throw new Error("No data received from the server.");
+      }
+      session!.setToken(data.token);
+      session!.setUser(values.email);
 
-      console.log("Registration successful:", data);
       setSuccessMessage("Registration successful! You can now sign in.");
-
       router.push("/setup");
     } catch (error: any) {
       console.error("Error during registration:", error);
       setServerError(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -105,8 +113,8 @@ export default function SignupPage() {
               {serverError && <p className="text-red-600 mt-2 text-sm">{serverError}</p>}
               {successMessage && <p className="text-green-600 mt-2 text-sm">{successMessage}</p>}
 
-              <Button type="submit" className="mt-5 rounded-full">
-                Sign up
+              <Button type="submit" className="mt-5 rounded-full" disabled={isLoading}>
+                {isLoading ? "Signing up..." : "Sign up"}
               </Button>
             </form>
 

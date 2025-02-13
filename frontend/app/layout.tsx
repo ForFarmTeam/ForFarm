@@ -36,7 +36,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head />
       <SessionProvider>
-        <body className={`${openSans.variable} ${robotoMono.variable} font-sans antialiased`}>
+        <body className={`${openSans.variable} ${robotoMono.variable} antialiased`}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <div className="relative flex min-h-screen flex-col">
               <div className="flex-1 bg-background">{children}</div>

@@ -15,15 +15,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { GoogleSigninButton } from "./google-oauth";
 import { z } from "zod";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { loginUser } from "@/api/authentication";
+import { SessionContext } from "@/context/SessionContext";
 
 export default function SigninPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const session = useContext(SessionContext);
 
   const {
     register,
@@ -43,8 +45,13 @@ export default function SigninPage() {
 
     try {
       const data = await loginUser(values.email, values.password);
-      localStorage.setItem("token", data.Token);
-      localStorage.setItem("user", values.email);
+
+      if (!data) {
+        setServerError("An error occurred while logging in. Please try again.");
+        throw new Error("No data received from the server.");
+      }
+      session!.setToken(data.token);
+      session!.setUser(values.email);
 
       router.push("/setup");
     } catch (error: any) {

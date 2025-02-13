@@ -3,6 +3,7 @@
 import { useContext } from "react";
 import { useRouter } from "next/navigation";
 import { SessionContext } from "@/context/SessionContext";
+import Cookies from "js-cookie";
 
 export function useLogout() {
   const router = useRouter();
@@ -15,9 +16,13 @@ export function useLogout() {
   const { setToken, setUser } = context;
 
   const logout = () => {
+    Cookies.remove("token");
+    Cookies.remove("user");
+
     setToken(null);
     setUser(null);
 
+    console.log(Cookies.get("token"));
     router.push("/");
   };
 

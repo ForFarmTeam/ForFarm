@@ -2,7 +2,7 @@ import axios from "axios";
 import axiosInstance from "./config";
 
 export interface LoginResponse {
-  Token: string;
+  token: string;
   message?: string;
 }
 

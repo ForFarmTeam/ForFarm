@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import Cookies from "js-cookie";
 
 interface SessionContextType {
   token: string | null;
@@ -21,17 +22,15 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const [user, setUserState] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Save or remove token from localStorage accordingly
   const setToken = (newToken: string | null) => {
     if (newToken) {
-      localStorage.setItem("token", newToken);
+      Cookies.set("token", newToken, { expires: 7 });
     } else {
-      localStorage.removeItem("token");
+      Cookies.remove("token");
     }
     setTokenState(newToken);
   };
 
-  // Save or remove user from localStorage accordingly
   const setUser = (newUser: any | null) => {
     if (newUser) {
       localStorage.setItem("user", JSON.stringify(newUser));
@@ -41,9 +40,8 @@ export function SessionProvider({ children }: SessionProviderProps) {
     setUserState(newUser);
   };
 
-  // On mount, check localStorage for token and user data
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
+    const storedToken = Cookies.get("token") || null;
     const storedUser = localStorage.getItem("user");
     if (storedToken) {
       setTokenState(storedToken);
