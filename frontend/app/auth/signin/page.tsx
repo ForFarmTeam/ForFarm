@@ -1,3 +1,10 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+
+import { signInSchema } from "@/schema/authSchema";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -6,19 +13,65 @@ import ForgotPasswordModal from "./forgot-password-modal";
 
 import Link from "next/link";
 import Image from "next/image";
+import { GoogleSigninButton } from "./google-oauth";
+import { z } from "zod";
+import { useContext, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { loginUser } from "@/api/authentication";
+import { SessionContext } from "@/context/SessionContext";
 
 export default function SigninPage() {
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const session = useContext(SessionContext);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (values: z.infer<typeof signInSchema>) => {
+    setServerError(null);
+    setIsLoading(true);
+
+    try {
+      const data = await loginUser(values.email, values.password);
+
+      if (!data) {
+        setServerError("An error occurred while logging in. Please try again.");
+        throw new Error("No data received from the server.");
+      }
+      session!.setToken(data.token);
+      session!.setUser(values.email);
+
+      router.push("/setup");
+    } catch (error: any) {
+      console.error("Error logging in:", error);
+      setServerError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div>
       <div className="grid grid-cols-[0.7fr_1.2fr] h-screen overflow-hidden">
-        <div className="flex bg-[url('/plant-background.jpeg')] bg-cover  bg-center"></div>
+        <div className="flex bg-[url('/plant-background.jpeg')] bg-cover bg-center"></div>
 
         <div className="flex justify-center items-center">
-          {/* login box */}
           <div className="container px-[25%]">
             <div className="flex flex-col justify-center items-center">
               <span>
-                <Image src={`/forfarm-logo.png`} alt="Forfarm" width={150} height={150}></Image>
+                <Image src="/forfarm-logo.png" alt="Forfarm" width={150} height={150} />
               </span>
               <h1 className="text-3xl font-semibold">Welcome back.</h1>
               <div className="flex whitespace-nowrap gap-x-2 mt-2">
@@ -31,27 +84,28 @@ export default function SigninPage() {
               </div>
             </div>
 
-            <div className="flex flex-col mt-4">
+            {/* Sign in form */}
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col mt-4">
               <div>
                 <Label htmlFor="email">Email</Label>
-                <Input type="email" id="email" placeholder="Email" />
+                <Input type="email" id="email" placeholder="Email" {...register("email")} />
+                {errors.email && <p className="text-red-600 text-sm">{errors.email.message}</p>}
               </div>
               <div className="mt-5">
-                <div>
-                  <Label htmlFor="password">Password</Label>
-                  <Input type="empasswordail" id="password" placeholder="Password" />
-                </div>
+                <Label htmlFor="password">Password</Label>
+                <Input type="password" id="password" placeholder="Password" {...register("password")} />
+                {errors.password && <p className="text-red-600 text-sm">{errors.password.message}</p>}
               </div>
 
-              <Button className="mt-5 rounded-full">Log in</Button>
-            </div>
+              <Button type="submit" className="mt-5 rounded-full" disabled={isLoading}>
+                {isLoading ? "Logging in..." : "Log in"}
+              </Button>
+            </form>
 
             <div id="signin-footer" className="flex justify-between mt-5">
               <div className="flex items-center space-x-2">
                 <Checkbox id="terms" />
-                <label
-                  htmlFor="terms"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                <label htmlFor="terms" className="text-sm font-medium leading-none">
                   Remember me
                 </label>
               </div>
@@ -60,12 +114,8 @@ export default function SigninPage() {
 
             <div className="my-5">
               <p className="text-sm">Or log in with</p>
-              {/* OAUTH */}
               <div className="flex flex-col gap-x-5 mt-3">
-                {/* Google */}
-                <div className="flex w-1/3 justify-center rounded-full border-2 border-border bg-gray-100 hover:bg-gray-300 duration-300 cursor-pointer ">
-                  <Image src="/google-logo.png" alt="Google Logo" width={35} height={35} className="object-contain" />
-                </div>
+                <GoogleSigninButton />
               </div>
             </div>
           </div>
