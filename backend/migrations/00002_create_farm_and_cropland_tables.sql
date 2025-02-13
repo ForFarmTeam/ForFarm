@@ -15,7 +15,7 @@ CREATE TABLE harvest_units (
 );
 
 CREATE TABLE plants (
-    id SERIAL PRIMARY KEY,
+    uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     variety TEXT,
     row_spacing DOUBLE PRECISION,
@@ -41,8 +41,7 @@ CREATE TABLE plants (
 );
 
 CREATE TABLE farms (
-    id SERIAL PRIMARY KEY,
-    uuid UUID NOT NULL DEFAULT gen_random_uuid(),
+    uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     lat DOUBLE PRECISION NOT NULL,
     lon DOUBLE PRECISION NOT NULL,
@@ -52,22 +51,17 @@ CREATE TABLE farms (
     CONSTRAINT fk_farm_owner FOREIGN KEY (owner_id) REFERENCES users(uuid) ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX idx_farms_uuid ON farms(uuid);
-
 CREATE TABLE croplands (
-    id SERIAL PRIMARY KEY,
-    uuid UUID NOT NULL DEFAULT gen_random_uuid(),
+    uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     status TEXT NOT NULL,
     priority INT NOT NULL,
     land_size DOUBLE PRECISION NOT NULL,
     growth_stage TEXT NOT NULL,
-    plant_id INT NOT NULL,
-    farm_id INT NOT NULL,
+    plant_id UUID NOT NULL,
+    farm_id UUID NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT fk_cropland_farm FOREIGN KEY (farm_id) REFERENCES farms(id) ON DELETE CASCADE,
-    CONSTRAINT fk_cropland_plant FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE CASCADE
+    CONSTRAINT fk_cropland_farm FOREIGN KEY (farm_id) REFERENCES farms(uuid) ON DELETE CASCADE,
+    CONSTRAINT fk_cropland_plant FOREIGN KEY (plant_id) REFERENCES plants(uuid) ON DELETE CASCADE
 );
-
-CREATE UNIQUE INDEX idx_croplands_uuid ON croplands(uuid);
