@@ -1,4 +1,5 @@
 import PlantingDetailsForm from "./planting-detail-form";
+import HarvestDetailsForm from "./harvest-detail-form";
 import { Separator } from "@/components/ui/separator";
 
 export default function SetupPage() {
@@ -15,6 +16,9 @@ export default function SetupPage() {
         <h1 className="flex text-2xl ">Harvest Details</h1>
       </div>
       <Separator className="mt-3" />
+      <div className="mt-10 flex justify-center">
+        <HarvestDetailsForm />
+      </div>
     </div>
   );
 }
