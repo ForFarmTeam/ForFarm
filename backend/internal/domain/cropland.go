@@ -32,5 +32,5 @@ func (c *Cropland) Validate() error {
 type CroplandRepository interface {
 	GetByID(context.Context, string) (Cropland, error)
 	CreateOrUpdate(context.Context, *Cropland) error
-	// Delete(context.Context, string) error
+	Delete(context.Context, string) error
 }
