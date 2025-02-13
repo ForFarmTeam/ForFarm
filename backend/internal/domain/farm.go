@@ -29,5 +29,5 @@ func (f *Farm) Validate() error {
 type FarmRepository interface {
 	GetByID(context.Context, string) (Farm, error)
 	CreateOrUpdate(context.Context, *Farm) error
-  // Delete(context.Context, string) error
+	Delete(context.Context, string) error
 }

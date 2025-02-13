@@ -8,7 +8,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { plantingDetailsFormSchema } from "@/schemas/application.schema";
+import { harvestDetailsFormSchema } from "@/schemas/application.schema";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,14 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 
-type plantingSchema = z.infer<typeof plantingDetailsFormSchema>;
+type harvestSchema = z.infer<typeof harvestDetailsFormSchema>;
 
-export default function PlantingDetailsForm() {
-  const form = useForm<plantingSchema>({
-    resolver: zodResolver(plantingDetailsFormSchema),
+export default function HarvestDetailsForm() {
+  const form = useForm<harvestSchema>({
+    resolver: zodResolver(harvestDetailsFormSchema),
     defaultValues: {},
   });
   return (
@@ -35,16 +33,18 @@ export default function PlantingDetailsForm() {
       <form className="grid grid-cols-3 gap-5">
         <FormField
           control={form.control}
-          name="daysToEmerge"
+          name="daysToFlower"
           render={({ field }: { field: any }) => (
             <FormItem>
-              <FormLabel className="font-bold text-lg">Day to Emerge</FormLabel>
+              <FormLabel className="font-bold text-lg">
+                Days To Flower
+              </FormLabel>
               <FormControl>
                 <div className="mt-5 space-y-5">
                   <div className="flex space-x-5">
                     <Input
                       type="number"
-                      id="daysToEmerge"
+                      id="daysToFlower"
                       className="w-96"
                       {...field}
                     />
@@ -57,16 +57,18 @@ export default function PlantingDetailsForm() {
         />
         <FormField
           control={form.control}
-          name="plantSpacing"
+          name="daysToMaturity"
           render={({ field }: { field: any }) => (
             <FormItem>
-              <FormLabel className="font-bold text-lg">Plant Spacing</FormLabel>
+              <FormLabel className="font-bold text-lg">
+                Days To Maturity
+              </FormLabel>
               <FormControl>
                 <div className="mt-5 space-y-5">
                   <div className="flex space-x-5">
                     <Input
                       type="number"
-                      id="plantSpacing"
+                      id="daysToMaturity"
                       className="w-96"
                       {...field}
                     />
@@ -79,40 +81,18 @@ export default function PlantingDetailsForm() {
         />
         <FormField
           control={form.control}
-          name="rowSpacing"
-          render={({ field }: { field: any }) => (
-            <FormItem>
-              <FormLabel className="font-bold text-lg">Row Spacing</FormLabel>
-              <FormControl>
-                <div className="mt-10 space-y-5">
-                  <div className="flex space-x-5">
-                    <Input
-                      type="number"
-                      id="rowSpacing"
-                      className="w-96"
-                      {...field}
-                    />
-                  </div>
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="plantingDepth"
+          name="harvestWindow"
           render={({ field }: { field: any }) => (
             <FormItem>
               <FormLabel className="font-bold text-lg">
-                Planting Depth
+                Harvest Window
               </FormLabel>
               <FormControl>
-                <div className="mt-10 space-y-5">
+                <div className="mt-5 space-y-5">
                   <div className="flex space-x-5">
                     <Input
                       type="number"
-                      id="plantingDepth"
+                      id="harvestWindow"
                       className="w-96"
                       {...field}
                     />
@@ -125,18 +105,18 @@ export default function PlantingDetailsForm() {
         />
         <FormField
           control={form.control}
-          name="averageHeight"
+          name="estimatedLossRate"
           render={({ field }: { field: any }) => (
             <FormItem>
               <FormLabel className="font-bold text-lg">
-                Average Height
+                Estimated Loss Rate
               </FormLabel>
               <FormControl>
-                <div className="mt-10 space-y-5">
+                <div className="mt-5 space-y-5">
                   <div className="flex space-x-5">
                     <Input
                       type="number"
-                      id="averageHeight"
+                      id="estimatedLossRate"
                       className="w-96"
                       {...field}
                     />
@@ -149,20 +129,20 @@ export default function PlantingDetailsForm() {
         />
         <FormField
           control={form.control}
-          name="startMethod"
+          name="harvestUnits"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-bold text-lg">Start Method</FormLabel>
+              <FormLabel className="font-bold text-lg">Harvest Units</FormLabel>
               <FormControl>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <SelectTrigger className="w-96">
-                    <SelectValue placeholder="Select a start method" />
+                    <SelectValue placeholder="Select a harvest unit" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="seed">Seed</SelectItem>
+                    <SelectItem value="bales">bales</SelectItem>
                     <SelectItem value="transplant">Transplant</SelectItem>
                     <SelectItem value="cutting">Cutting</SelectItem>
                   </SelectContent>
@@ -174,69 +154,18 @@ export default function PlantingDetailsForm() {
         />
         <FormField
           control={form.control}
-          name="lightProfile"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="font-bold text-lg">Light Profile</FormLabel>
-              <FormControl>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <SelectTrigger className="w-96">
-                    <SelectValue placeholder="Select light profile" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="xp">Seed</SelectItem>
-                    <SelectItem value="xa">Transplant</SelectItem>
-                    <SelectItem value="xz">Cutting</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="soilConditions"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="font-bold text-lg">
-                Soil Conditions
-              </FormLabel>
-              <FormControl>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <SelectTrigger className="w-96">
-                    <SelectValue placeholder="Select a soil condition" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="xp">Seed</SelectItem>
-                    <SelectItem value="xa">Transplant</SelectItem>
-                    <SelectItem value="xz">Cutting</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="plantingDetails"
+          name="estimatedRevenue"
           render={({ field }: { field: any }) => (
             <FormItem>
               <FormLabel className="font-bold text-lg">
-                Planting Details
+                Estimated Revenue
               </FormLabel>
               <FormControl>
                 <div className="mt-5 space-y-5">
                   <div className="flex space-x-5">
-                    <Textarea
-                      id="plantingDetails"
+                    <Input
+                      type="number"
+                      id="estimatedRevenue"
                       className="w-96"
                       {...field}
                     />
@@ -249,16 +178,21 @@ export default function PlantingDetailsForm() {
         />
         <FormField
           control={form.control}
-          name="pruningDetails"
+          name="expectedYieldPer100ft"
           render={({ field }: { field: any }) => (
             <FormItem>
               <FormLabel className="font-bold text-lg">
-                Pruning Details
+                Expected Yield Per100ft
               </FormLabel>
               <FormControl>
                 <div className="mt-5 space-y-5">
                   <div className="flex space-x-5">
-                    <Textarea id="pruningDetails" className="w-96" {...field} />
+                    <Input
+                      type="number"
+                      id="expectedYieldPer100ft"
+                      className="w-96"
+                      {...field}
+                    />
                   </div>
                 </div>
               </FormControl>
@@ -268,39 +202,21 @@ export default function PlantingDetailsForm() {
         />
         <FormField
           control={form.control}
-          name="isPerennial"
+          name="expectedYieldPerAcre"
           render={({ field }: { field: any }) => (
             <FormItem>
+              <FormLabel className="font-bold text-lg">
+                Expected Yield Per Acre
+              </FormLabel>
               <FormControl>
                 <div className="mt-5 space-y-5">
                   <div className="flex space-x-5">
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      aria-readonly
+                    <Input
+                      type="number"
+                      id="expectedYieldPerAcre"
+                      className="w-96"
+                      {...field}
                     />
-                    <p>Plant is Perennial</p>
-                  </div>
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="isPerennial"
-          render={({ field }: { field: any }) => (
-            <FormItem>
-              <FormControl>
-                <div className="mt-5 space-y-5">
-                  <div className="flex space-x-5">
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      aria-readonly
-                    />
-                    <p>Automatically create tasks for new plantings</p>
                   </div>
                 </div>
               </FormControl>
