@@ -41,7 +41,7 @@ export default function Home() {
             It's a smart and easy way to optimize your agricultural business, with the help of AI-driven insights and
             real-time data.
           </p>
-          <Link href="/auth/signin">
+          <Link href="/setup">
             <Button className="bg-black text-white text-md font-bold px-4 py-6 rounded-full hover:bg-gray-600">
               Manage your farm
             </Button>
