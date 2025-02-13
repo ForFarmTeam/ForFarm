@@ -78,13 +78,29 @@ func (p *postgresUserRepository) GetByUsername(ctx context.Context, username str
 	return users[0], nil
 }
 
-func (p *postgresUserRepository) CreateOrUpdate(ctx context.Context, u *domain.User) error {
-	if err := u.Validate(); err != nil {
-		return err
-	}
+func (p *postgresUserRepository) GetByEmail(ctx context.Context, email string) (domain.User, error) {
+	query := `
+		SELECT id, uuid, username, password, email, created_at, updated_at, is_active  
+		FROM users
+		WHERE email = $1`
 
+	users, err := p.fetch(ctx, query, email)
+	if err != nil {
+		return domain.User{}, err
+	}
+	if len(users) == 0 {
+		return domain.User{}, domain.ErrNotFound
+	}
+	return users[0], nil
+}
+
+func (p *postgresUserRepository) CreateOrUpdate(ctx context.Context, u *domain.User) error {
 	if strings.TrimSpace(u.UUID) == "" {
 		u.UUID = uuid.New().String()
+	}
+
+	if err := u.Validate(); err != nil {
+		return err
 	}
 
 	u.NormalizedUsername()

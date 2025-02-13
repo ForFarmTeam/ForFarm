@@ -29,7 +29,7 @@ func APICmd(ctx context.Context) *cobra.Command {
 			}
 			defer pool.Close()
 
-			api := api.NewAPI(ctx, logger)
+			api := api.NewAPI(ctx, logger, pool)
 			server := api.Server(port)
 
 			go func() {
