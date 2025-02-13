@@ -7,6 +7,7 @@ interface SessionContextType {
   user: any | null;
   setToken: (token: string | null) => void;
   setUser: (user: any | null) => void;
+  loading: boolean;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -18,7 +19,9 @@ interface SessionProviderProps {
 export function SessionProvider({ children }: SessionProviderProps) {
   const [token, setTokenState] = useState<string | null>(null);
   const [user, setUserState] = useState<any | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
+  // Save or remove token from localStorage accordingly
   const setToken = (newToken: string | null) => {
     if (newToken) {
       localStorage.setItem("token", newToken);
@@ -28,6 +31,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
     setTokenState(newToken);
   };
 
+  // Save or remove user from localStorage accordingly
   const setUser = (newUser: any | null) => {
     if (newUser) {
       localStorage.setItem("user", JSON.stringify(newUser));
@@ -37,6 +41,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
     setUserState(newUser);
   };
 
+  // On mount, check localStorage for token and user data
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
@@ -50,7 +55,12 @@ export function SessionProvider({ children }: SessionProviderProps) {
         console.error("Failed to parse stored user.", error);
       }
     }
+    setLoading(false);
   }, []);
 
-  return <SessionContext.Provider value={{ token, user, setToken, setUser }}>{children}</SessionContext.Provider>;
+  return (
+    <SessionContext.Provider value={{ token, user, setToken, setUser, loading }}>{children}</SessionContext.Provider>
+  );
 }
+
+export { SessionContext };
