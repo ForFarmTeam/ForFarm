@@ -23,6 +23,7 @@ type api struct {
 	httpClient *http.Client
 
 	userRepo domain.UserRepository
+	cropRepo domain.CroplandRepository
 	farmRepo domain.FarmRepository
 }
 
@@ -30,7 +31,9 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
 
 	client := &http.Client{}
 
+	// Initialize repositories for users and croplands
 	userRepository := repository.NewPostgresUser(pool)
+	croplandRepository := repository.NewPostgresCropland(pool)
 	farmRepository := repository.NewPostgresFarm(pool)
 
 	return &api{
@@ -38,6 +41,7 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
 		httpClient: client,
 
 		userRepo: userRepository,
+		cropRepo: croplandRepository,
 		farmRepo: farmRepository,
 	}
 }
@@ -66,14 +70,18 @@ func (a *api) Routes() *chi.Mux {
 	config := huma.DefaultConfig("ForFarm Public API", "v1.0.0")
 	api := humachi.New(router, config)
 
+	// Register Authentication Routes
 	router.Group(func(r chi.Router) {
 		a.registerAuthRoutes(r, api)
+		a.registerCropRoutes(r, api)
 	})
 
+	// Register Cropland Routes, including Auth Middleware if required
 	router.Group(func(r chi.Router) {
+		// Apply Authentication middleware to the Cropland routes
 		api.UseMiddleware(m.AuthMiddleware(api))
-    a.registerHelloRoutes(r, api)
-    a.registerFarmRoutes(r, api)
+		a.registerHelloRoutes(r, api)
+		a.registerFarmRoutes(r, api)
 	})
 
 	return router

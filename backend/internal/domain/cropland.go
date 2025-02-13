@@ -31,6 +31,8 @@ func (c *Cropland) Validate() error {
 
 type CroplandRepository interface {
 	GetByID(context.Context, string) (Cropland, error)
+	GetByFarmID(ctx context.Context, farmID string) ([]Cropland, error)
+	GetAll(ctx context.Context) ([]Cropland, error) // Add this method
 	CreateOrUpdate(context.Context, *Cropland) error
 	Delete(context.Context, string) error
 }

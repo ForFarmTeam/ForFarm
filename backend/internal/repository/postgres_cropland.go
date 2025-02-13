@@ -77,18 +77,18 @@ func (p *postgresCroplandRepository) CreateOrUpdate(ctx context.Context, c *doma
 	}
 
 	query := `  
-		INSERT INTO croplands (uuid, name, status, priority, land_size, growth_stage, plant_id, farm_id, created_at, updated_at)  
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
-		ON CONFLICT (uuid) DO UPDATE
-		SET name = EXCLUDED.name,
-		    status = EXCLUDED.status,
-		    priority = EXCLUDED.priority,
-		    land_size = EXCLUDED.land_size,
-		    growth_stage = EXCLUDED.growth_stage,
-		    plant_id = EXCLUDED.plant_id,
-		    farm_id = EXCLUDED.farm_id,
-		    updated_at = NOW()
-		RETURNING uuid, created_at, updated_at`
+        INSERT INTO croplands (uuid, name, status, priority, land_size, growth_stage, plant_id, farm_id, created_at, updated_at)  
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+        ON CONFLICT (uuid) DO UPDATE
+        SET name = EXCLUDED.name,
+            status = EXCLUDED.status,
+            priority = EXCLUDED.priority,
+            land_size = EXCLUDED.land_size,
+            growth_stage = EXCLUDED.growth_stage,
+            plant_id = EXCLUDED.plant_id,
+            farm_id = EXCLUDED.farm_id,
+            updated_at = NOW()
+        RETURNING uuid, created_at, updated_at`
 
 	return p.conn.QueryRow(
 		ctx,
@@ -101,11 +101,18 @@ func (p *postgresCroplandRepository) CreateOrUpdate(ctx context.Context, c *doma
 		c.GrowthStage,
 		c.PlantID,
 		c.FarmID,
-	).Scan(&c.CreatedAt, &c.UpdatedAt)
+	).Scan(&c.UUID, &c.CreatedAt, &c.UpdatedAt) // Fixed Scan call
 }
-
 func (p *postgresCroplandRepository) Delete(ctx context.Context, uuid string) error {
 	query := `DELETE FROM croplands WHERE uuid = $1`
 	_, err := p.conn.Exec(ctx, query, uuid)
 	return err
+}
+
+func (p *postgresCroplandRepository) GetAll(ctx context.Context) ([]domain.Cropland, error) {
+	query := `
+		SELECT uuid, name, status, priority, land_size, growth_stage, plant_id, farm_id, created_at, updated_at
+		FROM croplands`
+
+	return p.fetch(ctx, query)
 }
