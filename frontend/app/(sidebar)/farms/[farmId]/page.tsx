@@ -6,29 +6,28 @@ import { ArrowLeft, MapPin, Plus, Sprout } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { AddCropForm } from "./add-crop-form";
+import { CropDialog } from "./crop-dialog";
 import { CropCard } from "./crop-card";
 import { Farm, Crop } from "@/types";
 import React from "react";
 
 const crops: Crop[] = [
   {
-    id: "crop1",
+    id: "1",
     farmId: "1",
     name: "Monthong Durian",
     plantedDate: new Date("2023-03-15"),
     status: "growing",
   },
   {
-    id: "crop2",
+    id: "2",
     farmId: "1",
     name: "Chanee Durian",
     plantedDate: new Date("2023-02-20"),
     status: "planned",
   },
   {
-    id: "crop3",
+    id: "3",
     farmId: "2",
     name: "Kradum Durian",
     plantedDate: new Date("2022-11-05"),
@@ -76,6 +75,7 @@ export default function FarmDetailPage({ params }: { params: Promise<{ farmId: s
       status: data.status!,
     };
     setCrops((prevCrops) => [...prevCrops, newCrop]);
+    // When the crop gets added, close the dialog
     setIsDialogOpen(false);
   };
 
@@ -121,33 +121,34 @@ export default function FarmDetailPage({ params }: { params: Promise<{ farmId: s
           <h2 className="text-xl font-bold mb-4">Crops</h2>
           <Separator className="my-4" />
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <Card
-                className="w-full bg-muted/50 hover:bg-muted/80 transition-all cursor-pointer group hover:shadow-lg"
-                onClick={() => setIsDialogOpen(true)}>
-                <CardContent className="p-6">
-                  <div className="flex flex-col gap-6">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                      <Plus className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-xl font-medium">Add Crop</h3>
-                      <p className="text-sm text-muted-foreground">Plant a new crop</p>
-                    </div>
+            {/* Clickable "Add Crop" Card */}
+            <Card
+              className="w-full bg-muted/50 hover:bg-muted/80 transition-all cursor-pointer group hover:shadow-lg"
+              onClick={() => setIsDialogOpen(true)}>
+              <CardContent className="p-6">
+                <div className="flex flex-col gap-6">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <Plus className="h-5 w-5 text-primary" />
                   </div>
-                </CardContent>
-              </Card>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Add New Crop</DialogTitle>
-                  <DialogDescription>Fill out the form to add a new crop to your farm.</DialogDescription>
-                </DialogHeader>
-                <AddCropForm onSubmit={handleAddCrop} onCancel={() => setIsDialogOpen(false)} />
-              </DialogContent>
-            </Dialog>
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-medium">Add Crop</h3>
+                    <p className="text-sm text-muted-foreground">Plant a new crop</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* New Crop Dialog */}
+            <CropDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} onSubmit={handleAddCrop} />
 
             {crops.map((crop) => (
-              <CropCard key={crop.id} crop={crop} />
+              <CropCard
+                key={crop.id}
+                crop={crop}
+                onClick={() => {
+                  router.push(`/farms/${crop.farmId}/crops/${crop.id}`);
+                }}
+              />
             ))}
           </div>
         </div>

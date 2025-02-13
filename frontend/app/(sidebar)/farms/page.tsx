@@ -4,12 +4,14 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Link, Search } from "lucide-react";
 import { FarmCard } from "./farm-card";
 import { AddFarmForm } from "./add-farm-form";
+import { useRouter } from "next/navigation";
 import type { Farm } from "@/types";
 
 export default function FarmSetupPage() {
+  const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [farms, setFarms] = useState<Farm[]>([
@@ -17,7 +19,7 @@ export default function FarmSetupPage() {
       id: "1",
       name: "Green Valley Farm",
       location: "Bangkok",
-      type: "durian",
+      type: "Durian",
       createdAt: new Date(),
     },
   ]);
@@ -70,7 +72,14 @@ export default function FarmSetupPage() {
         </Dialog>
 
         {filteredFarms.map((farm) => (
-          <FarmCard key={farm.id} variant="farm" farm={farm} />
+          <FarmCard
+            key={farm.id}
+            variant="farm"
+            farm={farm}
+            onClick={() => {
+              router.push(`/farms/${farm.id}`);
+            }}
+          />
         ))}
       </div>
     </div>
