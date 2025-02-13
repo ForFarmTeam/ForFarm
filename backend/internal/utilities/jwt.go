@@ -34,10 +34,6 @@ func VerifyJwtToken(tokenString string, customKey ...[]byte) error {
 		secretKey = customKey[0]
 	}
 
-	if len(secretKey) == 0 {
-		return errors.New("no secret key available")
-	}
-
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid

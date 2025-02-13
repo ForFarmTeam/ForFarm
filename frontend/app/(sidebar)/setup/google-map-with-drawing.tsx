@@ -14,24 +14,13 @@ const GoogleMapWithDrawing = () => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
   // Handles drawing complete
-  const onDrawingComplete = useCallback(
-    (overlay: google.maps.drawing.OverlayCompleteEvent) => {
-      console.log("Drawing complete:", overlay);
-    },
-    []
-  );
+  const onDrawingComplete = useCallback((overlay: google.maps.drawing.OverlayCompleteEvent) => {
+    console.log("Drawing complete:", overlay);
+  }, []);
 
   return (
-    <LoadScript
-      googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
-      libraries={["drawing"]}
-    >
-      <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={center}
-        zoom={10}
-        onLoad={(map) => setMap(map)}
-      >
+    <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!} libraries={["drawing"]}>
+      <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={10} onLoad={(map) => setMap(map)}>
         {map && (
           <DrawingManager
             onOverlayComplete={onDrawingComplete}

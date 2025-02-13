@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-import { signUpSchema } from "@/schema/authSchema";
+import { signUpSchema } from "@/schemas/auth.schema";
 
 import Link from "next/link";
 import Image from "next/image";

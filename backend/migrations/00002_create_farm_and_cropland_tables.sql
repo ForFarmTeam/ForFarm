@@ -43,8 +43,9 @@ CREATE TABLE plants (
 CREATE TABLE farms (
     uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
-    lat DOUBLE PRECISION NOT NULL,
-    lon DOUBLE PRECISION NOT NULL,
+    lat DOUBLE PRECISION[] NOT NULL,
+    lon DOUBLE PRECISION[] NOT NULL,
+    plant_types UUID[],
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     owner_id UUID NOT NULL,

@@ -23,6 +23,7 @@ type api struct {
 	httpClient *http.Client
 
 	userRepo domain.UserRepository
+	farmRepo domain.FarmRepository
 }
 
 func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
@@ -30,12 +31,14 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
 	client := &http.Client{}
 
 	userRepository := repository.NewPostgresUser(pool)
+	farmRepository := repository.NewPostgresFarm(pool)
 
 	return &api{
 		logger:     logger,
 		httpClient: client,
 
 		userRepo: userRepository,
+		farmRepo: farmRepository,
 	}
 }
 
@@ -69,7 +72,8 @@ func (a *api) Routes() *chi.Mux {
 
 	router.Group(func(r chi.Router) {
 		api.UseMiddleware(m.AuthMiddleware(api))
-		a.registerHelloRoutes(r, api)
+    a.registerHelloRoutes(r, api)
+    a.registerFarmRoutes(r, api)
 	})
 
 	return router
