@@ -25,3 +25,14 @@ export interface Farm {
   type: string;
   createdAt: Date;
 }
+
+export interface User {
+  ID: number;
+  UUID: string;
+  Username: string;
+  Password: string;
+  Email: string;
+  CreatedAt: string;
+  UpdatedAt: string;
+  IsActive: boolean;
+}

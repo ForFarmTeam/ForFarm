@@ -19,12 +19,14 @@ import { NavProjects } from "./nav-projects";
 import { NavUser } from "./nav-user";
 import { TeamSwitcher } from "./team-switcher";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "@/components/ui/sidebar";
+import { useEffect } from "react";
+import { fetchUserMe } from "@/api/user";
 
 const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    avatar: "/avatars/avatar.webp",
   },
   teams: [
     {
@@ -134,6 +136,31 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [user, setUser] = React.useState<{ name: string; email: string; avatar: string }>({
+    name: "",
+    email: "",
+    avatar: "/avatars/avatar.webp",
+  });
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState("");
+
+  useEffect(() => {
+    async function getUser() {
+      try {
+        const data = await fetchUserMe();
+        let to_set = user;
+        to_set.name = data.user.UUID;
+        to_set.email = data.user.Email;
+        setUser(to_set);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    getUser();
+  }, []);
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -143,9 +170,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
         <NavProjects projects={data.projects} />
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={data.user} />
-      </SidebarFooter>
+      <SidebarFooter>{loading ? "Loading..." : error ? error : <NavUser user={user} />}</SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
