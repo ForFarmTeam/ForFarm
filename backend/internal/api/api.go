@@ -82,6 +82,7 @@ func (a *api) Routes() *chi.Mux {
 		api.UseMiddleware(m.AuthMiddleware(api))
 		a.registerHelloRoutes(r, api)
 		a.registerFarmRoutes(r, api)
+		a.registerUserRoutes(r, api)
 	})
 
 	return router
