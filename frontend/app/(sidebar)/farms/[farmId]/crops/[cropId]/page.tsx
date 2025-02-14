@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChatbotDialog } from "./chatbot-dialog";
 import { AnalyticsDialog } from "./analytics-dialog";
 import type { Crop, CropAnalytics } from "@/types";
+import GoogleMapWithDrawing from "@/components/google-map-with-drawing";
 
 const getCropById = (id: string): Crop => {
   return {
@@ -204,17 +205,18 @@ export default function CropDetailPage({ params }: { params: Promise<{ farmId: s
         </div>
 
         <div className="space-y-6">
-          <Card className="h-[400px]">
+          <Card className="h-[400px] mb-32">
             <CardContent className="p-0 h-full">
+              <GoogleMapWithDrawing />
               <div className="h-full w-full bg-muted/20 flex items-center justify-center">
-                <div className="text-center space-y-2">
+                {/* <div className="text-center space-y-2">
                   <MapPin className="h-8 w-8 mx-auto text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">
                     Map placeholder
                     <br />
                     Click to view full map
                   </p>
-                </div>
+                </div> */}
               </div>
             </CardContent>
           </Card>

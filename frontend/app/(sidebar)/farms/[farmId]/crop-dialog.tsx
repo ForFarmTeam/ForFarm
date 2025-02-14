@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Check, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Crop } from "@/types";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import GoogleMapWithDrawing from "@/components/google-map-with-drawing";
 
 interface Plant {
   id: string;
@@ -61,6 +63,9 @@ export function CropDialog({ open, onOpenChange, onSubmit }: CropDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      <VisuallyHidden>
+        <DialogTitle></DialogTitle>
+      </VisuallyHidden>
       <DialogContent className="sm:max-w-[900px] p-0">
         <div className="grid md:grid-cols-2 h-[600px]">
           {/* Left side - Plant Selection */}
@@ -97,9 +102,9 @@ export function CropDialog({ open, onOpenChange, onSubmit }: CropDialogProps) {
           {/* Right side - Map */}
           <div className="relative">
             <div className="absolute inset-0 bg-muted/10">
-              {/* Placeholder map - Replace with your map component */}
               <div className="h-full w-full bg-muted/20 flex items-center justify-center">
-                <div className="text-center space-y-2">
+                <GoogleMapWithDrawing />
+                {/* <div className="text-center space-y-2">
                   <MapPin className="h-8 w-8 mx-auto text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">
                     Map placeholder
@@ -108,7 +113,7 @@ export function CropDialog({ open, onOpenChange, onSubmit }: CropDialogProps) {
                     <br />
                     Lng: {location.lng.toFixed(4)}
                   </p>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
