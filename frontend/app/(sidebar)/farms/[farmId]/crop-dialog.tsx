@@ -69,15 +69,15 @@ export function CropDialog({ open, onOpenChange, onSubmit }: CropDialogProps) {
       <DialogContent className="sm:max-w-[900px] p-0">
         <div className="grid md:grid-cols-2 h-[600px]">
           {/* Left side - Plant Selection */}
-          <div className="p-6 overflow-y-auto border-r">
+          <div className="p-6 overflow-y-auto border-r dark:border-slate-700">
             <h2 className="text-lg font-semibold mb-4">Select Plant to Grow</h2>
             <div className="space-y-4">
               {plants.map((plant) => (
                 <Card
                   key={plant.id}
                   className={cn(
-                    "p-4 cursor-pointer hover:bg-muted/50 transition-colors",
-                    selectedPlant === plant.id && "border-primary bg-primary/5"
+                    "p-4 cursor-pointer hover:bg-muted/50 dark:hover:bg-muted/40 transition-colors",
+                    selectedPlant === plant.id && "border-primary dark:border-primary dark:bg-primary/5 bg-primary/5"
                   )}
                   onClick={() => setSelectedPlant(plant.id)}>
                   <div className="flex items-center gap-4">
@@ -101,25 +101,15 @@ export function CropDialog({ open, onOpenChange, onSubmit }: CropDialogProps) {
 
           {/* Right side - Map */}
           <div className="relative">
-            <div className="absolute inset-0 bg-muted/10">
-              <div className="h-full w-full bg-muted/20 flex items-center justify-center">
+            <div className="absolute inset-0 bg-muted/10 dark:bg-muted/20">
+              <div className="h-full w-full flex items-center justify-center">
                 <GoogleMapWithDrawing />
-                {/* <div className="text-center space-y-2">
-                  <MapPin className="h-8 w-8 mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    Map placeholder
-                    <br />
-                    Lat: {location.lat.toFixed(4)}
-                    <br />
-                    Lng: {location.lng.toFixed(4)}
-                  </p>
-                </div> */}
               </div>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t">
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-background dark:bg-background border-t dark:border-slate-700">
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
