@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { CalendarIcon, ChevronRight, Leaf, Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,86 +12,36 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
-// Sample blog data
-const blogs = [
-  {
-    id: 1,
-    title: "Sustainable Farming Practices for Modern Agriculture",
-    description:
-      "Learn about eco-friendly farming techniques that can increase yield while preserving the environment.",
-    date: "2023-05-15",
-    author: "Emma Johnson",
-    topic: "Sustainability",
-    image: "/placeholder.svg?height=400&width=600",
-    readTime: "5 min read",
-    featured: true,
-  },
-  {
-    id: 2,
-    title: "Optimizing Fertilizer Usage for Maximum Crop Yield",
-    description: "Discover the perfect balance of fertilizers to maximize your harvest without wasting resources.",
-    date: "2023-06-02",
-    author: "Michael Chen",
-    topic: "Fertilizers",
-    image: "/placeholder.svg?height=400&width=600",
-    readTime: "7 min read",
-    featured: false,
-  },
-  {
-    id: 3,
-    title: "Seasonal Planting Guide: What to Grow and When",
-    description:
-      "A comprehensive guide to help you plan your planting schedule throughout the year for optimal results.",
-    date: "2023-06-18",
-    author: "Sarah Williams",
-    topic: "Plantation",
-    image: "/placeholder.svg?height=400&width=600",
-    readTime: "8 min read",
-    featured: false,
-  },
-  {
-    id: 4,
-    title: "Water Conservation Techniques for Drought-Prone Areas",
-    description: "Essential strategies to maintain your crops during water shortages and drought conditions.",
-    date: "2023-07-05",
-    author: "David Rodriguez",
-    topic: "Sustainability",
-    image: "/placeholder.svg?height=400&width=600",
-    readTime: "6 min read",
-    featured: false,
-  },
-  {
-    id: 5,
-    title: "Organic Pest Control Methods That Actually Work",
-    description: "Natural and effective ways to keep pests at bay without resorting to harmful chemicals.",
-    date: "2023-07-22",
-    author: "Lisa Thompson",
-    topic: "Organic",
-    image: "/placeholder.svg?height=400&width=600",
-    readTime: "9 min read",
-    featured: false,
-  },
-  {
-    id: 6,
-    title: "The Future of Smart Farming: IoT and Agriculture",
-    description: "How Internet of Things technology is revolutionizing the way we monitor and manage farms.",
-    date: "2023-08-10",
-    author: "James Wilson",
-    topic: "Technology",
-    image: "/placeholder.svg?height=400&width=600",
-    readTime: "10 min read",
-    featured: true,
-  },
-];
-
-// Extract unique topics from blogs
-const topics = ["All", ...new Set(blogs.map((blog) => blog.topic))];
+import { fetchBlogs } from "@/api/hub";
+import type { Blog } from "@/types";
 
 export default function KnowledgeHubPage() {
   const [selectedTopic, setSelectedTopic] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Filter blogs based on selected topic and search query
+  // Fetch blogs using react-query.
+  const {
+    data: blogs,
+    isLoading,
+    isError,
+  } = useQuery<Blog[]>({
+    queryKey: ["blogs"],
+    queryFn: fetchBlogs,
+    staleTime: 60 * 1000,
+  });
+
+  if (isLoading) {
+    return <div className="flex min-h-screen bg-background items-center justify-center">Loading...</div>;
+  }
+
+  if (isError || !blogs) {
+    return <div className="flex min-h-screen bg-background items-center justify-center">Error loading blogs.</div>;
+  }
+
+  // Derive the list of topics from the fetched blogs.
+  const topics = ["All", ...new Set(blogs.map((blog) => blog.topic))];
+
+  // Filter blogs based on selected topic and search query.
   const filteredBlogs = blogs.filter((blog) => {
     const matchesTopic = selectedTopic === "All" || blog.topic === selectedTopic;
     const matchesSearch =
@@ -104,7 +55,6 @@ export default function KnowledgeHubPage() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Main content */}
       <div className="flex-1 flex flex-col">
         <main className="flex-1 p-6 md:p-10">
           <div className="max-w-7xl mx-auto">
@@ -156,7 +106,7 @@ export default function KnowledgeHubPage() {
                       </div>
                       <CardFooter className="p-4 flex justify-between items-center">
                         <div className="text-sm text-muted-foreground">By {blog.author}</div>
-                        <Link href={`/blog/${blog.id}`}>
+                        <Link href={`/hub/${blog.id}`}>
                           <Button variant="ghost" size="sm" className="gap-1">
                             Read more <ChevronRight className="h-4 w-4" />
                           </Button>

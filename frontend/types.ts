@@ -71,3 +71,28 @@ export type InventoryItem = {
 };
 
 export type CreateInventoryItemInput = Omit<InventoryItem, "id" | "lastUpdated" | "status">;
+
+export interface Blog {
+  id: number;
+  title: string;
+  description: string;
+  date: string;
+  author: string;
+  topic: string;
+  image: string;
+  readTime: string;
+  featured: boolean;
+  content?: string;
+  tableOfContents?: { id: string; title: string; level: number }[];
+  relatedArticles?: {
+    id: number;
+    title: string;
+    topic: string;
+    image: string;
+    description?: string;
+    date?: string;
+    author?: string;
+    readTime?: string;
+    featured?: boolean;
+  }[];
+}
