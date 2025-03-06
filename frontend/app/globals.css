@@ -87,3 +87,69 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Add custom styles for the blog content */
+.prose h2 {
+  @apply text-2xl font-semibold mt-8 mb-4;
+}
+
+.prose p {
+  @apply mb-4 leading-relaxed;
+}
+
+.prose ul {
+  @apply list-disc pl-6 mb-4 space-y-2;
+}
+
+/* Animation utilities */
+@keyframes blob {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(20px, 15px) scale(1.1);
+  }
+  50% {
+    transform: translate(-15px, 10px) scale(0.9);
+  }
+  75% {
+    transform: translate(15px, -25px) scale(1.05);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.animate-blob {
+  animation: blob 15s infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animation-delay-1000 {
+  animation-delay: 1s;
+}
