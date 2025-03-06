@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, Filter, SlidersHorizontal, Leaf, Calendar, AlertTriangle, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
@@ -23,70 +24,37 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { FarmCard } from "./farm-card";
 import { AddFarmForm } from "./add-farm-form";
 import type { Farm } from "@/types";
-import { fetchFarms } from "@/api/farm";
+import { fetchFarms, createFarm } from "@/api/farm";
 
-/**
- * FarmSetupPage component allows users to search, filter, sort, and add farms.
- */
 export default function FarmSetupPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  // Component state
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [farms, setFarms] = useState<Farm[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "alphabetical">("newest");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Load farms when the component mounts.
-  useEffect(() => {
-    async function loadFarms() {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await fetchFarms();
-        setFarms(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An unknown error occurred");
-      } finally {
-        setIsLoading(false);
-      }
-    }
+  const {
+    data: farms,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<Farm[]>({
+    queryKey: ["farms"],
+    queryFn: fetchFarms,
+    staleTime: 60 * 1000,
+  });
 
-    loadFarms();
-  }, []);
-
-  /**
-   * Handles adding a new farm.
-   *
-   * @param data - Partial Farm data from the form.
-   */
-  const handleAddFarm = async (data: Partial<Farm>) => {
-    try {
-      // Simulate an API call delay for adding a new farm.
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const newFarm: Farm = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: data.name!,
-        location: data.location!,
-        type: data.type!,
-        createdAt: new Date(),
-        area: data.area || "0 hectares",
-        crops: 0,
-      };
-
-      setFarms((prev) => [newFarm, ...prev]);
+  const mutation = useMutation({
+    mutationFn: (data: Partial<Farm>) => createFarm(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["farms"] });
       setIsDialogOpen(false);
-    } catch (err) {
-      setError("Failed to add farm. Please try again.");
-    }
-  };
+    },
+  });
 
-  // Filter and sort farms based on the current state.
-  const filteredAndSortedFarms = farms
+  const filteredAndSortedFarms = (farms || [])
     .filter(
       (farm) =>
         (activeFilter === "all" || farm.type === activeFilter) &&
@@ -96,16 +64,20 @@ export default function FarmSetupPage() {
     )
     .sort((a, b) => {
       if (sortOrder === "newest") {
-        return b.createdAt.getTime() - a.createdAt.getTime();
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       } else if (sortOrder === "oldest") {
-        return a.createdAt.getTime() - b.createdAt.getTime();
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       } else {
         return a.name.localeCompare(b.name);
       }
     });
 
-  // Get available farm types for filters.
-  const farmTypes = ["all", ...new Set(farms.map((farm) => farm.type))];
+  // Get distinct farm types.
+  const farmTypes = ["all", ...new Set((farms || []).map((farm) => farm.type))];
+
+  const handleAddFarm = async (data: Partial<Farm>) => {
+    await mutation.mutateAsync(data);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b">
@@ -187,11 +159,11 @@ export default function FarmSetupPage() {
           <Separator className="my-2" />
 
           {/* Error state */}
-          {error && (
+          {isError && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{(error as Error)?.message}</AlertDescription>
             </Alert>
           )}
 
@@ -204,7 +176,7 @@ export default function FarmSetupPage() {
           )}
 
           {/* Empty state */}
-          {!isLoading && !error && filteredAndSortedFarms.length === 0 && (
+          {!isLoading && !isError && filteredAndSortedFarms.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 bg-muted/20 rounded-lg border border-dashed">
               <div className="bg-green-100 p-3 rounded-full mb-4">
                 <Leaf className="h-6 w-6 text-green-600" />
@@ -223,7 +195,7 @@ export default function FarmSetupPage() {
                 onClick={() => {
                   setSearchQuery("");
                   setActiveFilter("all");
-                  if (!farms.length) {
+                  if (!farms || farms.length === 0) {
                     setIsDialogOpen(true);
                   }
                 }}
@@ -241,7 +213,7 @@ export default function FarmSetupPage() {
           )}
 
           {/* Grid of farm cards */}
-          {!isLoading && !error && filteredAndSortedFarms.length > 0 && (
+          {!isLoading && !isError && filteredAndSortedFarms.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               <AnimatePresence>
                 <motion.div
@@ -252,7 +224,6 @@ export default function FarmSetupPage() {
                   className="col-span-1">
                   <FarmCard variant="add" onClick={() => setIsDialogOpen(true)} />
                 </motion.div>
-
                 {filteredAndSortedFarms.map((farm, index) => (
                   <motion.div
                     key={farm.id}
@@ -285,9 +256,7 @@ export default function FarmSetupPage() {
 }
 
 /**
- * A helper component to render the Check icon.
- *
- * @param props - Optional className for custom styling.
+ * A helper component for the Check icon.
  */
 function Check({ className }: { className?: string }) {
   return (

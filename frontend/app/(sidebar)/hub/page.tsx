@@ -170,7 +170,7 @@ export default function KnowledgeHubPage() {
                     </CardContent>
                     <CardFooter className="p-4 pt-0 flex justify-between items-center">
                       <div className="text-sm text-muted-foreground">By {blog.author}</div>
-                      <Link href={`/blog/${blog.id}`}>
+                      <Link href={`/hub/${blog.id}`}>
                         <Button variant="ghost" size="sm" className="gap-1">
                           Read <ChevronRight className="h-4 w-4" />
                         </Button>

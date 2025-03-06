@@ -63,7 +63,7 @@ export function FarmCard({ variant, farm, onClick }: FarmCardProps) {
               <Sprout className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <h3 className="text-xl font-medium mb-1">{farm.name}</h3>
+              <h3 className="text-xl font-medium mb-1 truncate">{farm.name}</h3>
               <div className="flex items-center text-sm text-muted-foreground mb-2">
                 <MapPin className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
                 <span className="truncate">{farm.location}</span>

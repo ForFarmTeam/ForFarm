@@ -18,7 +18,7 @@ const farmFormSchema = z.object({
   area: z.string().optional(),
 });
 
-interface AddFarmFormProps {
+export interface AddFarmFormProps {
   onSubmit: (data: Partial<Farm>) => Promise<void>;
   onCancel: () => void;
 }
