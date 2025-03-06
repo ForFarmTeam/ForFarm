@@ -58,3 +58,16 @@ export interface User {
   Avatar: string;
   IsActive: boolean;
 }
+
+export type InventoryItem = {
+  id: number;
+  name: string;
+  category: string;
+  type: string;
+  quantity: number;
+  unit: string;
+  lastUpdated: string;
+  status: string;
+};
+
+export type CreateInventoryItemInput = Omit<InventoryItem, "id" | "lastUpdated" | "status">;

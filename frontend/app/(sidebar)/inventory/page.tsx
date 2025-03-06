@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Calendar, ChevronDown, Plus, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -12,66 +13,36 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 
+import { fetchInventoryItems } from "@/api/inventory";
+import { AddInventoryItem } from "./add-inventory-item";
+
 export default function InventoryPage() {
   const [date, setDate] = useState<Date>();
   const [inventoryType, setInventoryType] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Sample inventory data
-  const inventoryItems = [
-    {
-      id: 1,
-      name: "Tomato Seeds",
-      category: "Seeds",
-      type: "Plantation",
-      quantity: 500,
-      unit: "packets",
-      lastUpdated: "2023-03-01",
-      status: "In Stock",
-    },
-    {
-      id: 2,
-      name: "NPK Fertilizer",
-      category: "Fertilizer",
-      type: "Fertilizer",
-      quantity: 200,
-      unit: "kg",
-      lastUpdated: "2023-03-05",
-      status: "Low Stock",
-    },
-    {
-      id: 3,
-      name: "Corn Seeds",
-      category: "Seeds",
-      type: "Plantation",
-      quantity: 300,
-      unit: "packets",
-      lastUpdated: "2023-03-10",
-      status: "In Stock",
-    },
-    {
-      id: 4,
-      name: "Organic Compost",
-      category: "Fertilizer",
-      type: "Fertilizer",
-      quantity: 150,
-      unit: "kg",
-      lastUpdated: "2023-03-15",
-      status: "In Stock",
-    },
-    {
-      id: 5,
-      name: "Wheat Seeds",
-      category: "Seeds",
-      type: "Plantation",
-      quantity: 250,
-      unit: "packets",
-      lastUpdated: "2023-03-20",
-      status: "In Stock",
-    },
-  ];
+  // Fetch inventory items using react-query.
+  const {
+    data: inventoryItems,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["inventoryItems"],
+    queryFn: fetchInventoryItems,
+    staleTime: 60 * 1000,
+  });
 
-  // Filter items based on selected type
+  if (isLoading) {
+    return <div className="flex min-h-screen bg-background items-center justify-center">Loading...</div>;
+  }
+
+  if (isError || !inventoryItems) {
+    return (
+      <div className="flex min-h-screen bg-background items-center justify-center">Error loading inventory data.</div>
+    );
+  }
+
+  // Filter items based on selected type.
   const filteredItems =
     inventoryType === "all"
       ? inventoryItems
@@ -81,7 +52,6 @@ export default function InventoryPage() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Main content */}
       <div className="flex-1 flex flex-col">
         <main className="flex-1 p-6">
           <h1 className="text-2xl font-bold tracking-tight mb-6">Inventory</h1>
@@ -130,9 +100,7 @@ export default function InventoryPage() {
                 <Input type="search" placeholder="Search Farms" className="pl-8" />
               </div>
 
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add
-              </Button>
+              <AddInventoryItem />
             </div>
           </div>
 
