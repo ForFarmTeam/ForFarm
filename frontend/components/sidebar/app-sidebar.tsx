@@ -56,15 +56,13 @@ export function AppSidebar({ config, ...props }: AppSidebarProps) {
     ],
     navMain: [
       { title: "Farms", url: "/farms", icon: Map },
-      { title: "Crops list", url: "/crops", icon: Frame },
       { title: "Inventory", url: "/inventory", icon: SquareTerminal },
       { title: "Marketplace Information", url: "/marketplace", icon: PieChart },
-      { title: "Knowledge Hub", url: "/knowledge", icon: BookOpen },
+      { title: "Knowledge Hub", url: "/hub", icon: BookOpen },
       { title: "Users", url: "/users", icon: User },
       { title: "AI Chatbot", url: "/chatbot", icon: Bot },
       { title: "Settings", url: "/settings", icon: Settings2 },
     ],
-    // Define crops with dynamic URLs – replace [farmId] with your actual farm identifier as needed.
     crops: [
       { title: "Crops 1", url: "/farms/[farmId]/crops/1", icon: Map },
       { title: "Crops 2", url: "/farms/[farmId]/crops/2", icon: Map },
