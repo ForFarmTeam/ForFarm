@@ -16,7 +16,7 @@ interface AnalyticsDialogProps {
 export function AnalyticsDialog({ open, onOpenChange, crop, analytics }: AnalyticsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px]">
+      <DialogContent className="sm:max-w-[800px] dark:bg-background">
         <DialogHeader>
           <DialogTitle>Crop Analytics - {crop.name}</DialogTitle>
         </DialogHeader>
@@ -30,30 +30,30 @@ export function AnalyticsDialog({ open, onOpenChange, crop, analytics }: Analyti
 
           <TabsContent value="overview" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Card>
+              <Card className="dark:bg-slate-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Growth Rate</CardTitle>
-                  <Sprout className="h-4 w-4 text-muted-foreground" />
+                  <Sprout className="h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">+2.5%</div>
                   <p className="text-xs text-muted-foreground">+20.1% from last week</p>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="dark:bg-slate-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Water Usage</CardTitle>
-                  <Droplets className="h-4 w-4 text-muted-foreground" />
+                  <Droplets className="h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">15.2L</div>
                   <p className="text-xs text-muted-foreground">per day average</p>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="dark:bg-slate-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Sunlight</CardTitle>
-                  <Sun className="h-4 w-4 text-muted-foreground" />
+                  <Sun className="h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{analytics.sunlight}%</div>
@@ -62,7 +62,7 @@ export function AnalyticsDialog({ open, onOpenChange, crop, analytics }: Analyti
               </Card>
             </div>
 
-            <Card>
+            <Card className="dark:bg-slate-800">
               <CardHeader>
                 <CardTitle>Growth Timeline</CardTitle>
                 <CardDescription>Daily growth rate over time</CardDescription>
@@ -75,7 +75,7 @@ export function AnalyticsDialog({ open, onOpenChange, crop, analytics }: Analyti
           </TabsContent>
 
           <TabsContent value="growth" className="space-y-4">
-            <Card>
+            <Card className="dark:bg-slate-800">
               <CardHeader>
                 <CardTitle>Detailed Growth Analysis</CardTitle>
                 <CardDescription>Comprehensive growth metrics</CardDescription>
@@ -87,7 +87,7 @@ export function AnalyticsDialog({ open, onOpenChange, crop, analytics }: Analyti
           </TabsContent>
 
           <TabsContent value="environment" className="space-y-4">
-            <Card>
+            <Card className="dark:bg-slate-800">
               <CardHeader>
                 <CardTitle>Environmental Conditions</CardTitle>
                 <CardDescription>Temperature, humidity, and more</CardDescription>

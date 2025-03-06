@@ -43,11 +43,11 @@ export function ChatbotDialog({ open, onOpenChange, cropName }: ChatbotDialogPro
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <VisuallyHidden>
-        <DialogTitle></DialogTitle>
+        <DialogTitle>Farming Assistant Chat</DialogTitle>
       </VisuallyHidden>
-      <DialogContent className="sm:max-w-[500px] p-0">
+      <DialogContent className="sm:max-w-[500px] p-0 dark:bg-background">
         <div className="flex flex-col h-[600px]">
-          <div className="p-4 border-b">
+          <div className="p-4 border-b dark:border-slate-700">
             <h2 className="text-lg font-semibold">Farming Assistant</h2>
             <p className="text-sm text-muted-foreground">Ask questions about your {cropName}</p>
           </div>
@@ -58,7 +58,9 @@ export function ChatbotDialog({ open, onOpenChange, cropName }: ChatbotDialogPro
                 <div key={i} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
                     className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                      message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground dark:bg-primary dark:text-primary-foreground"
+                        : "bg-muted dark:bg-muted dark:text-muted-foreground"
                     }`}>
                     {message.content}
                   </div>
@@ -67,7 +69,7 @@ export function ChatbotDialog({ open, onOpenChange, cropName }: ChatbotDialogPro
             </div>
           </ScrollArea>
 
-          <div className="p-4 border-t">
+          <div className="p-4 border-t dark:border-slate-700">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
