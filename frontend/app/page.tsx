@@ -93,7 +93,7 @@ export default function Home() {
                 <Link href="/demo">
                   <Button
                     variant="outline"
-                    className="border-white text-white text-md font-bold px-6 py-6 rounded-full hover:bg-white/10 transition-colors w-full sm:w-auto">
+                    className="border-white dark:border-white text-black dark:text-white text-md font-bold px-6 py-6 rounded-full hover:bg-white/10 transition-colors w-full sm:w-auto">
                     Watch demo
                   </Button>
                 </Link>

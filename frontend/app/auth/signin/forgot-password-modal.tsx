@@ -18,21 +18,21 @@ export default function ForgotPasswordModal() {
     <div>
       <Dialog>
         <DialogTrigger asChild>
-          <Button className=" whitespace-nowrap flex bg-transparent border-none hover:bg-transparent shadow-none">
+          <Button className="whitespace-nowrap flex bg-transparent border-none hover:bg-transparent shadow-none">
             <h1 className="text-green-600 underline">Forgot password?</h1>
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md dark:bg-slate-800">
           <DialogHeader>
             <DialogTitle>What&apos;s your email?</DialogTitle>
             <DialogDescription>
-              Please verify your email for us. Once you do, we&apos;ll send instructions to reset your password
+              Please verify your email for us. Once you do, we&apos;ll send instructions to reset your password.
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center space-x-2">
             <div className="grid flex-1 gap-2">
               <Label htmlFor="link" className="sr-only">
-                Link
+                Email
               </Label>
               <Input id="email" type="email" placeholder="your.email@gmail.com" />
             </div>
