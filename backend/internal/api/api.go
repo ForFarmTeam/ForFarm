@@ -76,6 +76,7 @@ func (a *api) Routes() *chi.Mux {
 		a.registerAuthRoutes(r, api)
 		a.registerCropRoutes(r, api)
 		a.registerPlantRoutes(r, api)
+		a.registerOauthRoutes(r, api)
 	})
 
 	router.Group(func(r chi.Router) {

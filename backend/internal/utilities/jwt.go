@@ -8,7 +8,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var deafultSecretKey = []byte(config.JWT_SECRET_KEY)
+// TODO: Change later
+var defaultSecretKey = []byte(config.JWT_SECRET_KEY)
 
 func CreateJwtToken(uuid string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -16,7 +17,7 @@ func CreateJwtToken(uuid string) (string, error) {
 		"exp":  time.Now().Add(time.Hour * 24).Unix(),
 	})
 
-	tokenString, err := token.SignedString(deafultSecretKey)
+	tokenString, err := token.SignedString(defaultSecretKey)
 	if err != nil {
 		return "", err
 	}
@@ -25,7 +26,7 @@ func CreateJwtToken(uuid string) (string, error) {
 }
 
 func VerifyJwtToken(tokenString string, customKey ...[]byte) error {
-	secretKey := deafultSecretKey
+	secretKey := defaultSecretKey
 	if len(customKey) > 0 {
 		if len(customKey[0]) < 32 {
 			return errors.New("provided key is too short, minimum length is 32 bytes")
@@ -52,25 +53,40 @@ func VerifyJwtToken(tokenString string, customKey ...[]byte) error {
 	return nil
 }
 
-// ExtractUUIDFromToken decodes the JWT token using the default secret key,
-// and returns the uuid claim contained within the token.
-func ExtractUUIDFromToken(tokenString string) (string, error) {
+func ExtractUUIDFromToken(tokenString string, customKey ...[]byte) (string, error) {
+	secretKey := defaultSecretKey
+	if len(customKey) > 0 {
+		if len(customKey[0]) < 32 {
+			return "", errors.New("provided key is too short, minimum length is 32 bytes")
+		}
+		secretKey = customKey[0]
+	}
+
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid
 		}
-		return deafultSecretKey, nil
+
+		return secretKey, nil
 	})
+
 	if err != nil {
 		return "", err
 	}
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		if uuid, ok := claims["uuid"].(string); ok {
-			return uuid, nil
-		}
-		return "", errors.New("uuid not found in token")
+	if !token.Valid {
+		return "", jwt.ErrSignatureInvalid
 	}
 
-	return "", errors.New("invalid token claims")
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", errors.New("unable to parse claims")
+	}
+
+	userID, ok := claims["uuid"].(string)
+	if !ok || userID == "" {
+		return "", errors.New("uuid claim is missing or invalid")
+	}
+
+	return userID, nil
 }

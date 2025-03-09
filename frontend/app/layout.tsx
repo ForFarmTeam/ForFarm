@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 import { SessionProvider } from "@/context/SessionContext";
 import ReactQueryProvider from "@/lib/ReactQueryProvider";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -32,15 +33,17 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head />
       <SessionProvider>
-        <ReactQueryProvider>
-          <body className={`${poppins.variable}`}>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              <div className="relative flex min-h-screen flex-col">
-                <div className="flex-1 bg-background">{children}</div>
-              </div>
-            </ThemeProvider>
-          </body>
-        </ReactQueryProvider>
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string}>
+          <ReactQueryProvider>
+            <body className={`${poppins.variable}`}>
+              <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                <div className="relative flex min-h-screen flex-col">
+                  <div className="flex-1 bg-background">{children}</div>
+                </div>
+              </ThemeProvider>
+            </body>
+          </ReactQueryProvider>
+        </GoogleOAuthProvider>
       </SessionProvider>
     </html>
   );
