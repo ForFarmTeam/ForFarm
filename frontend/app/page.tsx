@@ -39,22 +39,22 @@ export default function Home() {
             </Badge>
           </Link>
           <nav className="hidden md:flex space-x-6 items-center">
-            <Link href="/features" className="hover:text-green-200 transition-colors">
+            <Link href="/hub" className="hover:text-green-200 transition-colors">
               Features
             </Link>
-            <Link href="/pricing" className="hover:text-green-200 transition-colors">
+            {/* <Link href="/pricing" className="hover:text-green-200 transition-colors">
               Pricing
-            </Link>
-            <Link href="/knowledge-hub" className="hover:text-green-200 transition-colors">
+            </Link> */}
+            <Link href="/hub" className="hover:text-green-200 transition-colors">
               Knowledge Hub
             </Link>
-            <Link href="/documentation" className="hover:text-green-200 transition-colors">
+            {/* <Link href="/documentation" className="hover:text-green-200 transition-colors">
               Documentation
-            </Link>
+            </Link> */}
           </nav>
           <div className="flex space-x-3 items-center">
             <Link
-              href="/auth/login"
+              href="/auth/signin"
               className="hidden md:inline-block hover:text-green-200 transition-colors font-medium">
               Log in
             </Link>
