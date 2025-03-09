@@ -60,6 +60,22 @@ func (p *postgresUserRepository) GetByID(ctx context.Context, id int64) (domain.
 	return users[0], nil
 }
 
+func (p *postgresUserRepository) GetByUUID(ctx context.Context, uuid string) (domain.User, error) {
+	query := `
+		SELECT id, uuid, username, password, email, created_at, updated_at, is_active
+		FROM users
+		WHERE uuid = $1`
+
+	users, err := p.fetch(ctx, query, uuid)
+	if err != nil {
+		return domain.User{}, err
+	}
+	if len(users) == 0 {
+		return domain.User{}, domain.ErrNotFound
+	}
+	return users[0], nil
+}
+
 func (p *postgresUserRepository) GetByUsername(ctx context.Context, username string) (domain.User, error) {
 	query := `
 		SELECT id, uuid, username, password, email, created_at, updated_at, is_active  

@@ -33,7 +33,7 @@ func (p *postgresPlantRepository) fetch(ctx context.Context, query string, args 
 			&plant.PlantingDetail, &plant.IsPerennial, &plant.DaysToEmerge,
 			&plant.DaysToFlower, &plant.DaysToMaturity, &plant.HarvestWindow,
 			&plant.PHValue, &plant.EstimateLossRate, &plant.EstimateRevenuePerHU,
-			&plant.HarvestUnitID, &plant.WaterNeeds, &plant.CreatedAt, &plant.UpdatedAt,
+			&plant.HarvestUnitID, &plant.WaterNeeds,
 		); err != nil {
 			return nil, err
 		}

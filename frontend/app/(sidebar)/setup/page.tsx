@@ -1,7 +1,7 @@
 import PlantingDetailsForm from "./planting-detail-form";
 import HarvestDetailsForm from "./harvest-detail-form";
 import { Separator } from "@/components/ui/separator";
-import GoogleMapWithDrawing from "./google-map-with-drawing";
+import GoogleMapWithDrawing from "@/components/google-map-with-drawing";
 
 export default function SetupPage() {
   return (

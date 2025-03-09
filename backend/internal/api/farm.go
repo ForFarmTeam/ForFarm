@@ -7,7 +7,6 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/forfarm/backend/internal/domain"
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 )
 
 func (a *api) registerFarmRoutes(_ chi.Router, api huma.API) {
@@ -46,11 +45,10 @@ func (a *api) registerFarmRoutes(_ chi.Router, api huma.API) {
 type CreateFarmInput struct {
 	Header string `header:"Authorization" required:"true" example:"Bearer token"`
 	Body   struct {
-		Name       string      `json:"name"`
-		Lat        []float64   `json:"lat"`
-		Lon        []float64   `json:"lon"`
-		OwnerID    string      `json:"owner_id"`
-		PlantTypes []uuid.UUID `json:"plant_types"`
+		Name    string    `json:"name"`
+		Lat     []float64 `json:"lat"`
+		Lon     []float64 `json:"lon"`
+		OwnerID string    `json:"owner_id"`
 	}
 }
 
@@ -62,11 +60,10 @@ type CreateFarmOutput struct {
 
 func (a *api) createFarmHandler(ctx context.Context, input *CreateFarmInput) (*CreateFarmOutput, error) {
 	farm := &domain.Farm{
-		Name:       input.Body.Name,
-		Lat:        input.Body.Lat,
-		Lon:        input.Body.Lon,
-		OwnerID:    input.Body.OwnerID,
-		PlantTypes: input.Body.PlantTypes,
+		Name:    input.Body.Name,
+		Lat:     input.Body.Lat,
+		Lon:     input.Body.Lon,
+		OwnerID: input.Body.OwnerID,
 	}
 
 	err := a.farmRepo.CreateOrUpdate(ctx, farm)

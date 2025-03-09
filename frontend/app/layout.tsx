@@ -1,20 +1,16 @@
 import type { Metadata } from "next";
-import { Open_Sans, Roboto_Mono } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import { SessionProvider } from "@/context/SessionContext";
+import ReactQueryProvider from "@/lib/ReactQueryProvider";
 
-const openSans = Open_Sans({
+const poppins = Poppins({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-opensans",
-});
-
-const robotoMono = Roboto_Mono({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-roboto-mono",
+  variable: "--font-poppins",
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
 // const geistMono = Geist_Mono({
@@ -36,13 +32,15 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head />
       <SessionProvider>
-        <body className={`${openSans.variable} ${robotoMono.variable} antialiased`}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <div className="relative flex min-h-screen flex-col">
-              <div className="flex-1 bg-background">{children}</div>
-            </div>
-          </ThemeProvider>
-        </body>
+        <ReactQueryProvider>
+          <body className={`${poppins.variable}`}>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              <div className="relative flex min-h-screen flex-col">
+                <div className="flex-1 bg-background">{children}</div>
+              </div>
+            </ThemeProvider>
+          </body>
+        </ReactQueryProvider>
       </SessionProvider>
     </html>
   );

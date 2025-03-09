@@ -2,10 +2,10 @@ package repository
 
 import (
 	"context"
+	"strings"
+
 	"github.com/forfarm/backend/internal/domain"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
-	"strings"
 )
 
 type postgresFarmRepository struct {
@@ -26,7 +26,6 @@ func (p *postgresFarmRepository) fetch(ctx context.Context, query string, args .
 	var farms []domain.Farm
 	for rows.Next() {
 		var f domain.Farm
-		var plantTypes pq.StringArray
 		if err := rows.Scan(
 			&f.UUID,
 			&f.Name,
@@ -35,17 +34,8 @@ func (p *postgresFarmRepository) fetch(ctx context.Context, query string, args .
 			&f.CreatedAt,
 			&f.UpdatedAt,
 			&f.OwnerID,
-			&plantTypes,
 		); err != nil {
 			return nil, err
-		}
-
-		for _, plantTypeStr := range plantTypes {
-			plantTypeUUID, err := uuid.Parse(plantTypeStr)
-			if err != nil {
-				return nil, err
-			}
-			f.PlantTypes = append(f.PlantTypes, plantTypeUUID)
 		}
 
 		farms = append(farms, f)
@@ -83,11 +73,6 @@ func (p *postgresFarmRepository) CreateOrUpdate(ctx context.Context, f *domain.F
 		f.UUID = uuid.New().String()
 	}
 
-	plantTypes := make([]string, len(f.PlantTypes))
-	for i, pt := range f.PlantTypes {
-		plantTypes[i] = pt.String()
-	}
-
 	query := `  
 		INSERT INTO farms (uuid, name, lat, lon, created_at, updated_at, owner_id, plant_types)  
 		VALUES ($1, $2, $3, $4, NOW(), NOW(), $5, $6)
@@ -108,7 +93,6 @@ func (p *postgresFarmRepository) CreateOrUpdate(ctx context.Context, f *domain.F
 		f.Lat,
 		f.Lon,
 		f.OwnerID,
-		pq.StringArray(plantTypes),
 	).Scan(&f.UUID, &f.CreatedAt, &f.UpdatedAt)
 }
 
