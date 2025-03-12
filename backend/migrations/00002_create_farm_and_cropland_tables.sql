@@ -66,3 +66,12 @@ CREATE TABLE croplands (
     CONSTRAINT fk_cropland_farm FOREIGN KEY (farm_id) REFERENCES farms(uuid) ON DELETE CASCADE,
     CONSTRAINT fk_cropland_plant FOREIGN KEY (plant_id) REFERENCES plants(uuid) ON DELETE CASCADE
 );
+
+
+-- +goose Down
+DROP TABLE IF EXISTS croplands;
+DROP TABLE IF EXISTS farms;
+DROP TABLE IF EXISTS plants;
+DROP TABLE IF EXISTS harvest_units;
+DROP TABLE IF EXISTS soil_conditions;
+DROP TABLE IF EXISTS light_profiles;

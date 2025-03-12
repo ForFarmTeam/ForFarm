@@ -11,3 +11,7 @@ CREATE TABLE users (
 );
 
 CREATE UNIQUE INDEX idx_users_uuid ON users(uuid);
+
+-- +goose Down
+DROP INDEX IF EXISTS idx_users_uuid;
+DROP TABLE IF EXISTS users;
