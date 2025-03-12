@@ -9,23 +9,17 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// registerFarmRoutes defines endpoints for farm operations.
 func (a *api) registerFarmRoutes(_ chi.Router, api huma.API) {
 	tags := []string{"farm"}
-	prefix := "/farm"
+	prefix := "/farms"
 
 	huma.Register(api, huma.Operation{
-		OperationID: "createFarm",
-		Method:      http.MethodPost,
+		OperationID: "getAllFarms",
+		Method:      http.MethodGet,
 		Path:        prefix,
 		Tags:        tags,
-	}, a.createFarmHandler)
-
-	huma.Register(api, huma.Operation{
-		OperationID: "getFarmsByOwner",
-		Method:      http.MethodGet,
-		Path:        prefix + "/owner/{owner_id}",
-		Tags:        tags,
-	}, a.getFarmsByOwnerHandler)
+	}, a.getAllFarmsHandler)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "getFarmByID",
@@ -35,6 +29,20 @@ func (a *api) registerFarmRoutes(_ chi.Router, api huma.API) {
 	}, a.getFarmByIDHandler)
 
 	huma.Register(api, huma.Operation{
+		OperationID: "createFarm",
+		Method:      http.MethodPost,
+		Path:        prefix,
+		Tags:        tags,
+	}, a.createFarmHandler)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "updateFarm",
+		Method:      http.MethodPut,
+		Path:        prefix + "/{farm_id}",
+		Tags:        tags,
+	}, a.updateFarmHandler)
+
+	huma.Register(api, huma.Operation{
 		OperationID: "deleteFarm",
 		Method:      http.MethodDelete,
 		Path:        prefix + "/{farm_id}",
@@ -42,13 +50,20 @@ func (a *api) registerFarmRoutes(_ chi.Router, api huma.API) {
 	}, a.deleteFarmHandler)
 }
 
+//
+// Input and Output types
+//
+
+// CreateFarmInput contains the request data for creating a new farm.
 type CreateFarmInput struct {
 	Header string `header:"Authorization" required:"true" example:"Bearer token"`
 	Body   struct {
-		Name    string    `json:"name"`
-		Lat     []float64 `json:"lat"`
-		Lon     []float64 `json:"lon"`
-		OwnerID string    `json:"owner_id"`
+		Name      string  `json:"name"`
+		Lat       float64 `json:"lat"`
+		Lon       float64 `json:"lon"`
+		OwnerID   string  `json:"owner_id"`
+		FarmType  string  `json:"farm_type,omitempty"`
+		TotalSize string  `json:"total_size,omitempty"`
 	}
 }
 
@@ -58,40 +73,12 @@ type CreateFarmOutput struct {
 	}
 }
 
-func (a *api) createFarmHandler(ctx context.Context, input *CreateFarmInput) (*CreateFarmOutput, error) {
-	farm := &domain.Farm{
-		Name:    input.Body.Name,
-		Lat:     input.Body.Lat,
-		Lon:     input.Body.Lon,
-		OwnerID: input.Body.OwnerID,
-	}
-
-	err := a.farmRepo.CreateOrUpdate(ctx, farm)
-	if err != nil {
-		return nil, err
-	}
-
-	return &CreateFarmOutput{Body: struct {
-		UUID string `json:"uuid"`
-	}{UUID: farm.UUID}}, nil
+type GetAllFarmsInput struct {
+	Header string `header:"Authorization" required:"true" example:"Bearer token"`
 }
 
-type GetFarmsByOwnerInput struct {
-	Header  string `header:"Authorization" required:"true" example:"Bearer token"`
-	OwnerID string `path:"owner_id"`
-}
-
-type GetFarmsByOwnerOutput struct {
+type GetAllFarmsOutput struct {
 	Body []domain.Farm
-}
-
-func (a *api) getFarmsByOwnerHandler(ctx context.Context, input *GetFarmsByOwnerInput) (*GetFarmsByOwnerOutput, error) {
-	farms, err := a.farmRepo.GetByOwnerID(ctx, input.OwnerID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &GetFarmsByOwnerOutput{Body: farms}, nil
 }
 
 type GetFarmByIDInput struct {
@@ -103,13 +90,22 @@ type GetFarmByIDOutput struct {
 	Body domain.Farm
 }
 
-func (a *api) getFarmByIDHandler(ctx context.Context, input *GetFarmByIDInput) (*GetFarmByIDOutput, error) {
-	farm, err := a.farmRepo.GetByID(ctx, input.FarmID)
-	if err != nil {
-		return nil, err
+// UpdateFarmInput uses pointer types for optional/nullable fields.
+type UpdateFarmInput struct {
+	Header string `header:"Authorization" required:"true" example:"Bearer token"`
+	FarmID string `path:"farm_id"`
+	Body   struct {
+		Name      string   `json:"name,omitempty"`
+		Lat       *float64 `json:"lat,omitempty"`
+		Lon       *float64 `json:"lon,omitempty"`
+		FarmType  *string  `json:"farm_type,omitempty"`
+		TotalSize *string  `json:"total_size,omitempty"`
+		OwnerID   string   `json:"owner_id,omitempty"`
 	}
+}
 
-	return &GetFarmByIDOutput{Body: farm}, nil
+type UpdateFarmOutput struct {
+	Body domain.Farm
 }
 
 type DeleteFarmInput struct {
@@ -123,13 +119,134 @@ type DeleteFarmOutput struct {
 	}
 }
 
-func (a *api) deleteFarmHandler(ctx context.Context, input *DeleteFarmInput) (*DeleteFarmOutput, error) {
-	err := a.farmRepo.Delete(ctx, input.FarmID)
+//
+// API Handlers
+//
+
+func (a *api) createFarmHandler(ctx context.Context, input *CreateFarmInput) (*CreateFarmOutput, error) {
+	userID, err := a.getUserIDFromHeader(input.Header)
 	if err != nil {
 		return nil, err
 	}
 
-	return &DeleteFarmOutput{Body: struct {
-		Message string `json:"message"`
-	}{Message: "Farm deleted successfully"}}, nil
+	if input.Body.OwnerID != "" && input.Body.OwnerID != userID {
+		return nil, huma.Error401Unauthorized("unauthorized: cannot create a farm for another owner")
+	}
+
+	farm := &domain.Farm{
+		Name:      input.Body.Name,
+		Lat:       input.Body.Lat,
+		Lon:       input.Body.Lon,
+		FarmType:  input.Body.FarmType,
+		TotalSize: input.Body.TotalSize,
+		OwnerID:   userID,
+	}
+
+	if err := a.farmRepo.CreateOrUpdate(ctx, farm); err != nil {
+		return nil, err
+	}
+
+	return &CreateFarmOutput{
+		Body: struct {
+			UUID string `json:"uuid"`
+		}{UUID: farm.UUID},
+	}, nil
+}
+
+func (a *api) getAllFarmsHandler(ctx context.Context, input *GetAllFarmsInput) (*GetAllFarmsOutput, error) {
+	userID, err := a.getUserIDFromHeader(input.Header)
+	if err != nil {
+		return nil, err
+	}
+
+	farms, err := a.farmRepo.GetByOwnerID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return &GetAllFarmsOutput{Body: farms}, nil
+}
+
+func (a *api) getFarmByIDHandler(ctx context.Context, input *GetFarmByIDInput) (*GetFarmByIDOutput, error) {
+	userID, err := a.getUserIDFromHeader(input.Header)
+	if err != nil {
+		return nil, err
+	}
+
+	farm, err := a.farmRepo.GetByID(ctx, input.FarmID)
+	if err != nil {
+		return nil, err
+	}
+
+	if farm.OwnerID != userID {
+		return nil, huma.Error401Unauthorized("unauthorized")
+	}
+
+	return &GetFarmByIDOutput{Body: *farm}, nil
+}
+
+func (a *api) updateFarmHandler(ctx context.Context, input *UpdateFarmInput) (*UpdateFarmOutput, error) {
+	userID, err := a.getUserIDFromHeader(input.Header)
+	if err != nil {
+		return nil, err
+	}
+
+	farm, err := a.farmRepo.GetByID(ctx, input.FarmID)
+	if err != nil {
+		return nil, err
+	}
+
+	if farm.OwnerID != userID {
+		return nil, huma.Error401Unauthorized("unauthorized")
+	}
+
+	if input.Body.Name != "" {
+		farm.Name = input.Body.Name
+	}
+	if input.Body.Lat != nil {
+		farm.Lat = *input.Body.Lat
+	}
+	if input.Body.Lon != nil {
+		farm.Lon = *input.Body.Lon
+	}
+	if input.Body.FarmType != nil {
+		farm.FarmType = *input.Body.FarmType
+	}
+	if input.Body.TotalSize != nil {
+		farm.TotalSize = *input.Body.TotalSize
+	}
+	if input.Body.OwnerID != "" && input.Body.OwnerID != userID {
+		return nil, huma.Error401Unauthorized("unauthorized: cannot change owner")
+	}
+
+	if err = a.farmRepo.CreateOrUpdate(ctx, farm); err != nil {
+		return nil, err
+	}
+
+	return &UpdateFarmOutput{Body: *farm}, nil
+}
+
+func (a *api) deleteFarmHandler(ctx context.Context, input *DeleteFarmInput) (*DeleteFarmOutput, error) {
+	userID, err := a.getUserIDFromHeader(input.Header)
+	if err != nil {
+		return nil, err
+	}
+
+	farm, err := a.farmRepo.GetByID(ctx, input.FarmID)
+	if err != nil {
+		return nil, err
+	}
+
+	if farm.OwnerID != userID {
+		return nil, huma.Error401Unauthorized("unauthorized")
+	}
+
+	if err := a.farmRepo.Delete(ctx, input.FarmID); err != nil {
+		return nil, err
+	}
+
+	return &DeleteFarmOutput{
+		Body: struct {
+			Message string `json:"message"`
+		}{Message: "Farm deleted successfully"},
+	}, nil
 }

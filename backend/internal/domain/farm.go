@@ -10,8 +10,10 @@ import (
 type Farm struct {
 	UUID      string
 	Name      string
-	Lat       []float64
-	Lon       []float64
+	Lat       float64 // single latitude value
+	Lon       float64 // single longitude value
+	FarmType  string  // e.g., "Durian", "mango", "mixed-crop", "others"
+	TotalSize string  // e.g., "10 Rai" (optional)
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	OwnerID   string
@@ -27,7 +29,7 @@ func (f *Farm) Validate() error {
 }
 
 type FarmRepository interface {
-	GetByID(context.Context, string) (Farm, error)
+	GetByID(context.Context, string) (*Farm, error)
 	GetByOwnerID(context.Context, string) ([]Farm, error)
 	CreateOrUpdate(context.Context, *Farm) error
 	Delete(context.Context, string) error

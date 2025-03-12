@@ -2,9 +2,11 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
@@ -16,6 +18,7 @@ import (
 	"github.com/forfarm/backend/internal/domain"
 	m "github.com/forfarm/backend/internal/middlewares"
 	"github.com/forfarm/backend/internal/repository"
+	"github.com/forfarm/backend/internal/utilities"
 )
 
 type api struct {
@@ -46,6 +49,15 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
 		farmRepo:  farmRepository,
 		plantRepo: plantRepository,
 	}
+}
+
+func (a *api) getUserIDFromHeader(authHeader string) (string, error) {
+	const bearerPrefix = "Bearer "
+	if !strings.HasPrefix(authHeader, bearerPrefix) {
+		return "", errors.New("invalid authorization header")
+	}
+	tokenString := strings.TrimPrefix(authHeader, bearerPrefix)
+	return utilities.ExtractUUIDFromToken(tokenString)
 }
 
 func (a *api) Server(port int) *http.Server {
