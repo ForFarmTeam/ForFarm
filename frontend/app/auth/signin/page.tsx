@@ -54,6 +54,7 @@ export default function SigninPage() {
       session!.setUser(values.email);
 
       router.push("/setup");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Error logging in:", error);
       setServerError(error.message || "Invalid email or password. Please try again.");

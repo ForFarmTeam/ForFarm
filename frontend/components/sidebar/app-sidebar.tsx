@@ -7,7 +7,6 @@ import {
   BookOpen,
   Bot,
   Command,
-  Frame,
   GalleryVerticalEnd,
   Map,
   PieChart,
@@ -45,6 +44,29 @@ interface SidebarConfig {
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   config?: SidebarConfig;
+}
+
+function UserSkeleton() {
+  return (
+    <div className="flex items-center space-x-2 animate-pulse">
+      <div className="w-8 h-8 bg-gray-300 rounded-full" />
+      <div className="w-24 h-4 bg-gray-300 rounded" />
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function UserErrorFallback({ message }: { message: string }) {
+  return (
+    <div className="flex items-center space-x-2">
+      <div className="w-8 h-8 bg-red-300 rounded-full flex items-center justify-center">
+        <span role="img" aria-label="error">
+          ⚠️
+        </span>
+      </div>
+      <div className="text-sm text-red-600">Failed to load user</div>
+    </div>
+  );
 }
 
 export function AppSidebar({ config, ...props }: AppSidebarProps) {
@@ -90,8 +112,12 @@ export function AppSidebar({ config, ...props }: AppSidebarProps) {
           email: data.user.Email,
           avatar: data.user.Avatar || "/avatars/avatar.webp",
         });
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unexpected error occurred");
+        }
       } finally {
         setLoading(false);
       }
@@ -110,7 +136,9 @@ export function AppSidebar({ config, ...props }: AppSidebarProps) {
           <NavCrops crops={sidebarConfig.crops} />
         </div>
       </SidebarContent>
-      <SidebarFooter>{loading ? "Loading..." : error ? error : <NavUser user={user} />}</SidebarFooter>
+      <SidebarFooter>
+        {loading ? <UserSkeleton /> : error ? <UserErrorFallback message={error} /> : <NavUser user={user} />}
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
