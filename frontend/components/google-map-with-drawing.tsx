@@ -1,5 +1,3 @@
-"use client";
-
 import { GoogleMap, LoadScript, DrawingManager } from "@react-google-maps/api";
 import { useState, useCallback } from "react";
 
@@ -10,66 +8,67 @@ const containerStyle = {
 
 const center = { lat: 13.7563, lng: 100.5018 }; // Example: Bangkok, Thailand
 
-const GoogleMapWithDrawing = () => {
+interface GoogleMapWithDrawingProps {
+  onAreaSelected: (data: { lat: number; lng: number }[]) => void;
+}
+
+const GoogleMapWithDrawing = ({
+  onAreaSelected,
+}: GoogleMapWithDrawingProps) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
-  // handles drawing complete
   const onDrawingComplete = useCallback(
     (overlay: google.maps.drawing.OverlayCompleteEvent) => {
-      console.log("Drawing complete:", overlay);
-
       const shape = overlay.overlay;
 
-      // check the shape of the drawing
+      // check the shape of the drawing and extract lat/lng values
       if (shape instanceof google.maps.Polygon) {
-        console.log("Polygon detected:", shape);
         const path = shape.getPath();
         const coordinates = path.getArray().map((latLng) => ({
           lat: latLng.lat(),
           lng: latLng.lng(),
         }));
         console.log("Polygon coordinates:", coordinates);
+        onAreaSelected(coordinates);
       } else if (shape instanceof google.maps.Rectangle) {
-        console.log("Rectangle detected:", shape);
         const bounds = shape.getBounds();
         if (bounds) {
           const northEast = bounds.getNorthEast();
           const southWest = bounds.getSouthWest();
-          console.log("Rectangle coordinates:", {
-            northEast: { lat: northEast.lat(), lng: northEast.lng() },
-            southWest: { lat: southWest.lat(), lng: southWest.lng() },
-          });
-        } else {
-          console.log("Bounds are null, rectangle not fully drawn yet.");
+          const coordinates = [
+            { lat: northEast.lat(), lng: northEast.lng() },
+            { lat: southWest.lat(), lng: southWest.lng() },
+          ];
+          console.log("Rectangle coordinates:", coordinates);
+          onAreaSelected(coordinates);
         }
       } else if (shape instanceof google.maps.Circle) {
-        console.log("Circle detected:", shape);
         const center = shape.getCenter();
         const radius = shape.getRadius();
         if (center) {
-          console.log("Circle center:", {
-            lat: center.lat(),
-            lng: center.lng(),
-            radius: radius, // circle's radius in meters
-          });
-        } else {
-          console.log("Circle center is null.");
+          const coordinates = [
+            {
+              lat: center.lat(),
+              lng: center.lng(),
+              radius: radius, // circle's radius in meters
+            },
+          ];
+          console.log("Circle center:", coordinates);
+          onAreaSelected(coordinates);
         }
       } else if (shape instanceof google.maps.Polyline) {
-        console.log("Polyline detected:", shape);
         const path = shape.getPath();
         const coordinates = path.getArray().map((latLng) => ({
           lat: latLng.lat(),
           lng: latLng.lng(),
         }));
         console.log("Polyline coordinates:", coordinates);
-      }
-      // in case of unrecognized shape types
-      else {
+        onAreaSelected(coordinates);
+      } else {
         console.log("Unknown shape detected:", shape);
       }
     },
-    []
+    [onAreaSelected]
   );
 
   return (

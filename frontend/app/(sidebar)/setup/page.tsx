@@ -20,7 +20,9 @@ export default function SetupPage() {
   const [harvestDetails, setHarvestDetails] = useState<harvestSchema | null>(
     null
   );
-  const [mapData, setMapData] = useState(null);
+  const [mapData, setMapData] = useState<{ lat: number; lng: number }[] | null>(
+    null
+  );
 
   // handle planting details submission
   const handlePlantingDetailsChange = (data: plantingSchema) => {
@@ -33,15 +35,22 @@ export default function SetupPage() {
   };
 
   // handle map area selection
-  const handleMapDataChange = (data: SetStateAction<null>) => {
-    setMapData(data);
+  const handleMapDataChange = (data: { lat: number; lng: number }[]) => {
+    setMapData((prevMapData) => {
+      if (prevMapData) {
+        return [...prevMapData, ...data];
+      } else {
+        return data;
+      }
+    });
   };
 
   // log the changes
   useEffect(() => {
-    console.log(plantingDetails);
-    console.log(harvestDetails);
-  }, [plantingDetails, harvestDetails]);
+    // console.log(plantingDetails);
+    // console.log(harvestDetails);
+    console.table(mapData);
+  }, [plantingDetails, harvestDetails, mapData]);
 
   const handleSubmit = () => {
     if (!plantingDetails || !harvestDetails || !mapData) {
@@ -100,7 +109,7 @@ export default function SetupPage() {
         </div>
         <Separator className="mt-3" />
         <div className="mt-10">
-          {/* <GoogleMapWithDrawing onAreaSelected={handleMapDataChange} /> */}
+          <GoogleMapWithDrawing onAreaSelected={handleMapDataChange} />
         </div>
       </div>
 
