@@ -4,48 +4,31 @@ import PlantingDetailsForm from "./planting-detail-form";
 import HarvestDetailsForm from "./harvest-detail-form";
 import { Separator } from "@/components/ui/separator";
 import GoogleMapWithDrawing from "@/components/google-map-with-drawing";
+import {
+  plantingDetailsFormSchema,
+  harvestDetailsFormSchema,
+} from "@/schemas/application.schema";
+import { z } from "zod";
+
+type plantingSchema = z.infer<typeof plantingDetailsFormSchema>;
+type harvestSchema = z.infer<typeof harvestDetailsFormSchema>;
 
 export default function SetupPage() {
-  type PlantingDetails = {
-    daysToEmerge: number;
-    plantSpacing: number;
-    rowSpacing: number;
-    plantingDepth: number;
-    averageHeight: number;
-    isPerennial: boolean;
-    autoCreateTasks: boolean;
-    startMethod?: string;
-    lightProfile?: string;
-    soilConditions?: string;
-    plantingDetails?: string;
-    pruningDetails?: string;
-  };
-
-  const [plantingDetails, setPlantingDetails] =
-    useState<PlantingDetails | null>(null);
-  const [harvestDetails, setHarvestDetails] = useState(null);
+  const [plantingDetails, setPlantingDetails] = useState<plantingSchema | null>(
+    null
+  );
+  const [harvestDetails, setHarvestDetails] = useState<harvestSchema | null>(
+    null
+  );
   const [mapData, setMapData] = useState(null);
 
   // handle planting details submission
-  const handlePlantingDetailsChange = (data: {
-    daysToEmerge: number;
-    plantSpacing: number;
-    rowSpacing: number;
-    plantingDepth: number;
-    averageHeight: number;
-    isPerennial: boolean;
-    autoCreateTasks: boolean;
-    startMethod?: string;
-    lightProfile?: string;
-    soilConditions?: string;
-    plantingDetails?: string;
-    pruningDetails?: string;
-  }) => {
+  const handlePlantingDetailsChange = (data: plantingSchema) => {
     setPlantingDetails(data);
   };
 
   // handle harvest details submission
-  const handleHarvestDetailsChange = (data: SetStateAction<null>) => {
+  const handleHarvestDetailsChange = (data: harvestSchema) => {
     setHarvestDetails(data);
   };
 
@@ -54,9 +37,11 @@ export default function SetupPage() {
     setMapData(data);
   };
 
+  // log the changes
   useEffect(() => {
     console.log(plantingDetails);
-  }, [plantingDetails]);
+    console.log(harvestDetails);
+  }, [plantingDetails, harvestDetails]);
 
   const handleSubmit = () => {
     if (!plantingDetails || !harvestDetails || !mapData) {
@@ -105,7 +90,7 @@ export default function SetupPage() {
       </div>
       <Separator className="mt-3" />
       <div className="mt-10 flex justify-center">
-        {/* <HarvestDetailsForm onChange={handleHarvestDetailsChange} /> */}
+        <HarvestDetailsForm onChange={handleHarvestDetailsChange} />
       </div>
 
       {/* Map Section */}

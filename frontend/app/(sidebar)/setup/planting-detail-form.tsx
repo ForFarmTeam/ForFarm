@@ -23,23 +23,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 
 type plantingSchema = z.infer<typeof plantingDetailsFormSchema>;
-interface FormData {
-  daysToEmerge: number;
-  plantSpacing: number;
-  rowSpacing: number;
-  plantingDepth: number;
-  averageHeight: number;
-  startMethod?: string;
-  lightProfile?: string;
-  soilConditions?: string;
-  plantingDetails?: string;
-  pruningDetails?: string;
-  isPerennial: boolean;
-  autoCreateTasks: boolean;
-}
 
 export default function PlantingDetailsForm({
   onChange,
@@ -64,7 +49,7 @@ export default function PlantingDetailsForm({
     },
   });
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: plantingSchema) => {
     onChange(data);
   };
   return (
