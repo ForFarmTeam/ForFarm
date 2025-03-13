@@ -20,13 +20,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 type harvestSchema = z.infer<typeof harvestDetailsFormSchema>;
 
 export default function HarvestDetailsForm() {
   const form = useForm<harvestSchema>({
     resolver: zodResolver(harvestDetailsFormSchema),
-    defaultValues: {},
+    defaultValues: {
+      daysToFlower: 0,
+      daysToMaturity: 0,
+      harvestWindow: 0,
+      estimatedLossRate: 0,
+      harvestUnits: "",
+      estimatedRevenue: 0,
+      expectedYieldPer100ft: 0,
+      expectedYieldPerAcre: 0,
+    },
   });
   return (
     <Form {...form}>
@@ -224,6 +234,9 @@ export default function HarvestDetailsForm() {
             </FormItem>
           )}
         />
+        <div className="col-span-3 flex justify-center">
+          <Button type="submit">Save</Button>
+        </div>
       </form>
     </Form>
   );

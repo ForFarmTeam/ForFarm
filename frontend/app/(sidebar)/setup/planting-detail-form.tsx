@@ -22,13 +22,27 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 
 type plantingSchema = z.infer<typeof plantingDetailsFormSchema>;
 
 export default function PlantingDetailsForm() {
   const form = useForm<plantingSchema>({
     resolver: zodResolver(plantingDetailsFormSchema),
-    defaultValues: {},
+    defaultValues: {
+      daysToEmerge: 0,
+      plantSpacing: 0,
+      rowSpacing: 0,
+      plantingDepth: 0,
+      averageHeight: 0,
+      startMethod: "",
+      lightProfile: "",
+      soilConditions: "",
+      plantingDetails: "",
+      pruningDetails: "",
+      isPerennial: false,
+      autoCreateTasks: false,
+    },
   });
   return (
     <Form {...form}>
@@ -289,7 +303,7 @@ export default function PlantingDetailsForm() {
         />
         <FormField
           control={form.control}
-          name="isPerennial"
+          name="autoCreateTasks"
           render={({ field }: { field: any }) => (
             <FormItem>
               <FormControl>
@@ -308,6 +322,9 @@ export default function PlantingDetailsForm() {
             </FormItem>
           )}
         />
+        <div className="col-span-3 flex justify-center">
+          <Button type="submit">Save</Button>
+        </div>
       </form>
     </Form>
   );
