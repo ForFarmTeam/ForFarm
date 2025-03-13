@@ -23,11 +23,30 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 type plantingSchema = z.infer<typeof plantingDetailsFormSchema>;
+interface FormData {
+  daysToEmerge: number;
+  plantSpacing: number;
+  rowSpacing: number;
+  plantingDepth: number;
+  averageHeight: number;
+  startMethod?: string;
+  lightProfile?: string;
+  soilConditions?: string;
+  plantingDetails?: string;
+  pruningDetails?: string;
+  isPerennial: boolean;
+  autoCreateTasks: boolean;
+}
 
-export default function PlantingDetailsForm() {
-  const form = useForm<plantingSchema>({
+export default function PlantingDetailsForm({
+  onChange,
+}: {
+  onChange: (data: plantingSchema) => void;
+}) {
+  const form = useForm({
     resolver: zodResolver(plantingDetailsFormSchema),
     defaultValues: {
       daysToEmerge: 0,
@@ -44,9 +63,16 @@ export default function PlantingDetailsForm() {
       autoCreateTasks: false,
     },
   });
+
+  const onSubmit = (data: FormData) => {
+    onChange(data);
+  };
   return (
     <Form {...form}>
-      <form className="grid grid-cols-3 gap-5">
+      <form
+        className="grid grid-cols-3 gap-5"
+        onSubmit={form.handleSubmit(onSubmit)}
+      >
         <FormField
           control={form.control}
           name="daysToEmerge"
@@ -61,6 +87,13 @@ export default function PlantingDetailsForm() {
                       id="daysToEmerge"
                       className="w-96"
                       {...field}
+                      onChange={(e) => {
+                        // convert to number
+                        const value = e.target.value
+                          ? parseInt(e.target.value, 10)
+                          : "";
+                        field.onChange(value);
+                      }}
                     />
                   </div>
                 </div>
@@ -83,6 +116,13 @@ export default function PlantingDetailsForm() {
                       id="plantSpacing"
                       className="w-96"
                       {...field}
+                      onChange={(e) => {
+                        // convert to number
+                        const value = e.target.value
+                          ? parseInt(e.target.value, 10)
+                          : "";
+                        field.onChange(value);
+                      }}
                     />
                   </div>
                 </div>
@@ -105,6 +145,13 @@ export default function PlantingDetailsForm() {
                       id="rowSpacing"
                       className="w-96"
                       {...field}
+                      onChange={(e) => {
+                        // convert to number
+                        const value = e.target.value
+                          ? parseInt(e.target.value, 10)
+                          : "";
+                        field.onChange(value);
+                      }}
                     />
                   </div>
                 </div>
@@ -129,6 +176,13 @@ export default function PlantingDetailsForm() {
                       id="plantingDepth"
                       className="w-96"
                       {...field}
+                      onChange={(e) => {
+                        // convert to number
+                        const value = e.target.value
+                          ? parseInt(e.target.value, 10)
+                          : "";
+                        field.onChange(value);
+                      }}
                     />
                   </div>
                 </div>
@@ -153,6 +207,13 @@ export default function PlantingDetailsForm() {
                       id="averageHeight"
                       className="w-96"
                       {...field}
+                      onChange={(e) => {
+                        // convert to number
+                        const value = e.target.value
+                          ? parseInt(e.target.value, 10)
+                          : "";
+                        field.onChange(value);
+                      }}
                     />
                   </div>
                 </div>
@@ -201,9 +262,9 @@ export default function PlantingDetailsForm() {
                     <SelectValue placeholder="Select light profile" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="xp">Seed</SelectItem>
-                    <SelectItem value="xa">Transplant</SelectItem>
-                    <SelectItem value="xz">Cutting</SelectItem>
+                    <SelectItem value="Seed">Seed</SelectItem>
+                    <SelectItem value="Transplant">Transplant</SelectItem>
+                    <SelectItem value="Cutting">Cutting</SelectItem>
                   </SelectContent>
                 </Select>
               </FormControl>
@@ -228,9 +289,9 @@ export default function PlantingDetailsForm() {
                     <SelectValue placeholder="Select a soil condition" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="xp">Seed</SelectItem>
-                    <SelectItem value="xa">Transplant</SelectItem>
-                    <SelectItem value="xz">Cutting</SelectItem>
+                    <SelectItem value="Seed">Seed</SelectItem>
+                    <SelectItem value="Transplant">Transplant</SelectItem>
+                    <SelectItem value="Cutting">Cutting</SelectItem>
                   </SelectContent>
                 </Select>
               </FormControl>
