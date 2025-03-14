@@ -7,6 +7,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import DynamicBreadcrumb from "./dynamic-breadcrumb";
 import { extractRoute } from "@/lib/utils";
 import { usePathname } from "next/navigation";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function AppLayout({
   children,
@@ -29,6 +30,7 @@ export default function AppLayout({
           </div>
         </header>
         {children}
+        <Toaster />
       </SidebarInset>
     </SidebarProvider>
   );

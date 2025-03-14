@@ -1,9 +1,5 @@
 lockfileVersion: '6.0'
 
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
-
 dependencies:
   '@hookform/resolvers':
     specifier: ^4.0.0
@@ -99,7 +95,7 @@ dependencies:
     specifier: ^4.24.11
     version: 4.24.11(next@15.1.0)(react-dom@19.0.0)(react@19.0.0)
   next-themes:
-    specifier: ^0.4.4
+    specifier: ^0.4.6
     version: 0.4.6(react-dom@19.0.0)(react@19.0.0)
   react:
     specifier: ^19.0.0
@@ -116,6 +112,9 @@ dependencies:
   recharts:
     specifier: ^2.15.1
     version: 2.15.1(react-dom@19.0.0)(react@19.0.0)
+  sonner:
+    specifier: ^2.0.1
+    version: 2.0.1(react-dom@19.0.0)(react@19.0.0)
   tailwind-merge:
     specifier: ^3.0.1
     version: 3.0.2
@@ -4334,6 +4333,16 @@ packages:
     dev: false
     optional: true
 
+  /sonner@2.0.1(react-dom@19.0.0)(react@19.0.0):
+    resolution: {integrity: sha512-FRBphaehZ5tLdLcQ8g2WOIRE+Y7BCfWi5Zyd8bCvBjiW8TxxAyoWZIxS661Yz6TGPqFQ4VLzOF89WEYhfynSFQ==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+    dependencies:
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
+    dev: false
+
   /source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
@@ -4834,3 +4843,7 @@ packages:
   /zod@3.24.2:
     resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
     dev: false
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false

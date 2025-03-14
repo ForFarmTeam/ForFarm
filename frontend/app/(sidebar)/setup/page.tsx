@@ -10,6 +10,8 @@ import {
 } from "@/schemas/application.schema";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+
 
 type PlantingSchema = z.infer<typeof plantingDetailsFormSchema>;
 type HarvestSchema = z.infer<typeof harvestDetailsFormSchema>;
@@ -34,11 +36,27 @@ export default function SetupPage() {
 
   const handleNext = () => {
     if (step === 1 && !plantingDetails) {
-      alert("Please complete the Planting Details before proceeding.");
+          toast.warning(
+            "Please complete the Planting Details before proceeding.",
+            {
+              action: {
+                label: "Close",
+                onClick: () => toast.dismiss(),
+              },
+            }
+          );
       return;
     }
     if (step === 2 && !harvestDetails) {
-      alert("Please complete the Harvest Details before proceeding.");
+          toast.warning(
+            "Please complete the Harvest Details before proceeding.",
+            {
+              action: {
+                label: "Close",
+                onClick: () => toast.dismiss(),
+              },
+            }
+          );
       return;
     }
     setStep((prev) => prev + 1);
@@ -50,7 +68,12 @@ export default function SetupPage() {
 
   const handleSubmit = () => {
     if (!mapData) {
-      alert("Please select an area on the map before submitting.");
+          toast.warning("Please select an area on the map before submitting.", {
+            action: {
+              label: "Close",
+              onClick: () => toast.dismiss(),
+            },
+          });
       return;
     }
 
