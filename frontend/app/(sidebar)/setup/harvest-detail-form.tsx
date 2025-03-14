@@ -294,7 +294,12 @@ export default function HarvestDetailsForm({
           )}
         />
         <div className="col-span-3 flex justify-center">
-          <Button type="submit">Save</Button>
+          <Button
+            type="submit"
+            className="bg-blue-500 hover:bg-blue-600 duration-100"
+          >
+            Save
+          </Button>
         </div>
       </form>
     </Form>

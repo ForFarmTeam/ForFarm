@@ -55,6 +55,9 @@ export default function SetupPage() {
     }
 
     console.log("Submitting:", { plantingDetails, harvestDetails, mapData });
+
+    // send request to the server
+    
   };
 
   return (
