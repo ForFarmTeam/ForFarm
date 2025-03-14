@@ -21,42 +21,7 @@ const GoogleMapWithDrawing = ({
     (overlay: google.maps.drawing.OverlayCompleteEvent) => {
       const shape = overlay.overlay;
 
-      // check the shape of the drawing and extract lat/lng values
-      if (shape instanceof google.maps.Polygon) {
-        const path = shape.getPath();
-        const coordinates = path.getArray().map((latLng) => ({
-          lat: latLng.lat(),
-          lng: latLng.lng(),
-        }));
-        console.log("Polygon coordinates:", coordinates);
-        onAreaSelected(coordinates);
-      } else if (shape instanceof google.maps.Rectangle) {
-        const bounds = shape.getBounds();
-        if (bounds) {
-          const northEast = bounds.getNorthEast();
-          const southWest = bounds.getSouthWest();
-          const coordinates = [
-            { lat: northEast.lat(), lng: northEast.lng() },
-            { lat: southWest.lat(), lng: southWest.lng() },
-          ];
-          console.log("Rectangle coordinates:", coordinates);
-          onAreaSelected(coordinates);
-        }
-      } else if (shape instanceof google.maps.Circle) {
-        const center = shape.getCenter();
-        const radius = shape.getRadius();
-        if (center) {
-          const coordinates = [
-            {
-              lat: center.lat(),
-              lng: center.lng(),
-              radius: radius, // circle's radius in meters
-            },
-          ];
-          console.log("Circle center:", coordinates);
-          onAreaSelected(coordinates);
-        }
-      } else if (shape instanceof google.maps.Polyline) {
+      if (shape instanceof google.maps.Polyline) {
         const path = shape.getPath();
         const coordinates = path.getArray().map((latLng) => ({
           lat: latLng.lat(),
@@ -90,9 +55,6 @@ const GoogleMapWithDrawing = ({
               drawingControlOptions: {
                 position: google.maps.ControlPosition.TOP_CENTER,
                 drawingModes: [
-                  google.maps.drawing.OverlayType.POLYGON,
-                  google.maps.drawing.OverlayType.RECTANGLE,
-                  google.maps.drawing.OverlayType.CIRCLE,
                   google.maps.drawing.OverlayType.POLYLINE,
                 ],
               },
