@@ -23,14 +23,16 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { useRef } from "react";
 
 type plantingSchema = z.infer<typeof plantingDetailsFormSchema>;
 
 export default function PlantingDetailsForm({
   onChange,
 }: {
-  onChange: (data: plantingSchema) => void;
+  onChange: (data: plantingSchema) => void; 
 }) {
+  const formRef = useRef<HTMLFormElement>(null);
   const form = useForm({
     resolver: zodResolver(plantingDetailsFormSchema),
     defaultValues: {
@@ -57,6 +59,7 @@ export default function PlantingDetailsForm({
       <form
         className="grid grid-cols-3 gap-5"
         onSubmit={form.handleSubmit(onSubmit)}
+        ref={formRef}
       >
         <FormField
           control={form.control}
@@ -369,7 +372,9 @@ export default function PlantingDetailsForm({
           )}
         />
         <div className="col-span-3 flex justify-center">
-          <Button type="submit">Save</Button>
+          <Button type="submit">
+            Save
+          </Button>
         </div>
       </form>
     </Form>

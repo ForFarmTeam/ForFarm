@@ -27,7 +27,7 @@ const GoogleMapWithDrawing = ({
           lat: latLng.lat(),
           lng: latLng.lng(),
         }));
-        console.log("Polyline coordinates:", coordinates);
+        // console.log("Polyline coordinates:", coordinates);
         onAreaSelected(coordinates);
       } else {
         console.log("Unknown shape detected:", shape);

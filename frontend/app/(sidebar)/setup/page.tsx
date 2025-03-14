@@ -9,6 +9,7 @@ import {
   harvestDetailsFormSchema,
 } from "@/schemas/application.schema";
 import { z } from "zod";
+import { Button } from "@/components/ui/button";
 
 type PlantingSchema = z.infer<typeof plantingDetailsFormSchema>;
 type HarvestSchema = z.infer<typeof harvestDetailsFormSchema>;
@@ -99,19 +100,14 @@ export default function SetupPage() {
       )}
 
       <div className="mt-10 flex justify-between">
-        {step > 1 && (
-          <button onClick={handleBack} className="btn btn-secondary">
-            Back
-          </button>
-        )}
+        <Button onClick={handleBack} disabled={step === 1}>
+          Back
+        </Button>
+
         {step < 3 ? (
-          <button onClick={handleNext} className="btn btn-primary">
-            Next
-          </button>
+          <Button onClick={handleNext}>Next</Button>
         ) : (
-          <button onClick={handleSubmit} className="btn btn-success">
-            Submit
-          </button>
+          <Button onClick={handleSubmit}>Submit</Button>
         )}
       </div>
     </div>
