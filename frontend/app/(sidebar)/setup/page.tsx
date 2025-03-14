@@ -57,7 +57,7 @@ export default function SetupPage() {
     console.log("Submitting:", { plantingDetails, harvestDetails, mapData });
 
     // send request to the server
-    
+
   };
 
   return (
@@ -83,21 +83,21 @@ export default function SetupPage() {
 
       {step === 1 && (
         <>
-          <h2 className="text-xl text-center">Planting Details</h2>
+          <h2 className="text-xl text-center mb-5">Planting Details</h2>
           <PlantingDetailsForm onChange={setPlantingDetails} />
         </>
       )}
 
       {step === 2 && (
         <>
-          <h2 className="text-xl text-center">Harvest Details</h2>
+          <h2 className="text-xl text-center mb-5">Harvest Details</h2>
           <HarvestDetailsForm onChange={setHarvestDetails} />
         </>
       )}
 
       {step === 3 && (
         <>
-          <h2 className="text-xl text-center">Select Area on Map</h2>
+          <h2 className="text-xl text-center mb-5">Select Area on Map</h2>
           <GoogleMapWithDrawing onAreaSelected={setMapData} />
         </>
       )}
