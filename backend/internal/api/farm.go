@@ -61,7 +61,6 @@ type CreateFarmInput struct {
 		Name      string  `json:"name"`
 		Lat       float64 `json:"lat"`
 		Lon       float64 `json:"lon"`
-		OwnerID   string  `json:"owner_id"`
 		FarmType  string  `json:"farm_type,omitempty"`
 		TotalSize string  `json:"total_size,omitempty"`
 	}
@@ -100,7 +99,6 @@ type UpdateFarmInput struct {
 		Lon       *float64 `json:"lon,omitempty"`
 		FarmType  *string  `json:"farm_type,omitempty"`
 		TotalSize *string  `json:"total_size,omitempty"`
-		OwnerID   string   `json:"owner_id,omitempty"`
 	}
 }
 
@@ -129,10 +127,6 @@ func (a *api) createFarmHandler(ctx context.Context, input *CreateFarmInput) (*C
 		return nil, err
 	}
 
-	if input.Body.OwnerID != "" && input.Body.OwnerID != userID {
-		return nil, huma.Error401Unauthorized("unauthorized: cannot create a farm for another owner")
-	}
-
 	farm := &domain.Farm{
 		Name:      input.Body.Name,
 		Lat:       input.Body.Lat,
@@ -143,7 +137,7 @@ func (a *api) createFarmHandler(ctx context.Context, input *CreateFarmInput) (*C
 	}
 
 	if err := a.farmRepo.CreateOrUpdate(ctx, farm); err != nil {
-		return nil, err
+		return nil, huma.Error500InternalServerError("failed to create farm", err)
 	}
 
 	return &CreateFarmOutput{
@@ -213,9 +207,6 @@ func (a *api) updateFarmHandler(ctx context.Context, input *UpdateFarmInput) (*U
 	}
 	if input.Body.TotalSize != nil {
 		farm.TotalSize = *input.Body.TotalSize
-	}
-	if input.Body.OwnerID != "" && input.Body.OwnerID != userID {
-		return nil, huma.Error401Unauthorized("unauthorized: cannot change owner")
 	}
 
 	if err = a.farmRepo.CreateOrUpdate(ctx, farm); err != nil {
