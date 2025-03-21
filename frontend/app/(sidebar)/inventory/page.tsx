@@ -6,15 +6,40 @@ import { Calendar, ChevronDown, Plus, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+} from "@/components/ui/pagination";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 
 import { fetchInventoryItems } from "@/api/inventory";
 import { AddInventoryItem } from "./add-inventory-item";
+import { EditInventoryItem } from "./edit-inventory-item";
+import { DeleteInventoryItem } from "./delete-inventory-item";
 
 export default function InventoryPage() {
   const [date, setDate] = useState<Date>();
@@ -33,12 +58,18 @@ export default function InventoryPage() {
   });
 
   if (isLoading) {
-    return <div className="flex min-h-screen bg-background items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex min-h-screen bg-background items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   if (isError || !inventoryItems) {
     return (
-      <div className="flex min-h-screen bg-background items-center justify-center">Error loading inventory data.</div>
+      <div className="flex min-h-screen bg-background items-center justify-center">
+        Error loading inventory data.
+      </div>
     );
   }
 
@@ -47,7 +78,9 @@ export default function InventoryPage() {
     inventoryType === "all"
       ? inventoryItems
       : inventoryItems.filter((item) =>
-          inventoryType === "plantation" ? item.type === "Plantation" : item.type === "Fertilizer"
+          inventoryType === "plantation"
+            ? item.type === "Plantation"
+            : item.type === "Fertilizer",
         );
 
   return (
@@ -62,7 +95,8 @@ export default function InventoryPage() {
               <Button
                 variant={inventoryType === "all" ? "default" : "outline"}
                 onClick={() => setInventoryType("all")}
-                className="w-24">
+                className="w-24"
+              >
                 All
               </Button>
               <Select value={inventoryType} onValueChange={setInventoryType}>
@@ -91,13 +125,22 @@ export default function InventoryPage() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <CalendarComponent mode="single" selected={date} onSelect={setDate} initialFocus />
+                  <CalendarComponent
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    initialFocus
+                  />
                 </PopoverContent>
               </Popover>
 
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input type="search" placeholder="Search Farms" className="pl-8" />
+                <Input
+                  type="search"
+                  placeholder="Search Farms"
+                  className="pl-8"
+                />
               </div>
 
               <AddInventoryItem />
@@ -116,12 +159,17 @@ export default function InventoryPage() {
                   <TableHead className="text-right">Quantity</TableHead>
                   <TableHead>Last Updated</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Edit</TableHead>
+                  <TableHead>Delete</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell
+                      colSpan={6}
+                      className="text-center py-8 text-muted-foreground"
+                    >
                       No inventory items found
                     </TableCell>
                   </TableRow>
@@ -136,7 +184,21 @@ export default function InventoryPage() {
                       </TableCell>
                       <TableCell>{item.lastUpdated}</TableCell>
                       <TableCell>
-                        <Badge variant={item.status === "Low Stock" ? "destructive" : "default"}>{item.status}</Badge>
+                        <Badge
+                          variant={
+                            item.status === "Low Stock"
+                              ? "destructive"
+                              : "default"
+                          }
+                        >
+                          {item.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <EditInventoryItem />
+                      </TableCell>
+                      <TableCell>
+                        <DeleteInventoryItem />
                       </TableCell>
                     </TableRow>
                   ))
