@@ -54,26 +54,38 @@ export default function FarmSetupPage() {
     },
   });
 
+  // export interface Farm {
+  //   CreatedAt: string;
+  //   FarmType: string;
+  //   Lat: number;
+  //   Lon: number;
+  //   Name: string;
+  //   OwnerID: string;
+  //   TotalSize: string;
+  //   UUID: string;
+  //   UpdatedAt: string;
+  // }
+
   const filteredAndSortedFarms = (farms || [])
     .filter(
       (farm) =>
-        (activeFilter === "all" || farm.type === activeFilter) &&
-        (farm.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          farm.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          farm.type.toLowerCase().includes(searchQuery.toLowerCase()))
+        (activeFilter === "all" || farm.FarmType === activeFilter) &&
+        (farm.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          // farm.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          farm.FarmType.toLowerCase().includes(searchQuery.toLowerCase()))
     )
     .sort((a, b) => {
       if (sortOrder === "newest") {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime();
       } else if (sortOrder === "oldest") {
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        return new Date(a.CreatedAt).getTime() - new Date(b.CreatedAt).getTime();
       } else {
-        return a.name.localeCompare(b.name);
+        return a.Name.localeCompare(b.Name);
       }
     });
 
   // Get distinct farm types.
-  const farmTypes = ["all", ...new Set((farms || []).map((farm) => farm.type))];
+  const farmTypes = ["all", ...new Set((farms || []).map((farm) => farm.FarmType))];
 
   const handleAddFarm = async (data: Partial<Farm>) => {
     await mutation.mutateAsync(data);
@@ -188,7 +200,7 @@ export default function FarmSetupPage() {
                 </p>
               ) : (
                 <p className="text-muted-foreground text-center max-w-md mb-6">
-                  You haven't added any farms yet. Get started by adding your first farm.
+                  You haven&apos;t added any farms yet. Get started by adding your first farm.
                 </p>
               )}
               <Button
@@ -226,13 +238,13 @@ export default function FarmSetupPage() {
                 </motion.div>
                 {filteredAndSortedFarms.map((farm, index) => (
                   <motion.div
-                    key={farm.id}
+                    key={farm.UUID}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.2, delay: index * 0.05 }}
                     className="col-span-1">
-                    <FarmCard variant="farm" farm={farm} onClick={() => router.push(`/farms/${farm.id}`)} />
+                    <FarmCard variant="farm" farm={farm} onClick={() => router.push(`/farms/${farm.UUID}`)} />
                   </motion.div>
                 ))}
               </AnimatePresence>

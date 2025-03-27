@@ -32,20 +32,32 @@ export interface CropAnalytics {
 }
 
 export interface Farm {
-  id: string;
-  name: string;
-  location: string;
-  type: string;
-  createdAt: Date;
-  area?: string;
-  crops: number;
-  weather?: {
-    temperature: number;
-    humidity: number;
-    rainfall: string;
-    sunlight: number;
-  };
+  CreatedAt: Date;
+  FarmType: string;
+  Lat: number;
+  Lon: number;
+  Name: string;
+  OwnerID: string;
+  TotalSize: string;
+  UUID: string;
+  UpdatedAt: Date;
 }
+
+// export interface Farm {
+//   id: string;
+//   name: string;
+//   location: string;
+//   type: string;
+//   createdAt: Date;
+//   area?: string;
+//   crops: number;
+//   weather?: {
+//     temperature: number;
+//     humidity: number;
+//     rainfall: string;
+//     sunlight: number;
+//   };
+// }
 
 export interface User {
   ID: number;
