@@ -1,5 +1,3 @@
-"use client";
-
 import { GoogleMap, LoadScript, DrawingManager } from "@react-google-maps/api";
 import { useState, useCallback } from "react";
 
@@ -10,17 +8,45 @@ const containerStyle = {
 
 const center = { lat: 13.7563, lng: 100.5018 }; // Example: Bangkok, Thailand
 
-const GoogleMapWithDrawing = () => {
+interface GoogleMapWithDrawingProps {
+  onAreaSelected: (data: { lat: number; lng: number }[]) => void;
+}
+
+const GoogleMapWithDrawing = ({
+  onAreaSelected,
+}: GoogleMapWithDrawingProps) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
-  // Handles drawing complete
-  const onDrawingComplete = useCallback((overlay: google.maps.drawing.OverlayCompleteEvent) => {
-    console.log("Drawing complete:", overlay);
-  }, []);
+  const onDrawingComplete = useCallback(
+    (overlay: google.maps.drawing.OverlayCompleteEvent) => {
+      const shape = overlay.overlay;
+
+      if (shape instanceof google.maps.Polyline) {
+        const path = shape.getPath();
+        const coordinates = path.getArray().map((latLng) => ({
+          lat: latLng.lat(),
+          lng: latLng.lng(),
+        }));
+        // console.log("Polyline coordinates:", coordinates);
+        onAreaSelected(coordinates);
+      } else {
+        console.log("Unknown shape detected:", shape);
+      }
+    },
+    [onAreaSelected]
+  );
 
   return (
-    <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!} libraries={["drawing"]}>
-      <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={10} onLoad={(map) => setMap(map)}>
+    <LoadScript
+      googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
+      libraries={["drawing"]}
+    >
+      <GoogleMap
+        mapContainerStyle={containerStyle}
+        center={center}
+        zoom={10}
+        onLoad={(map) => setMap(map)}
+      >
         {map && (
           <DrawingManager
             onOverlayComplete={onDrawingComplete}
@@ -29,9 +55,6 @@ const GoogleMapWithDrawing = () => {
               drawingControlOptions: {
                 position: google.maps.ControlPosition.TOP_CENTER,
                 drawingModes: [
-                  google.maps.drawing.OverlayType.POLYGON,
-                  google.maps.drawing.OverlayType.RECTANGLE,
-                  google.maps.drawing.OverlayType.CIRCLE,
                   google.maps.drawing.OverlayType.POLYLINE,
                 ],
               },

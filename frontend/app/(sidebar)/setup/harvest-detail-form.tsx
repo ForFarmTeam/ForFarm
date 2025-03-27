@@ -20,17 +20,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 type harvestSchema = z.infer<typeof harvestDetailsFormSchema>;
 
-export default function HarvestDetailsForm() {
+export default function HarvestDetailsForm({
+  onChange,
+}: {
+  onChange: (data: harvestSchema) => void;
+}) {
   const form = useForm<harvestSchema>({
     resolver: zodResolver(harvestDetailsFormSchema),
-    defaultValues: {},
+    defaultValues: {
+      daysToFlower: 0,
+      daysToMaturity: 0,
+      harvestWindow: 0,
+      estimatedLossRate: 0,
+      harvestUnits: "",
+      estimatedRevenue: 0,
+      expectedYieldPer100ft: 0,
+      expectedYieldPerAcre: 0,
+    },
   });
+  const onSubmit: (data: harvestSchema) => void = (data) => {
+    onChange(data);
+  };
   return (
     <Form {...form}>
-      <form className="grid grid-cols-3 gap-5">
+      <form
+        className="grid grid-cols-3 gap-5"
+        onSubmit={form.handleSubmit(onSubmit)}
+      >
         <FormField
           control={form.control}
           name="daysToFlower"
@@ -47,6 +67,13 @@ export default function HarvestDetailsForm() {
                       id="daysToFlower"
                       className="w-96"
                       {...field}
+                      onChange={(e) => {
+                        // convert to number
+                        const value = e.target.value
+                          ? parseInt(e.target.value, 10)
+                          : "";
+                        field.onChange(value);
+                      }}
                     />
                   </div>
                 </div>
@@ -71,6 +98,13 @@ export default function HarvestDetailsForm() {
                       id="daysToMaturity"
                       className="w-96"
                       {...field}
+                      onChange={(e) => {
+                        // convert to number
+                        const value = e.target.value
+                          ? parseInt(e.target.value, 10)
+                          : "";
+                        field.onChange(value);
+                      }}
                     />
                   </div>
                 </div>
@@ -95,6 +129,13 @@ export default function HarvestDetailsForm() {
                       id="harvestWindow"
                       className="w-96"
                       {...field}
+                      onChange={(e) => {
+                        // convert to number
+                        const value = e.target.value
+                          ? parseInt(e.target.value, 10)
+                          : "";
+                        field.onChange(value);
+                      }}
                     />
                   </div>
                 </div>
@@ -119,6 +160,13 @@ export default function HarvestDetailsForm() {
                       id="estimatedLossRate"
                       className="w-96"
                       {...field}
+                      onChange={(e) => {
+                        // convert to number
+                        const value = e.target.value
+                          ? parseInt(e.target.value, 10)
+                          : "";
+                        field.onChange(value);
+                      }}
                     />
                   </div>
                 </div>
@@ -168,6 +216,13 @@ export default function HarvestDetailsForm() {
                       id="estimatedRevenue"
                       className="w-96"
                       {...field}
+                      onChange={(e) => {
+                        // convert to number
+                        const value = e.target.value
+                          ? parseInt(e.target.value, 10)
+                          : "";
+                        field.onChange(value);
+                      }}
                     />
                   </div>
                 </div>
@@ -192,6 +247,13 @@ export default function HarvestDetailsForm() {
                       id="expectedYieldPer100ft"
                       className="w-96"
                       {...field}
+                      onChange={(e) => {
+                        // convert to number
+                        const value = e.target.value
+                          ? parseInt(e.target.value, 10)
+                          : "";
+                        field.onChange(value);
+                      }}
                     />
                   </div>
                 </div>
@@ -216,6 +278,13 @@ export default function HarvestDetailsForm() {
                       id="expectedYieldPerAcre"
                       className="w-96"
                       {...field}
+                      onChange={(e) => {
+                        // convert to number
+                        const value = e.target.value
+                          ? parseInt(e.target.value, 10)
+                          : "";
+                        field.onChange(value);
+                      }}
                     />
                   </div>
                 </div>
@@ -224,6 +293,14 @@ export default function HarvestDetailsForm() {
             </FormItem>
           )}
         />
+        <div className="col-span-3 flex justify-center">
+          <Button
+            type="submit"
+            className="bg-blue-500 hover:bg-blue-600 duration-100"
+          >
+            Save
+          </Button>
+        </div>
       </form>
     </Form>
   );

@@ -2,26 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -35,7 +18,7 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  Cell
+  Cell,
 } from "recharts";
 import {
   ArrowUpRight,
@@ -49,26 +32,14 @@ import {
   Leaf,
   BarChart3,
   LineChartIcon,
-  PieChart
+  PieChart,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Define types for market data
 
@@ -121,26 +92,10 @@ interface MarketOpportunityProps {
 
 // Mock data for market prices
 const generateMarketData = (): IMarketData[] => {
-  const crops = [
-    "Corn",
-    "Wheat",
-    "Soybeans",
-    "Rice",
-    "Potatoes",
-    "Tomatoes",
-    "Apples",
-    "Oranges"
-  ];
-  const markets = [
-    "National Market",
-    "Regional Hub",
-    "Local Market",
-    "Export Market",
-    "Wholesale Market"
-  ];
+  const crops = ["Corn", "Wheat", "Soybeans", "Rice", "Potatoes", "Tomatoes", "Apples", "Oranges"];
+  const markets = ["National Market", "Regional Hub", "Local Market", "Export Market", "Wholesale Market"];
 
-  const getRandomPrice = (base: number) =>
-    Number((base + Math.random() * 2).toFixed(2));
+  const getRandomPrice = (base: number) => Number((base + Math.random() * 2).toFixed(2));
   const getRandomDemand = () => Math.floor(Math.random() * 100);
   const getRandomTrend = (): ITrend =>
     Math.random() > 0.5
@@ -172,21 +127,18 @@ const generateMarketData = (): IMarketData[] => {
         market,
         price: getRandomPrice(basePrice),
         demand: getRandomDemand(),
-        trend: getRandomTrend()
+        trend: getRandomTrend(),
       })),
       averagePrice: getRandomPrice(basePrice - 0.5),
       recommendedPrice: getRandomPrice(basePrice + 0.2),
       demandScore: getRandomDemand(),
-      opportunity: Math.random() > 0.7
+      opportunity: Math.random() > 0.7,
     };
   });
 };
 
 // Generate historical price data for a specific crop
-const generateHistoricalData = (
-  crop: string,
-  days = 30
-): IHistoricalData[] => {
+const generateHistoricalData = (crop: string, days = 30): IHistoricalData[] => {
   const basePrice =
     crop === "Corn"
       ? 4
@@ -216,7 +168,7 @@ const generateHistoricalData = (
     data.push({
       date: date.toISOString().split("T")[0],
       price: Number(currentPrice.toFixed(2)),
-      volume: Math.floor(Math.random() * 1000) + 200
+      volume: Math.floor(Math.random() * 1000) + 200,
     });
   }
 
@@ -224,16 +176,8 @@ const generateHistoricalData = (
 };
 
 // Generate market comparison data
-const generateMarketComparisonData = (
-  crop: string
-): IMarketComparison[] => {
-  const markets = [
-    "National Market",
-    "Regional Hub",
-    "Local Market",
-    "Export Market",
-    "Wholesale Market"
-  ];
+const generateMarketComparisonData = (crop: string): IMarketComparison[] => {
+  const markets = ["National Market", "Regional Hub", "Local Market", "Export Market", "Wholesale Market"];
   const basePrice =
     crop === "Corn"
       ? 4
@@ -254,26 +198,18 @@ const generateMarketComparisonData = (
   return markets.map((market) => ({
     name: market,
     price: Number((basePrice + (Math.random() - 0.5) * 2).toFixed(2)),
-    demand: Math.floor(Math.random() * 100)
+    demand: Math.floor(Math.random() * 100),
   }));
 };
 
 // Custom tooltip for the price chart
-const CustomTooltip = ({
-  active,
-  payload,
-  label
-}: CustomTooltipProps) => {
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <Card className="bg-white dark:bg-gray-800 p-2 shadow-md border-none">
         <p className="text-sm font-medium">{label}</p>
         <p className="text-sm text-primary">Price: ${payload[0].value}</p>
-        {payload[1] && (
-          <p className="text-sm text-gray-500">
-            Volume: {payload[1].value} units
-          </p>
-        )}
+        {payload[1] && <p className="text-sm text-gray-500">Volume: {payload[1].value} units</p>}
       </Card>
     );
   }
@@ -285,9 +221,7 @@ const MarketOpportunity = ({ crop, data }: MarketOpportunityProps) => {
   const highestPrice = Math.max(...data.map((item) => item.price));
   const bestMarket = data.find((item) => item.price === highestPrice);
   const highestDemand = Math.max(...data.map((item) => item.demand));
-  const highDemandMarket = data.find(
-    (item) => item.demand === highestDemand
-  );
+  const highDemandMarket = data.find((item) => item.demand === highestDemand);
 
   return (
     <Card className="border-l-4 border-l-green-500">
@@ -296,28 +230,19 @@ const MarketOpportunity = ({ crop, data }: MarketOpportunityProps) => {
           <TrendingUp className="h-5 w-5 mr-2 text-green-500" />
           Sales Opportunity for {crop}
         </CardTitle>
-        <CardDescription>
-          Based on current market conditions
-        </CardDescription>
+        <CardDescription>Based on current market conditions</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div>
-            <p className="text-sm font-medium mb-1">
-              Best Price Opportunity
-            </p>
+            <p className="text-sm font-medium mb-1">Best Price Opportunity</p>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-lg font-bold text-green-600">
-                  ${bestMarket?.price}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {bestMarket?.name}
-                </p>
+                <p className="text-lg font-bold text-green-600">${bestMarket?.price}</p>
+                <p className="text-sm text-muted-foreground">{bestMarket?.name}</p>
               </div>
               <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-                {Math.round((bestMarket!.price / (highestPrice - 1)) * 100)}%
-                above average
+                {Math.round((bestMarket!.price / (highestPrice - 1)) * 100)}% above average
               </Badge>
             </div>
           </div>
@@ -325,22 +250,13 @@ const MarketOpportunity = ({ crop, data }: MarketOpportunityProps) => {
           <Separator />
 
           <div>
-            <p className="text-sm font-medium mb-1">
-              Highest Demand
-            </p>
+            <p className="text-sm font-medium mb-1">Highest Demand</p>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-lg font-bold">
-                  {highDemandMarket?.name}
-                </p>
+                <p className="text-lg font-bold">{highDemandMarket?.name}</p>
                 <div className="flex items-center">
-                  <Progress
-                    value={highDemandMarket?.demand}
-                    className="h-2 w-24 mr-2"
-                  />
-                  <span className="text-sm">
-                    {highDemandMarket?.demand}% demand
-                  </span>
+                  <Progress value={highDemandMarket?.demand} className="h-2 w-24 mr-2" />
+                  <span className="text-sm">{highDemandMarket?.demand}% demand</span>
                 </div>
               </div>
               <Button variant="outline" size="sm" className="gap-1">
@@ -351,12 +267,9 @@ const MarketOpportunity = ({ crop, data }: MarketOpportunityProps) => {
 
           <Alert className="bg-amber-50 border-amber-200">
             <AlertCircle className="h-4 w-4 text-amber-600" />
-            <AlertTitle className="text-amber-800">
-              Recommendation
-            </AlertTitle>
+            <AlertTitle className="text-amber-800">Recommendation</AlertTitle>
             <AlertDescription className="text-amber-700">
-              Consider selling your {crop} at {bestMarket?.name} within
-              the next 7 days to maximize profit.
+              Consider selling your {crop} at {bestMarket?.name} within the next 7 days to maximize profit.
             </AlertDescription>
           </Alert>
         </div>
@@ -374,17 +287,14 @@ export default function MarketplacePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [marketData, setMarketData] = useState<IMarketData[]>([]);
   const [historicalData, setHistoricalData] = useState<IHistoricalData[]>([]);
-  const [marketComparison, setMarketComparison] =
-    useState<IMarketComparison[]>([]);
+  const [marketComparison, setMarketComparison] = useState<IMarketComparison[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   useEffect(() => {
     setIsLoading(true);
     const timer = setTimeout(() => {
       setMarketData(generateMarketData());
-      setHistoricalData(
-        generateHistoricalData(selectedCrop, Number.parseInt(timeRange))
-      );
+      setHistoricalData(generateHistoricalData(selectedCrop, Number.parseInt(timeRange)));
       setMarketComparison(generateMarketComparisonData(selectedCrop));
       setLastUpdated(new Date());
       setIsLoading(false);
@@ -397,9 +307,7 @@ export default function MarketplacePage() {
     setIsLoading(true);
     setTimeout(() => {
       setMarketData(generateMarketData());
-      setHistoricalData(
-        generateHistoricalData(selectedCrop, Number.parseInt(timeRange))
-      );
+      setHistoricalData(generateHistoricalData(selectedCrop, Number.parseInt(timeRange)));
       setMarketComparison(generateMarketComparisonData(selectedCrop));
       setLastUpdated(new Date());
       setIsLoading(false);
@@ -424,33 +332,18 @@ export default function MarketplacePage() {
     <div className="container mx-auto py-6 px-4 md:px-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Marketplace Information
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Marketplace Information</h1>
           <p className="text-muted-foreground mt-1">
-            Make informed decisions with real-time market data and price
-            analytics
+            Make informed decisions with real-time market data and price analytics
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1"
-            onClick={handleRefresh}
-            disabled={isLoading}
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${
-                isLoading ? "animate-spin" : ""
-              }`}
-            />
+          <Button variant="outline" size="sm" className="gap-1" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             {isLoading ? "Updating..." : "Refresh Data"}
           </Button>
-          <div className="text-xs text-muted-foreground">
-            Last updated: {lastUpdated.toLocaleTimeString()}
-          </div>
+          <div className="text-xs text-muted-foreground">Last updated: {lastUpdated.toLocaleTimeString()}</div>
         </div>
       </div>
 
@@ -460,9 +353,7 @@ export default function MarketplacePage() {
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
               <div>
                 <CardTitle>Price Analytics</CardTitle>
-                <CardDescription>
-                  Track price trends and market movements
-                </CardDescription>
+                <CardDescription>Track price trends and market movements</CardDescription>
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
                 <Select value={selectedCrop} onValueChange={setSelectedCrop}>
@@ -500,9 +391,7 @@ export default function MarketplacePage() {
               <div className="w-full h-[300px] flex items-center justify-center">
                 <div className="text-center">
                   <RefreshCw className="h-8 w-8 animate-spin mx-auto text-primary/70" />
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Loading market data...
-                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">Loading market data...</p>
                 </div>
               </div>
             ) : (
@@ -528,21 +417,15 @@ export default function MarketplacePage() {
                           top: 5,
                           right: 30,
                           left: 20,
-                          bottom: 5
-                        }}
-                      >
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke="#e5e7eb"
-                        />
+                          bottom: 5,
+                        }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                         <XAxis
                           dataKey="date"
                           tick={{ fontSize: 12 }}
                           tickFormatter={(value) => {
                             const date = new Date(value);
-                            return `${date.getMonth() + 1}/${
-                              date.getDate()
-                            }`;
+                            return `${date.getMonth() + 1}/${date.getDate()}`;
                           }}
                         />
                         <YAxis
@@ -588,14 +471,9 @@ export default function MarketplacePage() {
                       <CardContent className="p-4">
                         <div className="flex justify-between items-center">
                           <div>
-                            <p className="text-sm font-medium text-muted-foreground">
-                              Current Price
-                            </p>
+                            <p className="text-sm font-medium text-muted-foreground">Current Price</p>
                             <p className="text-2xl font-bold text-green-700">
-                              $
-                              {historicalData[
-                                historicalData.length - 1
-                              ]?.price.toFixed(2)}
+                              ${historicalData[historicalData.length - 1]?.price.toFixed(2)}
                             </p>
                           </div>
                           <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -609,16 +487,11 @@ export default function MarketplacePage() {
                       <CardContent className="p-4">
                         <div className="flex justify-between items-center">
                           <div>
-                            <p className="text-sm font-medium text-muted-foreground">
-                              30-Day Average
-                            </p>
+                            <p className="text-sm font-medium text-muted-foreground">30-Day Average</p>
                             <p className="text-2xl font-bold">
                               $
                               {(
-                                historicalData.reduce(
-                                  (sum, item) => sum + item.price,
-                                  0
-                                ) / historicalData.length
+                                historicalData.reduce((sum, item) => sum + item.price, 0) / historicalData.length
                               ).toFixed(2)}
                             </p>
                           </div>
@@ -633,21 +506,12 @@ export default function MarketplacePage() {
                       <CardContent className="p-4">
                         <div className="flex justify-between items-center">
                           <div>
-                            <p className="text-sm font-medium text-muted-foreground">
-                              Recommended Price
-                            </p>
+                            <p className="text-sm font-medium text-muted-foreground">Recommended Price</p>
                             <p className="text-2xl font-bold text-amber-600">
-                              $
-                              {(
-                                historicalData[historicalData.length - 1]
-                                  ?.price * 1.05
-                              ).toFixed(2)}
+                              ${(historicalData[historicalData.length - 1]?.price * 1.05).toFixed(2)}
                             </p>
                           </div>
-                          <Badge
-                            variant="outline"
-                            className="bg-amber-50 text-amber-700 border-amber-200"
-                          >
+                          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                             +5% margin
                           </Badge>
                         </div>
@@ -665,36 +529,19 @@ export default function MarketplacePage() {
                           top: 5,
                           right: 30,
                           left: 20,
-                          bottom: 5
-                        }}
-                      >
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke="#e5e7eb"
-                        />
+                          bottom: 5,
+                        }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                         <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                        <YAxis
-                          tick={{ fontSize: 12 }}
-                          tickFormatter={(value) => `$${value}`}
-                        />
+                        <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `$${value}`} />
                         <Tooltip />
                         <Legend />
-                        <Bar
-                          dataKey="price"
-                          name="Price per unit"
-                          fill="#16a34a"
-                          radius={[4, 4, 0, 0]}
-                        >
+                        <Bar dataKey="price" name="Price per unit" fill="#16a34a" radius={[4, 4, 0, 0]}>
                           {marketComparison.map((entry, index) => (
                             <Cell
                               key={`cell-${index}`}
                               fill={
-                                entry.price ===
-                                Math.max(
-                                  ...marketComparison.map(
-                                    (item) => item.price
-                                  )
-                                )
+                                entry.price === Math.max(...marketComparison.map((item) => item.price))
                                   ? "#15803d"
                                   : "#16a34a"
                               }
@@ -708,8 +555,7 @@ export default function MarketplacePage() {
                   <div className="mt-4">
                     <Table>
                       <TableCaption>
-                        Market comparison for {selectedCrop} as of{" "}
-                        {new Date().toLocaleDateString()}
+                        Market comparison for {selectedCrop} as of {new Date().toLocaleDateString()}
                       </TableCaption>
                       <TableHeader>
                         <TableRow>
@@ -717,54 +563,30 @@ export default function MarketplacePage() {
                           <TableHead>Price</TableHead>
                           <TableHead>Demand</TableHead>
                           <TableHead>Price Difference</TableHead>
-                          <TableHead className="text-right">
-                            Action
-                          </TableHead>
+                          <TableHead className="text-right">Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {marketComparison.map((market) => {
                           const avgPrice =
-                            marketComparison.reduce(
-                              (sum, m) => sum + m.price,
-                              0
-                            ) / marketComparison.length;
-                          const priceDiff = (
-                            ((market.price - avgPrice) / avgPrice) *
-                            100
-                          ).toFixed(1);
+                            marketComparison.reduce((sum, m) => sum + m.price, 0) / marketComparison.length;
+                          const priceDiff = (((market.price - avgPrice) / avgPrice) * 100).toFixed(1);
                           const isPriceHigh = Number.parseFloat(priceDiff) > 0;
 
                           return (
                             <TableRow
                               key={market.name}
                               className="cursor-pointer hover:bg-muted/50"
-                              onClick={() =>
-                                setSelectedCrop(market.name)
-                              }
-                            >
-                              <TableCell className="font-medium">
-                                {market.name}
-                              </TableCell>
-                              <TableCell>
-                                ${market.price.toFixed(2)}
-                              </TableCell>
+                              onClick={() => setSelectedCrop(market.name)}>
+                              <TableCell className="font-medium">{market.name}</TableCell>
+                              <TableCell>${market.price.toFixed(2)}</TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-2">
-                                  <Progress
-                                    value={market.demand}
-                                    className="h-2 w-16"
-                                  />
+                                  <Progress value={market.demand} className="h-2 w-16" />
                                   <span>{market.demand}%</span>
                                 </div>
                               </TableCell>
-                              <TableCell
-                                className={
-                                  isPriceHigh
-                                    ? "text-green-600"
-                                    : "text-red-600"
-                                }
-                              >
+                              <TableCell className={isPriceHigh ? "text-green-600" : "text-red-600"}>
                                 <div className="flex items-center gap-1">
                                   {isPriceHigh ? (
                                     <ArrowUpRight className="h-4 w-4" />
@@ -775,11 +597,7 @@ export default function MarketplacePage() {
                                 </div>
                               </TableCell>
                               <TableCell className="text-right">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 gap-1"
-                                >
+                                <Button variant="ghost" size="sm" className="h-8 gap-1">
                                   Details <ChevronRight className="h-4 w-4" />
                                 </Button>
                               </TableCell>
@@ -795,12 +613,8 @@ export default function MarketplacePage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Card>
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">
-                          Demand Forecast
-                        </CardTitle>
-                        <CardDescription>
-                          Projected demand for {selectedCrop} over the next 30 days
-                        </CardDescription>
+                        <CardTitle className="text-lg">Demand Forecast</CardTitle>
+                        <CardDescription>Projected demand for {selectedCrop} over the next 30 days</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4">
@@ -808,9 +622,7 @@ export default function MarketplacePage() {
                             <div key={market.name} className="space-y-1">
                               <div className="flex justify-between text-sm">
                                 <span>{market.name}</span>
-                                <span className="font-medium">
-                                  {market.demand}%
-                                </span>
+                                <span className="font-medium">{market.demand}%</span>
                               </div>
                               <Progress value={market.demand} className="h-2" />
                             </div>
@@ -831,9 +643,7 @@ export default function MarketplacePage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Market Summary</CardTitle>
-              <CardDescription>
-                Today&apos;s market overview
-              </CardDescription>
+              <CardDescription>Today&apos;s market overview</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -846,10 +656,7 @@ export default function MarketplacePage() {
                 <ScrollArea className="h-[220px] pr-4">
                   <div className="space-y-4">
                     {marketData.slice(0, 5).map((crop) => (
-                      <div
-                        key={crop.id}
-                        className="flex items-center justify-between"
-                      >
+                      <div key={crop.id} className="flex items-center justify-between">
                         <div>
                           <p className="font-medium">{crop.name}</p>
                           <div className="flex items-center text-sm text-muted-foreground">
@@ -867,12 +674,7 @@ export default function MarketplacePage() {
                             )}
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8"
-                          onClick={() => setSelectedCrop(crop.name)}
-                        >
+                        <Button variant="ghost" size="sm" className="h-8" onClick={() => setSelectedCrop(crop.name)}>
                           View
                         </Button>
                       </div>
@@ -886,9 +688,7 @@ export default function MarketplacePage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Top Opportunities</CardTitle>
-              <CardDescription>
-                Best selling opportunities today
-              </CardDescription>
+              <CardDescription>Best selling opportunities today</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -904,40 +704,30 @@ export default function MarketplacePage() {
                     .slice(0, 3)
                     .map((crop) => {
                       const bestMarket = crop.marketPrices.reduce(
-                        (best, current) =>
-                          current.price > best.price ? current : best,
+                        (best, current) => (current.price > best.price ? current : best),
                         crop.marketPrices[0]
                       );
                       return (
-                        <div
-                          key={crop.id}
-                          className="border rounded-lg p-3 bg-green-50/50 dark:bg-green-950/10"
-                        >
+                        <div key={crop.id} className="border rounded-lg p-3 bg-green-50/50 dark:bg-green-950/10">
                           <div className="flex justify-between items-start">
                             <div>
                               <p className="font-medium">{crop.name}</p>
                               <p className="text-sm text-muted-foreground">
-                                {bestMarket.market} - $
-                                {bestMarket.price.toFixed(2)}
+                                {bestMarket.market} - ${bestMarket.price.toFixed(2)}
                               </p>
                             </div>
-                            <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-                              High Demand
-                            </Badge>
+                            <Badge className="bg-green-100 text-green-800 hover:bg-green-200">High Demand</Badge>
                           </div>
                           <div className="mt-2 flex justify-between items-center">
                             <div className="flex items-center gap-1">
                               <TrendingUp className="h-4 w-4 text-green-600" />
-                              <span className="text-sm text-green-600">
-                                Recommended
-                              </span>
+                              <span className="text-sm text-green-600">Recommended</span>
                             </div>
                             <Button
                               variant="outline"
                               size="sm"
                               className="h-7 text-xs"
-                              onClick={() => setSelectedCrop(crop.name)}
-                            >
+                              onClick={() => setSelectedCrop(crop.name)}>
                               View Details
                             </Button>
                           </div>
@@ -954,9 +744,7 @@ export default function MarketplacePage() {
       <Card>
         <CardHeader>
           <CardTitle>Market Price Table</CardTitle>
-          <CardDescription>
-            Comprehensive price data across all markets and crops
-          </CardDescription>
+          <CardDescription>Comprehensive price data across all markets and crops</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -973,9 +761,7 @@ export default function MarketplacePage() {
                   <TableRow>
                     <TableHead>Crop</TableHead>
                     {marketData[0]?.marketPrices.map((market) => (
-                      <TableHead key={market.market}>
-                        {market.market}
-                      </TableHead>
+                      <TableHead key={market.market}>{market.market}</TableHead>
                     ))}
                     <TableHead>Average</TableHead>
                     <TableHead>Recommended</TableHead>
@@ -986,27 +772,18 @@ export default function MarketplacePage() {
                     <TableRow
                       key={crop.id}
                       className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => setSelectedCrop(crop.name)}
-                    >
-                      <TableCell className="font-medium">
-                        {crop.name}
-                      </TableCell>
+                      onClick={() => setSelectedCrop(crop.name)}>
+                      <TableCell className="font-medium">{crop.name}</TableCell>
                       {crop.marketPrices.map((market) => (
                         <TableCell key={market.market}>
                           <div className="flex items-center gap-1">
                             <span>${market.price.toFixed(2)}</span>
-                            <span className={getTrendColor(market.trend)}>
-                              {getTrendIcon(market.trend)}
-                            </span>
+                            <span className={getTrendColor(market.trend)}>{getTrendIcon(market.trend)}</span>
                           </div>
                         </TableCell>
                       ))}
-                      <TableCell>
-                        ${crop.averagePrice.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="font-medium text-amber-600">
-                        ${crop.recommendedPrice.toFixed(2)}
-                      </TableCell>
+                      <TableCell>${crop.averagePrice.toFixed(2)}</TableCell>
+                      <TableCell className="font-medium text-amber-600">${crop.recommendedPrice.toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
