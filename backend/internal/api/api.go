@@ -22,8 +22,9 @@ import (
 )
 
 type api struct {
-	logger     *slog.Logger
-	httpClient *http.Client
+	logger         *slog.Logger
+	httpClient     *http.Client
+	eventPublisher domain.EventPublisher
 
 	userRepo  domain.UserRepository
 	cropRepo  domain.CroplandRepository
@@ -31,7 +32,7 @@ type api struct {
 	plantRepo domain.PlantRepository
 }
 
-func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
+func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, eventPublisher domain.EventPublisher) *api {
 
 	client := &http.Client{}
 
@@ -40,9 +41,12 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
 	farmRepository := repository.NewPostgresFarm(pool)
 	plantRepository := repository.NewPostgresPlant(pool)
 
+	farmRepository.SetEventPublisher(eventPublisher)
+
 	return &api{
-		logger:     logger,
-		httpClient: client,
+		logger:         logger,
+		httpClient:     client,
+		eventPublisher: eventPublisher,
 
 		userRepo:  userRepository,
 		cropRepo:  croplandRepository,
@@ -72,7 +76,7 @@ func (a *api) Routes() *chi.Mux {
 
 	router.Use(cors.Handler(cors.Options{
 		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
-		AllowedOrigins: []string{"https://*", "http://*"},
+		AllowedOrigins: []string{"https://*", "http://*", "http://localhost:3000"},
 		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},

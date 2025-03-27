@@ -33,4 +33,5 @@ type FarmRepository interface {
 	GetByOwnerID(context.Context, string) ([]Farm, error)
 	CreateOrUpdate(context.Context, *Farm) error
 	Delete(context.Context, string) error
+	SetEventPublisher(EventPublisher)
 }

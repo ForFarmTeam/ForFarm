@@ -16,6 +16,7 @@ var (
 	GOOGLE_CLIENT_SECRET string
 	GOOGLE_REDIRECT_URL  string
 	JWT_SECRET_KEY       string
+	RABBITMQ_URL         string
 )
 
 func Load() {
@@ -28,6 +29,7 @@ func Load() {
 	viper.SetDefault("GOOGLE_CLIENT_SECRET", "google_client_secret")
 	viper.SetDefault("JWT_SECRET_KEY", "jwt_secret_key")
 	viper.SetDefault("GOOGLE_REDIRECT_URL", "http://localhost:8000/auth/login/google")
+	viper.SetDefault("RABBITMQ_URL", "amqp://user:password@localhost:5672/")
 
 	viper.SetConfigFile(".env")
 	viper.AddConfigPath("../../.")
@@ -47,4 +49,5 @@ func Load() {
 	GOOGLE_CLIENT_SECRET = viper.GetString("GOOGLE_CLIENT_SECRET")
 	GOOGLE_REDIRECT_URL = viper.GetString("GOOGLE_REDIRECT_URL")
 	JWT_SECRET_KEY = viper.GetString("JWT_SECRET_KEY")
+	RABBITMQ_URL = viper.GetString("RABBITMQ_URL")
 }

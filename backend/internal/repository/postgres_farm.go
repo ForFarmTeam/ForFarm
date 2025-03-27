@@ -3,17 +3,23 @@ package repository
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/forfarm/backend/internal/domain"
 	"github.com/google/uuid"
 )
 
 type postgresFarmRepository struct {
-	conn Connection
+	conn           Connection
+	eventPublisher domain.EventPublisher
 }
 
 func NewPostgresFarm(conn Connection) domain.FarmRepository {
 	return &postgresFarmRepository{conn: conn}
+}
+
+func (p *postgresFarmRepository) SetEventPublisher(publisher domain.EventPublisher) {
+	p.eventPublisher = publisher
 }
 
 func (p *postgresFarmRepository) fetch(ctx context.Context, query string, args ...interface{}) ([]domain.Farm, error) {
@@ -77,7 +83,9 @@ func (p *postgresFarmRepository) GetByOwnerID(ctx context.Context, ownerID strin
 }
 
 func (p *postgresFarmRepository) CreateOrUpdate(ctx context.Context, f *domain.Farm) error {
-	if strings.TrimSpace(f.UUID) == "" {
+	isNew := strings.TrimSpace(f.UUID) == ""
+
+	if isNew {
 		f.UUID = uuid.New().String()
 	}
 
@@ -93,8 +101,46 @@ func (p *postgresFarmRepository) CreateOrUpdate(ctx context.Context, f *domain.F
 		    updated_at = NOW(),
 		    owner_id = EXCLUDED.owner_id
 		RETURNING uuid, created_at, updated_at`
-	return p.conn.QueryRow(ctx, query, f.UUID, f.Name, f.Lat, f.Lon, f.FarmType, f.TotalSize, f.OwnerID).
+	err := p.conn.QueryRow(ctx, query, f.UUID, f.Name, f.Lat, f.Lon, f.FarmType, f.TotalSize, f.OwnerID).
 		Scan(&f.UUID, &f.CreatedAt, &f.UpdatedAt)
+
+	if err != nil {
+		return err
+	}
+
+	if p.eventPublisher != nil {
+		eventType := "farm.updated"
+		if isNew {
+			eventType = "farm.created"
+		}
+
+		event := domain.Event{
+			ID:          uuid.New().String(),
+			Type:        eventType,
+			Source:      "farm-repository",
+			Timestamp:   time.Now(),
+			AggregateID: f.UUID,
+			Payload: map[string]interface{}{
+				"farm_id":    f.UUID,
+				"name":       f.Name,
+				"location":   map[string]float64{"lat": f.Lat, "lon": f.Lon},
+				"farm_type":  f.FarmType,
+				"total_size": f.TotalSize,
+				"owner_id":   f.OwnerID,
+				"created_at": f.CreatedAt,
+				"updated_at": f.UpdatedAt,
+			},
+		}
+
+		go func() {
+			bgCtx := context.Background()
+			if err := p.eventPublisher.Publish(bgCtx, event); err != nil {
+				println("Failed to publish event", err.Error())
+			}
+		}()
+	}
+
+	return nil
 }
 
 func (p *postgresFarmRepository) Delete(ctx context.Context, uuid string) error {
