@@ -1,5 +1,3 @@
-"use client";
-
 import { GoogleMap, LoadScript, DrawingManager } from "@react-google-maps/api";
 import { useState, useCallback } from "react";
 
@@ -10,17 +8,80 @@ const containerStyle = {
 
 const center = { lat: 13.7563, lng: 100.5018 }; // Example: Bangkok, Thailand
 
-const GoogleMapWithDrawing = () => {
+interface GoogleMapWithDrawingProps {
+  onAreaSelected: (data: { lat: number; lng: number }[]) => void;
+}
+
+const GoogleMapWithDrawing = ({
+  onAreaSelected,
+}: GoogleMapWithDrawingProps) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
-  // Handles drawing complete
-  const onDrawingComplete = useCallback((overlay: google.maps.drawing.OverlayCompleteEvent) => {
-    console.log("Drawing complete:", overlay);
-  }, []);
+  const onDrawingComplete = useCallback(
+    (overlay: google.maps.drawing.OverlayCompleteEvent) => {
+      const shape = overlay.overlay;
+
+      // check the shape of the drawing and extract lat/lng values
+      if (shape instanceof google.maps.Polygon) {
+        const path = shape.getPath();
+        const coordinates = path.getArray().map((latLng) => ({
+          lat: latLng.lat(),
+          lng: latLng.lng(),
+        }));
+        console.log("Polygon coordinates:", coordinates);
+        onAreaSelected(coordinates);
+      } else if (shape instanceof google.maps.Rectangle) {
+        const bounds = shape.getBounds();
+        if (bounds) {
+          const northEast = bounds.getNorthEast();
+          const southWest = bounds.getSouthWest();
+          const coordinates = [
+            { lat: northEast.lat(), lng: northEast.lng() },
+            { lat: southWest.lat(), lng: southWest.lng() },
+          ];
+          console.log("Rectangle coordinates:", coordinates);
+          onAreaSelected(coordinates);
+        }
+      } else if (shape instanceof google.maps.Circle) {
+        const center = shape.getCenter();
+        const radius = shape.getRadius();
+        if (center) {
+          const coordinates = [
+            {
+              lat: center.lat(),
+              lng: center.lng(),
+              radius: radius, // circle's radius in meters
+            },
+          ];
+          console.log("Circle center:", coordinates);
+          onAreaSelected(coordinates);
+        }
+      } else if (shape instanceof google.maps.Polyline) {
+        const path = shape.getPath();
+        const coordinates = path.getArray().map((latLng) => ({
+          lat: latLng.lat(),
+          lng: latLng.lng(),
+        }));
+        console.log("Polyline coordinates:", coordinates);
+        onAreaSelected(coordinates);
+      } else {
+        console.log("Unknown shape detected:", shape);
+      }
+    },
+    [onAreaSelected]
+  );
 
   return (
-    <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!} libraries={["drawing"]}>
-      <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={10} onLoad={(map) => setMap(map)}>
+    <LoadScript
+      googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
+      libraries={["drawing"]}
+    >
+      <GoogleMap
+        mapContainerStyle={containerStyle}
+        center={center}
+        zoom={10}
+        onLoad={(map) => setMap(map)}
+      >
         {map && (
           <DrawingManager
             onOverlayComplete={onDrawingComplete}
