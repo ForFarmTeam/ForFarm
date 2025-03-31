@@ -35,6 +35,7 @@ import {
   PaginationItem,
 } from "@/components/ui/pagination";
 import { Search } from "lucide-react";
+import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
 import { Badge } from "@/components/ui/badge";
 import { fetchInventoryItems } from "@/api/inventory";
@@ -102,11 +103,17 @@ export default function InventoryPage() {
           | undefined;
       }) => <Badge>{info.getValue()}</Badge>,
     },
-    { accessorKey: "edit", header: "Edit", cell: () => <EditInventoryItem /> },
+    {
+      accessorKey: "edit",
+      header: "Edit",
+      cell: () => <EditInventoryItem />,
+      enableSorting: false,
+    },
     {
       accessorKey: "delete",
       header: "Delete",
       cell: () => <DeleteInventoryItem />,
+      enableSorting: false,
     },
   ];
 
@@ -158,11 +165,26 @@ export default function InventoryPage() {
                       <TableHead
                         key={header.id}
                         onClick={header.column.getToggleSortingHandler()}
+                        className="cursor-pointer "
                       >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        <div className="flex items-center">
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                          {header.column.getCanSort() &&
+                            !header.column.columnDef.enableSorting && (
+                              <span className="ml-2">
+                                {header.column.getIsSorted() === "desc" ? (
+                                  <FaSortDown />
+                                ) : header.column.getIsSorted() === "asc" ? (
+                                  <FaSortUp />
+                                ) : (
+                                  <FaSort />
+                                )}
+                              </span>
+                            )}
+                        </div>
                       </TableHead>
                     ))}
                   </TableRow>
