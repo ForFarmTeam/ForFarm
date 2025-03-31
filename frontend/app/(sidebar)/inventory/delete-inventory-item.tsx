@@ -52,7 +52,11 @@ export function DeleteInventoryItem() {
   };
 
   return (
-    <Button type="submit" onClick={handleDelete}>
+    <Button
+      type="submit"
+      className="bg-red-500 hover:bg-red-800 text-white"
+      onClick={handleDelete}
+    >
       Delete Item
     </Button>
   );

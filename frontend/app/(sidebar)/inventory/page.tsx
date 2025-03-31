@@ -61,10 +61,6 @@ export default function InventoryPage() {
   });
   // console.table(inventoryItems);
   const [searchTerm, setSearchTerm] = useState("");
-  const handleSearch = () => {
-    // update search state when user clicks or presses enter
-    setSearchTerm(searchTerm);
-  };
   const filteredItems = useMemo(() => {
     return inventoryItems.filter((item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase())
