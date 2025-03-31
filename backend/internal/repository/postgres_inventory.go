@@ -29,6 +29,7 @@ func (p *postgresInventoryRepository) fetch(ctx context.Context, query string, a
 		var i domain.InventoryItem
 		if err := rows.Scan(
 			&i.ID,
+			&i.UserID,
 			&i.Name,
 			&i.Category,
 			&i.Type,
@@ -46,13 +47,13 @@ func (p *postgresInventoryRepository) fetch(ctx context.Context, query string, a
 	return items, nil
 }
 
-func (p *postgresInventoryRepository) GetByID(ctx context.Context, id string) (domain.InventoryItem, error) {
+func (p *postgresInventoryRepository) GetByID(ctx context.Context, id, userID string) (domain.InventoryItem, error) {
 	query := `
-		SELECT id, name, category, type, quantity, unit, date_added, status, created_at, updated_at
+		SELECT id, user_id, name, category, type, quantity, unit, date_added, status, created_at, updated_at
 		FROM inventory_items
-		WHERE id = $1`
+		WHERE id = $1 AND user_id = $2`
 
-	items, err := p.fetch(ctx, query, id)
+	items, err := p.fetch(ctx, query, id, userID)
 	if err != nil {
 		return domain.InventoryItem{}, err
 	}
@@ -62,15 +63,20 @@ func (p *postgresInventoryRepository) GetByID(ctx context.Context, id string) (d
 	return items[0], nil
 }
 
-func (p *postgresInventoryRepository) GetWithFilter(ctx context.Context, filter domain.InventoryFilter, sort domain.InventorySort) ([]domain.InventoryItem, error) {
+func (p *postgresInventoryRepository) GetByUserID(
+	ctx context.Context,
+	userID string,
+	filter domain.InventoryFilter,
+	sort domain.InventorySort,
+) ([]domain.InventoryItem, error) {
 	var query strings.Builder
-	args := []interface{}{}
-	argPos := 1
+	args := []interface{}{userID}
+	argPos := 2
 
 	query.WriteString(`
-		SELECT id, name, category, type, quantity, unit, date_added, status, created_at, updated_at
+		SELECT id, user_id, name, category, type, quantity, unit, date_added, status, created_at, updated_at
 		FROM inventory_items
-		WHERE 1=1`)
+		WHERE user_id = $1`)
 
 	if filter.Category != "" {
 		query.WriteString(fmt.Sprintf(" AND category = $%d", argPos))
@@ -135,6 +141,14 @@ func (p *postgresInventoryRepository) GetWithFilter(ctx context.Context, filter 
 	return p.fetch(ctx, query.String(), args...)
 }
 
+func (p *postgresInventoryRepository) GetAll(ctx context.Context) ([]domain.InventoryItem, error) {
+	query := `
+		SELECT id, user_id, name, category, type, quantity, unit, date_added, status, created_at, updated_at
+		FROM inventory_items
+		ORDER BY created_at DESC`
+	return p.fetch(ctx, query)
+}
+
 func (p *postgresInventoryRepository) CreateOrUpdate(ctx context.Context, item *domain.InventoryItem) error {
 	now := time.Now()
 	item.UpdatedAt = now
@@ -143,12 +157,13 @@ func (p *postgresInventoryRepository) CreateOrUpdate(ctx context.Context, item *
 		item.CreatedAt = now
 		query := `  
 			INSERT INTO inventory_items 
-			(id, name, category, type, quantity, unit, date_added, status, created_at, updated_at)  
-			VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9)
+			(id, user_id, name, category, type, quantity, unit, date_added, status, created_at, updated_at)  
+			VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 			RETURNING id`
 		return p.conn.QueryRow(
 			ctx,
 			query,
+			item.UserID,
 			item.Name,
 			item.Category,
 			item.Type,
@@ -171,7 +186,7 @@ func (p *postgresInventoryRepository) CreateOrUpdate(ctx context.Context, item *
 			date_added = $6,
 			status = $7,
 			updated_at = $8
-		WHERE id = $9
+		WHERE id = $9 AND user_id = $10
 		RETURNING id`
 
 	return p.conn.QueryRow(
@@ -186,11 +201,12 @@ func (p *postgresInventoryRepository) CreateOrUpdate(ctx context.Context, item *
 		item.Status,
 		item.UpdatedAt,
 		item.ID,
+		item.UserID,
 	).Scan(&item.ID)
 }
 
-func (p *postgresInventoryRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM inventory_items WHERE id = $1`
-	_, err := p.conn.Exec(ctx, query, id)
+func (p *postgresInventoryRepository) Delete(ctx context.Context, id, userID string) error {
+	query := `DELETE FROM inventory_items WHERE id = $1 AND user_id = $2`
+	_, err := p.conn.Exec(ctx, query, id, userID)
 	return err
 }
