@@ -59,6 +59,7 @@ export default function InventoryPage() {
     queryFn: fetchInventoryItems,
     staleTime: 60 * 1000,
   });
+  // console.table(inventoryItems);
   const [searchTerm, setSearchTerm] = useState("");
   const handleSearch = () => {
     // update search state when user clicks or presses enter
@@ -79,29 +80,23 @@ export default function InventoryPage() {
     {
       accessorKey: "status",
       header: "Status",
-      cell: (info: {
-        getValue: () =>
-          | string
-          | number
-          | bigint
-          | boolean
-          | ReactElement<unknown, string | JSXElementConstructor<any>>
-          | Iterable<ReactNode>
-          | ReactPortal
-          | Promise<
-              | string
-              | number
-              | bigint
-              | boolean
-              | ReactPortal
-              | ReactElement<unknown, string | JSXElementConstructor<any>>
-              | Iterable<ReactNode>
-              | null
-              | undefined
-            >
-          | null
-          | undefined;
-      }) => <Badge>{info.getValue()}</Badge>,
+      cell: (info: { getValue: () => string }) => {
+        const status = info.getValue();
+
+        let statusClass = ""; // default status class
+
+        if (status === "Low Stock") {
+          statusClass = "bg-yellow-300"; // yellow for low stock
+        } else if (status === "Out of Stock") {
+          statusClass = "bg-red-500 text-white"; // red for out of stock
+        }
+
+        return (
+          <Badge className={`py-1 px-2 rounded-md ${statusClass}`}>
+            {status}
+          </Badge>
+        );
+      },
     },
     {
       accessorKey: "edit",
