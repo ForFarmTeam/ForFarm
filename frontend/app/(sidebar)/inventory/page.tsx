@@ -1,11 +1,12 @@
 "use client";
 
 import {
+  useState,
   JSXElementConstructor,
   ReactElement,
   ReactNode,
   ReactPortal,
-  useState,
+  useMemo,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -33,17 +34,15 @@ import {
   PaginationContent,
   PaginationItem,
 } from "@/components/ui/pagination";
+import { Search } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-
 import { fetchInventoryItems } from "@/api/inventory";
 import { AddInventoryItem } from "./add-inventory-item";
 import { EditInventoryItem } from "./edit-inventory-item";
 import { DeleteInventoryItem } from "./delete-inventory-item";
 
 export default function InventoryPage() {
-  const [date, setDate] = useState<Date>();
-  const [inventoryType, setInventoryType] = useState("all");
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -59,13 +58,16 @@ export default function InventoryPage() {
     queryFn: fetchInventoryItems,
     staleTime: 60 * 1000,
   });
-
-  const filteredItems =
-    inventoryType === "all"
-      ? inventoryItems
-      : inventoryItems.filter(
-          (item) => item.type.toLowerCase() === inventoryType
-        );
+  const [searchTerm, setSearchTerm] = useState("");
+  const handleSearch = () => {
+    // update search state when user clicks or presses enter
+    setSearchTerm(searchTerm);
+  };
+  const filteredItems = useMemo(() => {
+    return inventoryItems.filter((item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [inventoryItems, searchTerm]);
 
   const columns = [
     { accessorKey: "name", header: "Name" },
@@ -138,10 +140,13 @@ export default function InventoryPage() {
         <main className="flex-1 p-6">
           <h1 className="text-2xl font-bold tracking-tight mb-6">Inventory</h1>
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <Button onClick={() => setInventoryType("all")} className="w-24">
-              All
-            </Button>
-            <Input type="search" placeholder="Search the name" />
+            <Search className="mt-1" />
+            <Input
+              type="search"
+              placeholder="Search by name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
             <AddInventoryItem />
           </div>
           <div className="border rounded-md">
@@ -180,7 +185,7 @@ export default function InventoryPage() {
             </Table>
           </div>
           <Pagination className="mt-5">
-            <PaginationContent>
+            <PaginationContent className="space-x-5">
               <PaginationItem>
                 <Button
                   className="flex w-24"
@@ -190,6 +195,7 @@ export default function InventoryPage() {
                       pageIndex: Math.max(0, prev.pageIndex - 1),
                     }))
                   }
+                  disabled={pagination.pageIndex === 0}
                 >
                   Previous
                 </Button>
@@ -203,6 +209,10 @@ export default function InventoryPage() {
                       ...prev,
                       pageIndex: prev.pageIndex + 1,
                     }))
+                  }
+                  disabled={
+                    pagination.pageIndex >=
+                    Math.ceil(filteredItems.length / pagination.pageSize) - 1
                   }
                 >
                   Next
