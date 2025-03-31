@@ -79,7 +79,10 @@ export async function createInventoryItem(
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 500));
   try {
-    const response = await axiosInstance.post<InventoryItem>("/api/inventory", item);
+    const response = await axiosInstance.post<InventoryItem>(
+      "/api/inventory",
+      item
+    );
     return response.data;
   } catch (error) {
     // Simulate successful creation if API endpoint is not available
