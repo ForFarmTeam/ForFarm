@@ -17,6 +17,7 @@ const (
 
 type InventoryItem struct {
 	ID        string
+	UserID    string
 	Name      string
 	Category  string
 	Type      string
@@ -29,6 +30,7 @@ type InventoryItem struct {
 }
 
 type InventoryFilter struct {
+	UserID      string
 	Category    string
 	Type        string
 	Status      InventoryStatus
@@ -44,6 +46,7 @@ type InventorySort struct {
 
 func (i *InventoryItem) Validate() error {
 	return validation.ValidateStruct(i,
+		validation.Field(&i.UserID, validation.Required),
 		validation.Field(&i.Name, validation.Required),
 		validation.Field(&i.Category, validation.Required),
 		validation.Field(&i.Type, validation.Required),
@@ -54,8 +57,9 @@ func (i *InventoryItem) Validate() error {
 }
 
 type InventoryRepository interface {
-	GetByID(ctx context.Context, id string) (InventoryItem, error)
-	GetWithFilter(ctx context.Context, filter InventoryFilter, sort InventorySort) ([]InventoryItem, error)
+	GetByID(ctx context.Context, id, userID string) (InventoryItem, error)
+	GetByUserID(ctx context.Context, userID string, filter InventoryFilter, sort InventorySort) ([]InventoryItem, error)
+	GetAll(ctx context.Context) ([]InventoryItem, error)
 	CreateOrUpdate(ctx context.Context, item *InventoryItem) error
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id, userID string) error
 }
