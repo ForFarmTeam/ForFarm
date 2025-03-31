@@ -75,7 +75,7 @@ export function FarmCard({ variant, farm, onClick }: FarmCardProps) {
                 </div>
                 <div className="bg-muted/30 dark:bg-muted/20 rounded-md p-2 text-center">
                   <p className="text-xs text-muted-foreground">Crops</p>
-                  <p className="font-medium">{farm.crops}</p>
+                  <p className="font-medium">{farm.Crops ? farm.Crops.length : 0}</p>
                 </div>
               </div>
             </div>

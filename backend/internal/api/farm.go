@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -58,11 +59,11 @@ func (a *api) registerFarmRoutes(_ chi.Router, api huma.API) {
 type CreateFarmInput struct {
 	Header string `header:"Authorization" required:"true" example:"Bearer token"`
 	Body   struct {
-		Name      string  `json:"name"`
-		Lat       float64 `json:"lat"`
-		Lon       float64 `json:"lon"`
-		FarmType  string  `json:"farm_type,omitempty"`
-		TotalSize string  `json:"total_size,omitempty"`
+		Name      string  `json:"Name"`
+		Lat       float64 `json:"Lat"`
+		Lon       float64 `json:"Lon"`
+		FarmType  string  `json:"FarmType,omitempty"`
+		TotalSize string  `json:"TotalSize,omitempty"`
 	}
 }
 
@@ -135,7 +136,7 @@ func (a *api) createFarmHandler(ctx context.Context, input *CreateFarmInput) (*C
 		TotalSize: input.Body.TotalSize,
 		OwnerID:   userID,
 	}
-
+	fmt.Println(farm)
 	if err := a.farmRepo.CreateOrUpdate(ctx, farm); err != nil {
 		return nil, huma.Error500InternalServerError("failed to create farm", err)
 	}

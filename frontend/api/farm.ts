@@ -22,27 +22,7 @@ export async function createFarm(data: Partial<Farm>): Promise<Farm> {
  * Calls GET /farms/{farm_id} and returns fallback data on failure.
  */
 export async function getFarm(farmId: string): Promise<Farm> {
-  // Simulate a network delay.
-  await new Promise((resolve) => setTimeout(resolve, 600));
-
-  try {
-    const response = await axiosInstance.get<Farm>(`/farms/${farmId}`);
-    return response.data;
-  } catch (error: any) {
-    console.error(`Error fetching farm ${farmId}. Returning fallback data:`, error);
-    const dummyDate = new Date().toISOString();
-    return {
-      CreatedAt: dummyDate,
-      FarmType: "conventional",
-      Lat: 15.87,
-      Lon: 100.9925,
-      Name: "Fallback Farm",
-      OwnerID: "fallback_owner",
-      TotalSize: "40 hectares",
-      UUID: farmId,
-      UpdatedAt: dummyDate,
-    };
-  }
+  return axiosInstance.get<Farm>(`/farms/${farmId}`).then((res) => res.data);
 }
 
 /**
