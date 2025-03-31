@@ -51,6 +51,49 @@ func (p *postgresFarmRepository) fetch(ctx context.Context, query string, args .
 	return farms, nil
 }
 
+func (p *postgresFarmRepository) fetchCroplandsByFarmIDs(ctx context.Context, farmIDs []string) (map[string][]domain.Cropland, error) {
+	if len(farmIDs) == 0 {
+		return make(map[string][]domain.Cropland), nil
+	}
+
+	query := `
+		SELECT uuid, name, status, priority, land_size, growth_stage, plant_id, farm_id, created_at, updated_at  
+		FROM croplands  
+		WHERE farm_id = ANY($1)`
+
+	rows, err := p.conn.Query(ctx, query, farmIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	croplandsByFarmID := make(map[string][]domain.Cropland)
+	for rows.Next() {
+		var c domain.Cropland
+		if err := rows.Scan(
+			&c.UUID,
+			&c.Name,
+			&c.Status,
+			&c.Priority,
+			&c.LandSize,
+			&c.GrowthStage,
+			&c.PlantID,
+			&c.FarmID,
+			&c.CreatedAt,
+			&c.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+
+		croplandsByFarmID[c.FarmID] = append(croplandsByFarmID[c.FarmID], c)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return croplandsByFarmID, nil
+}
+
 func (p *postgresFarmRepository) GetByID(ctx context.Context, farmId string) (*domain.Farm, error) {
 	query := `
 		SELECT uuid, name, lat, lon, farm_type, total_size, created_at, updated_at, owner_id
@@ -77,9 +120,37 @@ func (p *postgresFarmRepository) GetByID(ctx context.Context, farmId string) (*d
 func (p *postgresFarmRepository) GetByOwnerID(ctx context.Context, ownerID string) ([]domain.Farm, error) {
 	query := `
 		SELECT uuid, name, lat, lon, farm_type, total_size, created_at, updated_at, owner_id
-		FROM farms
+		FROM farms  
 		WHERE owner_id = $1`
-	return p.fetch(ctx, query, ownerID)
+
+	farms, err := p.fetch(ctx, query, ownerID)
+	if err != nil {
+		return nil, err
+	}
+	if len(farms) == 0 {
+		return []domain.Farm{}, nil
+	}
+
+	farmIDs := make([]string, 0, len(farms))
+	farmMap := make(map[string]*domain.Farm, len(farms))
+	for i := range farms {
+		farmIDs = append(farmIDs, farms[i].UUID)
+		farmMap[farms[i].UUID] = &farms[i]
+	}
+
+	croplandsByFarmID, err := p.fetchCroplandsByFarmIDs(ctx, farmIDs)
+	if err != nil {
+		println("Warning: Failed to fetch croplands for farms:", err.Error())
+		return farms, nil
+	}
+
+	for farmID, croplands := range croplandsByFarmID {
+		if farm, ok := farmMap[farmID]; ok {
+			farm.Crops = croplands
+		}
+	}
+
+	return farms, nil
 }
 
 func (p *postgresFarmRepository) CreateOrUpdate(ctx context.Context, f *domain.Farm) error {

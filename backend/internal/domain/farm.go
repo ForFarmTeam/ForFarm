@@ -17,6 +17,7 @@ type Farm struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	OwnerID   string
+	Crops     []Cropland
 }
 
 func (f *Farm) Validate() error {
