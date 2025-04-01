@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useState,
-  JSXElementConstructor,
-  ReactElement,
-  ReactNode,
-  ReactPortal,
-  useMemo,
-} from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   useReactTable,
@@ -38,9 +31,12 @@ import { Search } from "lucide-react";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
 import { Badge } from "@/components/ui/badge";
-import { fetchInventoryItems } from "@/api/inventory";
+import { fetchInventoryItems, fetchInventoryStatus } from "@/api/inventory";
 import { AddInventoryItem } from "./add-inventory-item";
-import { EditInventoryItem } from "./edit-inventory-item";
+import {
+  EditInventoryItem,
+  EditInventoryItemProps,
+} from "./edit-inventory-item";
 import { DeleteInventoryItem } from "./delete-inventory-item";
 
 export default function InventoryPage() {
@@ -52,26 +48,42 @@ export default function InventoryPage() {
 
   const {
     data: inventoryItems = [],
-    isLoading,
-    isError,
+    isLoading: isItemLoading,
+    isError: isItemError,
   } = useQuery({
     queryKey: ["inventoryItems"],
     queryFn: fetchInventoryItems,
     staleTime: 60 * 1000,
   });
+
+  const {
+    data: inventoryStatus = [],
+    isLoading: isLoadingStatus,
+    isError: isErrorStatus,
+  } = useQuery({
+    queryKey: ["inventoryStatus"],
+    queryFn: fetchInventoryStatus,
+    staleTime: 60 * 1000,
+  });
   // console.table(inventoryItems);
+  console.table(inventoryStatus);
   const [searchTerm, setSearchTerm] = useState("");
   const filteredItems = useMemo(() => {
-    return inventoryItems.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    return inventoryItems
+      .map((item) => ({
+        ...item,
+        id: String(item.id), // Convert `id` to string here
+      }))
+      .filter((item) =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
   }, [inventoryItems, searchTerm]);
 
   const columns = [
     { accessorKey: "name", header: "Name" },
     { accessorKey: "category", header: "Category" },
-    { accessorKey: "type", header: "Type" },
     { accessorKey: "quantity", header: "Quantity" },
+    { accessorKey: "unit", header: "Unit" },
     { accessorKey: "lastUpdated", header: "Last Updated" },
     {
       accessorKey: "status",
@@ -83,7 +95,7 @@ export default function InventoryPage() {
 
         if (status === "Low Stock") {
           statusClass = "bg-yellow-300"; // yellow for low stock
-        } else if (status === "Out of Stock") {
+        } else if (status === "Out Of Stock") {
           statusClass = "bg-red-500 text-white"; // red for out of stock
         }
 
@@ -97,7 +109,9 @@ export default function InventoryPage() {
     {
       accessorKey: "edit",
       header: "Edit",
-      cell: () => <EditInventoryItem />,
+      cell: ({ row }: { row: { original: EditInventoryItemProps } }) => (
+        <EditInventoryItem {...row.original} />
+      ),
       enableSorting: false,
     },
     {
@@ -119,13 +133,13 @@ export default function InventoryPage() {
     onPaginationChange: setPagination,
   });
 
-  if (isLoading)
+  if (isItemLoading || isLoadingStatus)
     return (
       <div className="flex min-h-screen items-center justify-center">
         Loading...
       </div>
     );
-  if (isError)
+  if (isItemError || isErrorStatus)
     return (
       <div className="flex min-h-screen items-center justify-center">
         Error loading inventory data.
@@ -183,7 +197,7 @@ export default function InventoryPage() {
               </TableHeader>
               <TableBody>
                 {table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
+                  <TableRow key={row.id} className="even:bg-gray-800">
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(

@@ -26,11 +26,12 @@ type api struct {
 	httpClient     *http.Client
 	eventPublisher domain.EventPublisher
 
-	userRepo  domain.UserRepository
-	cropRepo  domain.CroplandRepository
-	farmRepo  domain.FarmRepository
-	plantRepo domain.PlantRepository
+	userRepo      domain.UserRepository
+	cropRepo      domain.CroplandRepository
+	farmRepo      domain.FarmRepository
+	plantRepo     domain.PlantRepository
 	inventoryRepo domain.InventoryRepository
+	harvestRepo   domain.HarvestRepository
 }
 
 func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, eventPublisher domain.EventPublisher) *api {
@@ -42,6 +43,7 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, eventP
 	farmRepository := repository.NewPostgresFarm(pool)
 	plantRepository := repository.NewPostgresPlant(pool)
 	inventoryRepository := repository.NewPostgresInventory(pool)
+	harvestRepository := repository.NewPostgresHarvest(pool)
 
 	farmRepository.SetEventPublisher(eventPublisher)
 
@@ -50,11 +52,12 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, eventP
 		httpClient:     client,
 		eventPublisher: eventPublisher,
 
-		userRepo:  userRepository,
-		cropRepo:  croplandRepository,
-		farmRepo:  farmRepository,
-		plantRepo: plantRepository,
+		userRepo:      userRepository,
+		cropRepo:      croplandRepository,
+		farmRepo:      farmRepository,
+		plantRepo:     plantRepository,
 		inventoryRepo: inventoryRepository,
+		harvestRepo:   harvestRepository,
 	}
 }
 
