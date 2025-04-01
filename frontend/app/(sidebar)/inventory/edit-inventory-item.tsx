@@ -194,7 +194,7 @@ export function EditInventoryItem({
         </div>
         <DialogFooter>
           <Button type="submit" onClick={handleEdit}>
-            Edit Item
+            Save
           </Button>
         </DialogFooter>
       </DialogContent>
