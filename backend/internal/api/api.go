@@ -22,11 +22,12 @@ type api struct {
 	logger     *slog.Logger
 	httpClient *http.Client
 
-	userRepo  domain.UserRepository
-	cropRepo  domain.CroplandRepository
-	farmRepo  domain.FarmRepository
-	plantRepo domain.PlantRepository
+	userRepo      domain.UserRepository
+	cropRepo      domain.CroplandRepository
+	farmRepo      domain.FarmRepository
+	plantRepo     domain.PlantRepository
 	inventoryRepo domain.InventoryRepository
+	harvestRepo   domain.HarvestRepository
 }
 
 func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
@@ -38,16 +39,18 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
 	farmRepository := repository.NewPostgresFarm(pool)
 	plantRepository := repository.NewPostgresPlant(pool)
 	inventoryRepository := repository.NewPostgresInventory(pool)
+	harvestRepository := repository.NewPostgresHarvest(pool)
 
 	return &api{
 		logger:     logger,
 		httpClient: client,
 
-		userRepo:  userRepository,
-		cropRepo:  croplandRepository,
-		farmRepo:  farmRepository,
-		plantRepo: plantRepository,
+		userRepo:      userRepository,
+		cropRepo:      croplandRepository,
+		farmRepo:      farmRepository,
+		plantRepo:     plantRepository,
 		inventoryRepo: inventoryRepository,
+		harvestRepo:   harvestRepository,
 	}
 }
 
