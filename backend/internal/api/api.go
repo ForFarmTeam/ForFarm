@@ -30,6 +30,7 @@ type api struct {
 	cropRepo  domain.CroplandRepository
 	farmRepo  domain.FarmRepository
 	plantRepo domain.PlantRepository
+	inventoryRepo domain.InventoryRepository
 }
 
 func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, eventPublisher domain.EventPublisher) *api {
@@ -40,6 +41,7 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, eventP
 	croplandRepository := repository.NewPostgresCropland(pool)
 	farmRepository := repository.NewPostgresFarm(pool)
 	plantRepository := repository.NewPostgresPlant(pool)
+	inventoryRepository := repository.NewPostgresInventory(pool)
 
 	farmRepository.SetEventPublisher(eventPublisher)
 
@@ -52,6 +54,7 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, eventP
 		cropRepo:  croplandRepository,
 		farmRepo:  farmRepository,
 		plantRepo: plantRepository,
+		inventoryRepo: inventoryRepository,
 	}
 }
 
@@ -100,6 +103,7 @@ func (a *api) Routes() *chi.Mux {
 		a.registerHelloRoutes(r, api)
 		a.registerFarmRoutes(r, api)
 		a.registerUserRoutes(r, api)
+		a.registerInventoryRoutes(r, api)
 	})
 
 	return router
