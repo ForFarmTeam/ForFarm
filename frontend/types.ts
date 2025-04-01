@@ -69,6 +69,10 @@ export type InventoryItem = {
   lastUpdated: string;
   status: string;
 };
+export type InventoryItemStatus = {
+  id: number;
+  name: string;
+};
 
 export type CreateInventoryItemInput = Omit<InventoryItem, "id" | "lastUpdated" | "status">;
 

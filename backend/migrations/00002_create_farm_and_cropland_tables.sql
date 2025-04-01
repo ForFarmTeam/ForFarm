@@ -12,7 +12,7 @@ CREATE TABLE soil_conditions (
 CREATE TABLE harvest_units (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL UNIQUE
-);
+);  
 
 CREATE TABLE plants (
     uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
