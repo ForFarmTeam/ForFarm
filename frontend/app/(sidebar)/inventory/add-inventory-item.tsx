@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -60,12 +60,21 @@ export function AddInventoryItem({
   const [itemUnit, setItemUnit] = useState("");
   const [itemStatus, setItemStatus] = useState("");
 
-  const queryClient = useQueryClient();
+  // const {
+  //   data: inventoryItems = [],
+  //   isLoading: isItemLoading,
+  //   isError: isItemError,
+  // } = useQuery({
+  //   queryKey: ["inventoryItems"],
+  //   queryFn: fetchInventoryItems,
+  //   staleTime: 60 * 1000,
+  // });
 
   const mutation = useMutation({
     mutationFn: (item: CreateInventoryItemInput) => createInventoryItem(item),
     onSuccess: () => {
       // Invalidate queries to refresh inventory data.
+      const queryClient = useQueryClient();
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
       // Reset form fields and close dialog.
       setItemName("");
@@ -80,12 +89,6 @@ export function AddInventoryItem({
   const handleSave = () => {
     // Basic validation (you can extend this as needed)
     if (!itemName || !itemCategory || !itemUnit) return;
-    mutation.mutate({
-      name: itemName,
-      category: itemCategory,
-      quantity: itemQuantity,
-      unit: itemUnit,
-    });
   };
 
   return (

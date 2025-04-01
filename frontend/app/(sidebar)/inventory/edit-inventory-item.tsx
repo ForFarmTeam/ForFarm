@@ -38,9 +38,9 @@ import {
 export interface EditInventoryItemProps {
   id: string;
   name: string;
-  category: string;
-  status: string;
-  unit: string;
+  categoryId: string;
+  statusId: string;
+  unitId: string;
   quantity: number;
   fetchedInventoryStatus: InventoryItemStatus[];
   fetchedInventoryCategory: InventoryItemCategory[];
@@ -50,9 +50,9 @@ export interface EditInventoryItemProps {
 export function EditInventoryItem({
   id,
   name,
-  category,
-  status,
-  unit,
+  categoryId,
+  statusId,
+  unitId,
   quantity,
   fetchedInventoryStatus,
   fetchedInventoryCategory,
@@ -60,10 +60,22 @@ export function EditInventoryItem({
 }: EditInventoryItemProps) {
   const [open, setOpen] = useState(false);
   const [itemName, setItemName] = useState(name);
-  const [itemCategory, setItemCategory] = useState(category);
+  const [itemCategory, setItemCategory] = useState(
+    fetchedInventoryCategory.find(
+      (categoryItem) => categoryItem.id.toString() === categoryId
+    )?.name
+  );
   const [itemQuantity, setItemQuantity] = useState(quantity);
-  const [itemUnit, setItemUnit] = useState(unit);
-  const [itemStatus, setItemStatus] = useState(status);
+  const [itemUnit, setItemUnit] = useState(
+    fetchedHarvestUnits.find(
+      (harvestItem) => harvestItem.id.toString() === unitId
+    )?.name
+  );
+  const [itemStatus, setItemStatus] = useState(
+    fetchedInventoryStatus.find(
+      (statusItem) => statusItem.id.toString() === statusId
+    )?.name
+  );
 
   // const queryClient = useQueryClient();
 

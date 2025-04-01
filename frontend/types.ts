@@ -60,13 +60,13 @@ export interface User {
 }
 
 export type InventoryItem = {
-  id: number;
+  id: string;
   name: string;
-  category: string;
+  categoryId: string;
   quantity: number;
-  unit: string;
+  unitId: string;
   lastUpdated: string;
-  status: string;
+  statusId: string;
 };
 export type InventoryItemStatus = {
   id: number;

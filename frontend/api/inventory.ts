@@ -45,49 +45,49 @@ export async function fetchInventoryItems(): Promise<InventoryItem[]> {
     // Fallback dummy data
     return [
       {
-        id: 1,
+        id: "1",
         name: "Tomato Seeds",
-        category: "1",
+        categoryId: "1",
         quantity: 500,
-        unit: "1",
+        unitId: "1",
         lastUpdated: "2023-03-01",
-        status: "1",
+        statusId: "1",
       },
       {
-        id: 2,
+        id: "2",
         name: "NPK Fertilizer",
-        category: "3",
+        categoryId: "3",
         quantity: 200,
-        unit: "2",
+        unitId: "2",
         lastUpdated: "2023-03-05",
-        status: "2",
+        statusId: "2",
       },
       {
-        id: 3,
+        id: "3",
         name: "Corn Seeds",
-        category: "1",
+        categoryId: "1",
         quantity: 300,
-        unit: "1",
+        unitId: "1",
         lastUpdated: "2023-03-10",
-        status: "3",
+        statusId: "3",
       },
       {
-        id: 4,
+        id: "4",
         name: "Organic Compost",
-        category: "3",
+        categoryId: "3",
         quantity: 150,
-        unit: "2",
+        unitId: "2",
         lastUpdated: "2023-03-15",
-        status: "1",
+        statusId: "1",
       },
       {
-        id: 5,
+        id: "5",
         name: "Wheat Seeds",
-        category: "1",
+        categoryId: "1",
         quantity: 250,
-        unit: "2",
+        unitId: "2",
         lastUpdated: "2023-03-20",
-        status: "2",
+        statusId: "2",
       },
     ];
   }
@@ -111,15 +111,7 @@ export async function createInventoryItem(
     );
     return response.data;
   } catch (error) {
-    // Simulate successful creation if API endpoint is not available
-    return {
-      id: Math.floor(Math.random() * 1000),
-      name: item.name,
-      category: item.category,
-      quantity: item.quantity,
-      unit: item.unit,
-      lastUpdated: new Date().toISOString(),
-      status: "In Stock",
-    };
+    console.error("Error while creating Inventory Item!" + error);
+    throw new Error("Failed to create inventory item: " + error);
   }
 }
