@@ -83,6 +83,7 @@ func (a *api) Routes() *chi.Mux {
 		a.registerCropRoutes(r, api)
 		a.registerPlantRoutes(r, api)
 		a.registerOauthRoutes(r, api)
+		a.registerInventoryRoutes(r, api)
 	})
 
 	router.Group(func(r chi.Router) {
@@ -90,7 +91,6 @@ func (a *api) Routes() *chi.Mux {
 		a.registerHelloRoutes(r, api)
 		a.registerFarmRoutes(r, api)
 		a.registerUserRoutes(r, api)
-		a.registerInventoryRoutes(r, api)
 	})
 
 	return router
