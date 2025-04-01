@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { InventoryItemStatus, InventoryItemCategory } from "@/types";
 // import { updateInventoryItem } from "@/api/inventory";
 // import type { UpdateInventoryItemInput } from "@/types";
 
@@ -41,9 +42,10 @@ export interface EditInventoryItemProps {
   name: string;
   category: string;
   status: string;
-  type: string;
   unit: string;
   quantity: number;
+  fetchedInventoryStatus: InventoryItemStatus[];
+  fetchedInventoryCategory: InventoryItemCategory[];
 }
 
 export function EditInventoryItem({
@@ -51,13 +53,13 @@ export function EditInventoryItem({
   name,
   category,
   status,
-  type,
   unit,
   quantity,
+  fetchedInventoryStatus,
+  fetchedInventoryCategory,
 }: EditInventoryItemProps) {
   const [open, setOpen] = useState(false);
   const [itemName, setItemName] = useState(name);
-  const [itemType, setItemType] = useState(type);
   const [itemCategory, setItemCategory] = useState(category);
   const [itemQuantity, setItemQuantity] = useState(quantity);
   const [itemUnit, setItemUnit] = useState(unit);
@@ -119,17 +121,20 @@ export function EditInventoryItem({
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="type" className="text-right">
-              Type
+              Category
             </Label>
-            <Select value={itemType.toLowerCase()} onValueChange={setItemType}>
+            <Select value={itemCategory} onValueChange={setItemCategory}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectLabel>Type</SelectLabel>
-                  <SelectItem value="plantation">Plantation</SelectItem>
-                  <SelectItem value="fertilizer">Fertilizer</SelectItem>
+                  <SelectLabel>Category</SelectLabel>
+                  {fetchedInventoryCategory.map((categoryItem, _) => (
+                    <SelectItem key={categoryItem.id} value={categoryItem.name}>
+                      {categoryItem.name}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -138,34 +143,21 @@ export function EditInventoryItem({
             <Label htmlFor="type" className="text-right">
               Status
             </Label>
-            <Select
-              value={itemStatus.toLowerCase()}
-              onValueChange={setItemStatus}
-            >
+            <Select value={itemStatus} onValueChange={setItemStatus}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Status</SelectLabel>
-                  <SelectItem value="in stock">In Stock</SelectItem>
-                  <SelectItem value="low stock">Low Stock</SelectItem>
-                  <SelectItem value="out of stock">Out Of Stock</SelectItem>
+                  {fetchedInventoryStatus.map((statusItem, _) => (
+                    <SelectItem key={statusItem.id} value={statusItem.name}>
+                      {statusItem.name}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="category" className="text-right">
-              Category
-            </Label>
-            <Input
-              id="category"
-              className="col-span-3"
-              placeholder="e.g., Seeds, Organic"
-              value={itemCategory}
-              onChange={(e) => setItemCategory(e.target.value)}
-            />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="quantity" className="text-right">

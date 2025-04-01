@@ -3,19 +3,33 @@ import type {
   InventoryItem,
   CreateInventoryItemInput,
   InventoryItemStatus,
+  InventoryItemCategory,
 } from "@/types";
 
 /**
  * Simulates an API call to fetch inventory items.
  * Waits for a simulated delay and then attempts an axios GET request.
  * If the request fails, returns fallback dummy data.
- * 
- * 
+ *
+ *
  */
 export async function fetchInventoryStatus(): Promise<InventoryItemStatus[]> {
   try {
     const response = await axiosInstance.get<InventoryItemStatus[]>(
       "/inventory/status"
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching inventory status:", error);
+    return [];
+  }
+}
+export async function fetchInventoryCategory(): Promise<
+  InventoryItemCategory[]
+> {
+  try {
+    const response = await axiosInstance.get<InventoryItemCategory[]>(
+      "/inventory/category"
     );
     return response.data;
   } catch (error) {
@@ -34,52 +48,47 @@ export async function fetchInventoryItems(): Promise<InventoryItem[]> {
       {
         id: 1,
         name: "Tomato Seeds",
-        category: "Seeds",
-        type: "Plantation",
+        category: "1",
         quantity: 500,
         unit: "packets",
         lastUpdated: "2023-03-01",
-        status: "In Stock",
+        status: "1",
       },
       {
         id: 2,
         name: "NPK Fertilizer",
-        category: "Fertilizer",
-        type: "Fertilizer",
+        category: "3",
         quantity: 200,
         unit: "kg",
         lastUpdated: "2023-03-05",
-        status: "Low Stock",
+        status: "2",
       },
       {
         id: 3,
         name: "Corn Seeds",
-        category: "Seeds",
-        type: "Plantation",
+        category: "1",
         quantity: 300,
         unit: "packets",
         lastUpdated: "2023-03-10",
-        status: "In Stock",
+        status: "3",
       },
       {
         id: 4,
         name: "Organic Compost",
-        category: "Fertilizer",
-        type: "Fertilizer",
+        category: "3",
         quantity: 150,
         unit: "kg",
         lastUpdated: "2023-03-15",
-        status: "Out Of Stock",
+        status: "1",
       },
       {
         id: 5,
         name: "Wheat Seeds",
-        category: "Seeds",
-        type: "Plantation",
+        category: "1",
         quantity: 250,
         unit: "packets",
         lastUpdated: "2023-03-20",
-        status: "In Stock",
+        status: "2",
       },
     ];
   }
@@ -108,7 +117,6 @@ export async function createInventoryItem(
       id: Math.floor(Math.random() * 1000),
       name: item.name,
       category: item.category,
-      type: item.type,
       quantity: item.quantity,
       unit: item.unit,
       lastUpdated: new Date().toISOString(),

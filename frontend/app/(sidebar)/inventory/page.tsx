@@ -31,7 +31,11 @@ import { Search } from "lucide-react";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
 import { Badge } from "@/components/ui/badge";
-import { fetchInventoryItems, fetchInventoryStatus } from "@/api/inventory";
+import {
+  fetchInventoryItems,
+  fetchInventoryStatus,
+  fetchInventoryCategory,
+} from "@/api/inventory";
 import { AddInventoryItem } from "./add-inventory-item";
 import {
   EditInventoryItem,
@@ -65,14 +69,33 @@ export default function InventoryPage() {
     queryFn: fetchInventoryStatus,
     staleTime: 60 * 1000,
   });
+  const {
+    data: inventoryCategory = [],
+    isLoading: isLoadingCategory,
+    isError: isErrorCategory,
+  } = useQuery({
+    queryKey: ["inventoryCategory"],
+    queryFn: fetchInventoryCategory,
+    staleTime: 60 * 1000,
+  });
   // console.table(inventoryItems);
-  console.table(inventoryStatus);
+  // console.table(inventoryStatus);
   const [searchTerm, setSearchTerm] = useState("");
   const filteredItems = useMemo(() => {
     return inventoryItems
       .map((item) => ({
         ...item,
-        id: String(item.id), // Convert `id` to string here
+        status:
+          inventoryStatus.find(
+            (statusItem) => statusItem.id.toString() === item.status
+          )?.name || "",
+        category:
+          inventoryCategory.find(
+            (categoryItem) => categoryItem.id.toString() === item.category
+          )?.name || "",
+        fetchedInventoryStatus: inventoryStatus,
+        fetchedInventoryCategory: inventoryCategory,
+        id: String(item.id),
       }))
       .filter((item) =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -110,7 +133,11 @@ export default function InventoryPage() {
       accessorKey: "edit",
       header: "Edit",
       cell: ({ row }: { row: { original: EditInventoryItemProps } }) => (
-        <EditInventoryItem {...row.original} />
+        <EditInventoryItem
+          {...row.original}
+          fetchedInventoryStatus={inventoryStatus}
+          fetchedInventoryCategory={inventoryCategory}
+        />
       ),
       enableSorting: false,
     },
@@ -133,13 +160,13 @@ export default function InventoryPage() {
     onPaginationChange: setPagination,
   });
 
-  if (isItemLoading || isLoadingStatus)
+  if (isItemLoading || isLoadingStatus || isLoadingCategory)
     return (
       <div className="flex min-h-screen items-center justify-center">
         Loading...
       </div>
     );
-  if (isItemError || isErrorStatus)
+  if (isItemError || isErrorStatus || isErrorCategory)
     return (
       <div className="flex min-h-screen items-center justify-center">
         Error loading inventory data.

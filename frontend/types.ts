@@ -63,7 +63,6 @@ export type InventoryItem = {
   id: number;
   name: string;
   category: string;
-  type: string;
   quantity: number;
   unit: string;
   lastUpdated: string;
@@ -74,7 +73,15 @@ export type InventoryItemStatus = {
   name: string;
 };
 
-export type CreateInventoryItemInput = Omit<InventoryItem, "id" | "lastUpdated" | "status">;
+export type InventoryItemCategory = {
+  id: number;
+  name: string;
+};
+
+export type CreateInventoryItemInput = Omit<
+  InventoryItem,
+  "id" | "lastUpdated" | "status"
+>;
 
 export interface Blog {
   id: number;
