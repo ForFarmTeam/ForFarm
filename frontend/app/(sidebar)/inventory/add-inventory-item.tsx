@@ -18,7 +18,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -30,16 +34,31 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { createInventoryItem } from "@/api/inventory";
-import type { CreateInventoryItemInput } from "@/types";
+import type {
+  CreateInventoryItemInput,
+  InventoryItemStatus,
+  InventoryItemCategory,
+  HarvestUnits,
+} from "@/types";
 
-export function AddInventoryItem() {
+interface AddInventoryItemProps {
+  inventoryCategory: InventoryItemCategory[];
+  inventoryStatus: InventoryItemStatus[];
+  harvestUnits: HarvestUnits[];
+}
+
+export function AddInventoryItem({
+  inventoryCategory,
+  inventoryStatus,
+  harvestUnits,
+}: AddInventoryItemProps) {
   const [date, setDate] = useState<Date | undefined>();
   const [open, setOpen] = useState(false);
   const [itemName, setItemName] = useState("");
-  const [itemType, setItemType] = useState("");
   const [itemCategory, setItemCategory] = useState("");
   const [itemQuantity, setItemQuantity] = useState(0);
   const [itemUnit, setItemUnit] = useState("");
+  const [itemStatus, setItemStatus] = useState("");
 
   const queryClient = useQueryClient();
 
@@ -50,7 +69,6 @@ export function AddInventoryItem() {
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
       // Reset form fields and close dialog.
       setItemName("");
-      setItemType("");
       setItemCategory("");
       setItemQuantity(0);
       setItemUnit("");
@@ -61,10 +79,9 @@ export function AddInventoryItem() {
 
   const handleSave = () => {
     // Basic validation (you can extend this as needed)
-    if (!itemName || !itemType || !itemCategory || !itemUnit) return;
+    if (!itemName || !itemCategory || !itemUnit) return;
     mutation.mutate({
       name: itemName,
-      type: itemType,
       category: itemCategory,
       quantity: itemQuantity,
       unit: itemUnit,
@@ -79,43 +96,61 @@ export function AddInventoryItem() {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add Inventory Item</DialogTitle>
-          <DialogDescription>Add a new plantation or fertilizer item to your inventory.</DialogDescription>
+          <DialogDescription>
+            Add a new plantation or fertilizer item to your inventory.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
               Name
             </Label>
-            <Input id="name" className="col-span-3" value={itemName} onChange={(e) => setItemName(e.target.value)} />
+            <Input
+              id="name"
+              className="col-span-3"
+              value={itemName}
+              onChange={(e) => setItemName(e.target.value)}
+            />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="type" className="text-right">
-              Type
+              Category
             </Label>
-            <Select value={itemType} onValueChange={setItemType}>
+            <Select value={itemCategory} onValueChange={setItemCategory}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectLabel>Type</SelectLabel>
-                  <SelectItem value="plantation">Plantation</SelectItem>
-                  <SelectItem value="fertilizer">Fertilizer</SelectItem>
+                  <SelectLabel>Category</SelectLabel>
+                  {inventoryCategory.map((categoryItem, _) => (
+                    <SelectItem key={categoryItem.id} value={categoryItem.name}>
+                      {categoryItem.name}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="category" className="text-right">
-              Category
+            <Label htmlFor="type" className="text-right">
+              Status
             </Label>
-            <Input
-              id="category"
-              className="col-span-3"
-              placeholder="e.g., Seeds, Organic"
-              value={itemCategory}
-              onChange={(e) => setItemCategory(e.target.value)}
-            />
+            <Select value={itemStatus} onValueChange={setItemStatus}>
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Status</SelectLabel>
+                  {inventoryStatus.map((statusItem, _) => (
+                    <SelectItem key={statusItem.id} value={statusItem.name}>
+                      {statusItem.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="quantity" className="text-right">
@@ -130,16 +165,24 @@ export function AddInventoryItem() {
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="unit" className="text-right">
+            <Label htmlFor="type" className="text-right">
               Unit
             </Label>
-            <Input
-              id="unit"
-              className="col-span-3"
-              placeholder="e.g., kg, packets"
-              value={itemUnit}
-              onChange={(e) => setItemUnit(e.target.value)}
-            />
+            <Select value={itemUnit} onValueChange={setItemUnit}>
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Unit</SelectLabel>
+                  {harvestUnits.map((unit, _) => (
+                    <SelectItem key={unit.id} value={unit.name}>
+                      {unit.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="date" className="text-right">
@@ -149,13 +192,22 @@ export function AddInventoryItem() {
               <PopoverTrigger asChild>
                 <Button
                   variant={"outline"}
-                  className={cn("col-span-3 justify-start text-left font-normal", !date && "text-muted-foreground")}>
+                  className={cn(
+                    "col-span-3 justify-start text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {date ? format(date, "PPP") : "Pick a date"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  initialFocus
+                />
               </PopoverContent>
             </Popover>
           </div>

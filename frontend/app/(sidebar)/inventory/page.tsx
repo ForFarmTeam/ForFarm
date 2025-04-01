@@ -221,7 +221,11 @@ export default function InventoryPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <AddInventoryItem />
+            <AddInventoryItem
+              inventoryCategory={inventoryCategory}
+              inventoryStatus={inventoryStatus}
+              harvestUnits={harvestUnits}
+            />
           </div>
           <div className="border rounded-md">
             <Table>
