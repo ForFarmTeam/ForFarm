@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useMemo,
-} from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   useReactTable,
@@ -38,7 +35,7 @@ import { fetchInventoryItems } from "@/api/inventory";
 import { AddInventoryItem } from "./add-inventory-item";
 import {
   EditInventoryItem,
-  EditInventoryItemProps
+  EditInventoryItemProps,
 } from "./edit-inventory-item";
 import { DeleteInventoryItem } from "./delete-inventory-item";
 
@@ -61,9 +58,14 @@ export default function InventoryPage() {
   // console.table(inventoryItems);
   const [searchTerm, setSearchTerm] = useState("");
   const filteredItems = useMemo(() => {
-    return inventoryItems.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    return inventoryItems
+      .map((item) => ({
+        ...item,
+        id: String(item.id), // Convert `id` to string here
+      }))
+      .filter((item) =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
   }, [inventoryItems, searchTerm]);
 
   const columns = [
@@ -111,7 +113,7 @@ export default function InventoryPage() {
   ];
 
   const table = useReactTable({
-    data: filteredItems.map((item) => ({ ...item, id: item.id.toString() })),
+    data: filteredItems,
     columns,
     state: { sorting, pagination },
     getCoreRowModel: getCoreRowModel(),
