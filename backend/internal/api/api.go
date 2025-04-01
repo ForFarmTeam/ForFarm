@@ -22,10 +22,11 @@ type api struct {
 	logger     *slog.Logger
 	httpClient *http.Client
 
-	userRepo  domain.UserRepository
-	cropRepo  domain.CroplandRepository
-	farmRepo  domain.FarmRepository
-	plantRepo domain.PlantRepository
+	userRepo         domain.UserRepository
+	cropRepo         domain.CroplandRepository
+	farmRepo         domain.FarmRepository
+	plantRepo        domain.PlantRepository
+	knowledgeHubRepo domain.KnowledgeHubRepository
 }
 
 func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
@@ -36,15 +37,17 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
 	croplandRepository := repository.NewPostgresCropland(pool)
 	farmRepository := repository.NewPostgresFarm(pool)
 	plantRepository := repository.NewPostgresPlant(pool)
+	knowledgeHubRepository := repository.NewPostgresKnowledgeHub(pool)
 
 	return &api{
 		logger:     logger,
 		httpClient: client,
 
-		userRepo:  userRepository,
-		cropRepo:  croplandRepository,
-		farmRepo:  farmRepository,
-		plantRepo: plantRepository,
+		userRepo:         userRepository,
+		cropRepo:         croplandRepository,
+		farmRepo:         farmRepository,
+		plantRepo:        plantRepository,
+		knowledgeHubRepo: knowledgeHubRepository,
 	}
 }
 
@@ -77,6 +80,7 @@ func (a *api) Routes() *chi.Mux {
 		a.registerCropRoutes(r, api)
 		a.registerPlantRoutes(r, api)
 		a.registerOauthRoutes(r, api)
+		a.registerKnowledgeHubRoutes(r, api)
 	})
 
 	router.Group(func(r chi.Router) {
