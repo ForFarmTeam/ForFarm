@@ -51,7 +51,7 @@ export async function fetchInventoryItems(): Promise<InventoryItem[]> {
         quantity: 150,
         unit: "kg",
         lastUpdated: "2023-03-15",
-        status: "In Stock",
+        status: "Out Of Stock",
       },
       {
         id: 5,

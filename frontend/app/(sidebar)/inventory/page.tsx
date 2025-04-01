@@ -83,7 +83,7 @@ export default function InventoryPage() {
 
         if (status === "Low Stock") {
           statusClass = "bg-yellow-300"; // yellow for low stock
-        } else if (status === "Out of Stock") {
+        } else if (status === "Out Of Stock") {
           statusClass = "bg-red-500 text-white"; // red for out of stock
         }
 
