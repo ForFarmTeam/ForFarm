@@ -31,7 +31,7 @@ import { Search } from "lucide-react";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
 import { Badge } from "@/components/ui/badge";
-import { fetchInventoryItems } from "@/api/inventory";
+import { fetchInventoryItems, fetchInventoryStatus } from "@/api/inventory";
 import { AddInventoryItem } from "./add-inventory-item";
 import {
   EditInventoryItem,
@@ -48,14 +48,25 @@ export default function InventoryPage() {
 
   const {
     data: inventoryItems = [],
-    isLoading,
-    isError,
+    isLoading: isItemLoading,
+    isError: isItemError,
   } = useQuery({
     queryKey: ["inventoryItems"],
     queryFn: fetchInventoryItems,
     staleTime: 60 * 1000,
   });
+
+  const {
+    data: inventoryStatus = [],
+    isLoading: isLoadingStatus,
+    isError: isErrorStatus,
+  } = useQuery({
+    queryKey: ["inventoryStatus"],
+    queryFn: fetchInventoryStatus,
+    staleTime: 60 * 1000,
+  });
   // console.table(inventoryItems);
+  console.table(inventoryStatus);
   const [searchTerm, setSearchTerm] = useState("");
   const filteredItems = useMemo(() => {
     return inventoryItems
@@ -122,13 +133,13 @@ export default function InventoryPage() {
     onPaginationChange: setPagination,
   });
 
-  if (isLoading)
+  if (isItemLoading || isLoadingStatus)
     return (
       <div className="flex min-h-screen items-center justify-center">
         Loading...
       </div>
     );
-  if (isError)
+  if (isItemError || isErrorStatus)
     return (
       <div className="flex min-h-screen items-center justify-center">
         Error loading inventory data.
