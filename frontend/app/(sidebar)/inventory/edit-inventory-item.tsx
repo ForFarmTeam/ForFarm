@@ -19,11 +19,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
   Select,
   SelectContent,
   SelectGroup,
@@ -32,8 +27,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { InventoryItemStatus, InventoryItemCategory } from "@/types";
+import {
+  InventoryItemStatus,
+  InventoryItemCategory,
+  HarvestUnits,
+} from "@/types";
 // import { updateInventoryItem } from "@/api/inventory";
 // import type { UpdateInventoryItemInput } from "@/types";
 
@@ -46,6 +44,7 @@ export interface EditInventoryItemProps {
   quantity: number;
   fetchedInventoryStatus: InventoryItemStatus[];
   fetchedInventoryCategory: InventoryItemCategory[];
+  fetchedHarvestUnits: HarvestUnits[];
 }
 
 export function EditInventoryItem({
@@ -57,6 +56,7 @@ export function EditInventoryItem({
   quantity,
   fetchedInventoryStatus,
   fetchedInventoryCategory,
+  fetchedHarvestUnits,
 }: EditInventoryItemProps) {
   const [open, setOpen] = useState(false);
   const [itemName, setItemName] = useState(name);
@@ -172,16 +172,24 @@ export function EditInventoryItem({
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="unit" className="text-right">
+            <Label htmlFor="type" className="text-right">
               Unit
             </Label>
-            <Input
-              id="unit"
-              className="col-span-3"
-              placeholder="e.g., kg, packets"
-              value={itemUnit}
-              onChange={(e) => setItemUnit(e.target.value)}
-            />
+            <Select value={itemUnit} onValueChange={setItemUnit}>
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Unit</SelectLabel>
+                  {fetchedHarvestUnits.map((unit, _) => (
+                    <SelectItem key={unit.id} value={unit.name}>
+                      {unit.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <DialogFooter>

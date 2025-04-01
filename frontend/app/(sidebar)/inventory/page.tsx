@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/pagination";
 import { Search } from "lucide-react";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
+import { fetchHarvestUnits } from "@/api/harvest";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -49,7 +50,8 @@ export default function InventoryPage() {
     pageIndex: 0,
     pageSize: 10,
   });
-
+  //////////////////////////////
+  // query the necessary data for edit and etc.
   const {
     data: inventoryItems = [],
     isLoading: isItemLoading,
@@ -78,6 +80,16 @@ export default function InventoryPage() {
     queryFn: fetchInventoryCategory,
     staleTime: 60 * 1000,
   });
+  const {
+    data: harvestUnits = [],
+    isLoading: isLoadingHarvestUnits,
+    isError: isErrorHarvestUnits,
+  } = useQuery({
+    queryKey: ["harvestUnits"],
+    queryFn: fetchHarvestUnits,
+    staleTime: 60 * 1000,
+  });
+  //////////////////////////////
   // console.table(inventoryItems);
   // console.table(inventoryStatus);
   const [searchTerm, setSearchTerm] = useState("");
@@ -93,14 +105,20 @@ export default function InventoryPage() {
           inventoryCategory.find(
             (categoryItem) => categoryItem.id.toString() === item.category
           )?.name || "",
+        unit:
+          harvestUnits.find((unit) => unit.id.toString() === item.unit)?.name ||
+          "",
         fetchedInventoryStatus: inventoryStatus,
         fetchedInventoryCategory: inventoryCategory,
+        fetchedHarvestUnits: harvestUnits,
         id: String(item.id),
       }))
       .filter((item) =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
   }, [inventoryItems, searchTerm]);
+
+  //  prepare columns for table
 
   const columns = [
     { accessorKey: "name", header: "Name" },
@@ -159,14 +177,29 @@ export default function InventoryPage() {
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
   });
+  const loadingStates = [
+    isItemLoading,
+    isLoadingStatus,
+    isLoadingCategory,
+    isLoadingHarvestUnits,
+  ];
+  const errorStates = [
+    isItemError,
+    isErrorStatus,
+    isErrorCategory,
+    isErrorHarvestUnits,
+  ];
 
-  if (isItemLoading || isLoadingStatus || isLoadingCategory)
+  const isLoading = loadingStates.some((loading) => loading);
+  const isError = errorStates.some((error) => error);
+
+  if (isLoading)
     return (
       <div className="flex min-h-screen items-center justify-center">
         Loading...
       </div>
     );
-  if (isItemError || isErrorStatus || isErrorCategory)
+  if (isError)
     return (
       <div className="flex min-h-screen items-center justify-center">
         Error loading inventory data.

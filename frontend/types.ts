@@ -77,6 +77,10 @@ export type InventoryItemCategory = {
   id: number;
   name: string;
 };
+export type HarvestUnits = {
+  id: number;
+  name: string;
+};
 
 export type CreateInventoryItemInput = Omit<
   InventoryItem,
