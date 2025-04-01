@@ -58,6 +58,13 @@ func (a *api) registerKnowledgeHubRoutes(_ chi.Router, api huma.API) {
 		Path:        prefix + "/{uuid}/related",
 		Tags:        tags,
 	}, a.getArticleRelatedArticlesHandler)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "createRelatedArticle",
+		Method:      http.MethodPost,
+		Path:        prefix + "/{uuid}/related",
+		Tags:        tags,
+	}, a.createRelatedArticleHandler)
 }
 
 type GetKnowledgeArticlesOutput struct {
@@ -99,6 +106,14 @@ type GetTableOfContentsOutput struct {
 type GetRelatedArticlesOutput struct {
 	Body struct {
 		RelatedArticles []domain.RelatedArticle `json:"related_articles"`
+	} `json:"body"`
+}
+
+type CreateRelatedArticleInput struct {
+	UUID string `path:"uuid"`
+	Body struct {
+		RelatedTitle string `json:"related_title"`
+		RelatedTag   string `json:"related_tag"`
 	} `json:"body"`
 }
 
@@ -250,4 +265,26 @@ func (a *api) getArticleRelatedArticlesHandler(ctx context.Context, input *struc
 
 	resp.Body.RelatedArticles = related
 	return resp, nil
+}
+
+func (a *api) createRelatedArticleHandler(
+	ctx context.Context,
+	input *CreateRelatedArticleInput,
+) (*struct{}, error) {
+	// Validate main article exists
+	if _, err := a.knowledgeHubRepo.GetArticleByID(ctx, input.UUID); err != nil {
+		return nil, huma.Error404NotFound("main article not found")
+	}
+
+	// Create related article
+	related := &domain.RelatedArticle{
+		RelatedTitle: input.Body.RelatedTitle,
+		RelatedTag:   input.Body.RelatedTag,
+	}
+
+	if err := a.knowledgeHubRepo.CreateRelatedArticle(ctx, input.UUID, related); err != nil {
+		return nil, huma.Error500InternalServerError("failed to create related article")
+	}
+
+	return nil, nil // HTTP 204 No Content
 }

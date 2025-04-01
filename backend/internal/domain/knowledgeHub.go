@@ -55,4 +55,5 @@ type KnowledgeHubRepository interface {
 
 	GetTableOfContents(ctx context.Context, articleID string) ([]TableOfContent, error)
 	GetRelatedArticles(ctx context.Context, articleID string) ([]RelatedArticle, error)
+	CreateRelatedArticle(ctx context.Context, articleID string, related *RelatedArticle) error
 }

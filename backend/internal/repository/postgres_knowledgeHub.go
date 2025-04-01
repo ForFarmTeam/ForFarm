@@ -182,3 +182,27 @@ func (p *postgresKnowledgeHubRepository) GetRelatedArticles(ctx context.Context,
 
 	return p.fetchRelatedArticles(ctx, query, articleID)
 }
+
+func (p *postgresKnowledgeHubRepository) CreateRelatedArticle(
+	ctx context.Context,
+	articleID string,
+	related *domain.RelatedArticle,
+) error {
+	related.UUID = uuid.New().String() // Generate UUID
+	related.ArticleID = articleID      // Link to main article
+
+	query := `
+        INSERT INTO related_articles 
+        (uuid, article_id, related_title, related_tag, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, NOW(), NOW())`
+
+	_, err := p.conn.Exec(
+		ctx,
+		query,
+		related.UUID,
+		related.ArticleID,
+		related.RelatedTitle,
+		related.RelatedTag,
+	)
+	return err
+}
