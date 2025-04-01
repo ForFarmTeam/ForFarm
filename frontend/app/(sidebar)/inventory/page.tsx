@@ -71,7 +71,6 @@ export default function InventoryPage() {
   const columns = [
     { accessorKey: "name", header: "Name" },
     { accessorKey: "category", header: "Category" },
-    { accessorKey: "type", header: "Type" },
     { accessorKey: "quantity", header: "Quantity" },
     { accessorKey: "unit", header: "Unit" },
     { accessorKey: "lastUpdated", header: "Last Updated" },
