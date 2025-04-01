@@ -11,7 +11,9 @@ CREATE TABLE users (
 );
 
 CREATE UNIQUE INDEX idx_users_uuid ON users(uuid);
+CREATE UNIQUE INDEX idx_users_email ON users(email); -- Added unique constraint for email
 
 -- +goose Down
+DROP INDEX IF EXISTS idx_users_email;
 DROP INDEX IF EXISTS idx_users_uuid;
 DROP TABLE IF EXISTS users;
