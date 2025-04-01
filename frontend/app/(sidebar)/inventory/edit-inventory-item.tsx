@@ -36,14 +36,32 @@ import { cn } from "@/lib/utils";
 // import { updateInventoryItem } from "@/api/inventory";
 // import type { UpdateInventoryItemInput } from "@/types";
 
-export function EditInventoryItem() {
-  const [date, setDate] = useState<Date | undefined>();
+export interface EditInventoryItemProps {
+  id: string;
+  name: string;
+  category: string;
+  status: string;
+  type: string;
+  unit: string;
+  quantity: number;
+}
+
+export function EditInventoryItem({
+  id,
+  name,
+  category,
+  status,
+  type,
+  unit,
+  quantity,
+}: EditInventoryItemProps) {
   const [open, setOpen] = useState(false);
-  const [itemName, setItemName] = useState("");
-  const [itemType, setItemType] = useState("");
-  const [itemCategory, setItemCategory] = useState("");
-  const [itemQuantity, setItemQuantity] = useState(0);
-  const [itemUnit, setItemUnit] = useState("");
+  const [itemName, setItemName] = useState(name);
+  const [itemType, setItemType] = useState(type);
+  const [itemCategory, setItemCategory] = useState(category);
+  const [itemQuantity, setItemQuantity] = useState(quantity);
+  const [itemUnit, setItemUnit] = useState(unit);
+  const [itemStatus, setItemStatus] = useState(status);
 
   // const queryClient = useQueryClient();
 
@@ -103,7 +121,7 @@ export function EditInventoryItem() {
             <Label htmlFor="type" className="text-right">
               Type
             </Label>
-            <Select value={itemType} onValueChange={setItemType}>
+            <Select value={itemType.toLowerCase()} onValueChange={setItemType}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
@@ -112,6 +130,27 @@ export function EditInventoryItem() {
                   <SelectLabel>Type</SelectLabel>
                   <SelectItem value="plantation">Plantation</SelectItem>
                   <SelectItem value="fertilizer">Fertilizer</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="type" className="text-right">
+              Status
+            </Label>
+            <Select
+              value={itemStatus.toLowerCase()}
+              onValueChange={setItemStatus}
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Status</SelectLabel>
+                  <SelectItem value="in stock">In Stock</SelectItem>
+                  <SelectItem value="low stock">Low Stock</SelectItem>
+                  <SelectItem value="out of stock">Out Of Stock</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -151,33 +190,6 @@ export function EditInventoryItem() {
               value={itemUnit}
               onChange={(e) => setItemUnit(e.target.value)}
             />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="date" className="text-right">
-              Date
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "col-span-3 justify-start text-left font-normal",
-                    !date && "text-muted-foreground",
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
           </div>
         </div>
         <DialogFooter>

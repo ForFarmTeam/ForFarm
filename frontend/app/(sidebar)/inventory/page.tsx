@@ -2,10 +2,6 @@
 
 import {
   useState,
-  JSXElementConstructor,
-  ReactElement,
-  ReactNode,
-  ReactPortal,
   useMemo,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -40,7 +36,10 @@ import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 import { Badge } from "@/components/ui/badge";
 import { fetchInventoryItems } from "@/api/inventory";
 import { AddInventoryItem } from "./add-inventory-item";
-import { EditInventoryItem } from "./edit-inventory-item";
+import {
+  EditInventoryItem,
+  EditInventoryItemProps
+} from "./edit-inventory-item";
 import { DeleteInventoryItem } from "./delete-inventory-item";
 
 export default function InventoryPage() {
@@ -72,6 +71,7 @@ export default function InventoryPage() {
     { accessorKey: "category", header: "Category" },
     { accessorKey: "type", header: "Type" },
     { accessorKey: "quantity", header: "Quantity" },
+    { accessorKey: "unit", header: "Unit" },
     { accessorKey: "lastUpdated", header: "Last Updated" },
     {
       accessorKey: "status",
@@ -97,7 +97,9 @@ export default function InventoryPage() {
     {
       accessorKey: "edit",
       header: "Edit",
-      cell: () => <EditInventoryItem />,
+      cell: ({ row }: { row: { original: EditInventoryItemProps } }) => (
+        <EditInventoryItem {...row.original} />
+      ),
       enableSorting: false,
     },
     {
@@ -109,7 +111,7 @@ export default function InventoryPage() {
   ];
 
   const table = useReactTable({
-    data: filteredItems,
+    data: filteredItems.map((item) => ({ ...item, id: item.id.toString() })),
     columns,
     state: { sorting, pagination },
     getCoreRowModel: getCoreRowModel(),
