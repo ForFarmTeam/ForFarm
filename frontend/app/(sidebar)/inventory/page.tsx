@@ -162,7 +162,9 @@ export default function InventoryPage() {
     {
       accessorKey: "delete",
       header: "Delete",
-      cell: () => <DeleteInventoryItem />,
+      cell: ({ row }: { row: { original: EditInventoryItemProps } }) => (
+        <DeleteInventoryItem id={row.original.id} />
+      ),
       enableSorting: false,
     },
   ];
