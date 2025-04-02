@@ -7,16 +7,19 @@ import (
 )
 
 var (
-	PORT                 int
-	POSTGRES_USER        string
-	POSTGRES_PASSWORD    string
-	POSTGRES_DB          string
-	DATABASE_URL         string
-	GOOGLE_CLIENT_ID     string
-	GOOGLE_CLIENT_SECRET string
-	GOOGLE_REDIRECT_URL  string
-	JWT_SECRET_KEY       string
-	RABBITMQ_URL         string
+	PORT                   int
+	POSTGRES_USER          string
+	POSTGRES_PASSWORD      string
+	POSTGRES_DB            string
+	DATABASE_URL           string
+	GOOGLE_CLIENT_ID       string
+	GOOGLE_CLIENT_SECRET   string
+	GOOGLE_REDIRECT_URL    string
+	JWT_SECRET_KEY         string
+	RABBITMQ_URL           string
+	OPENWEATHER_API_KEY    string
+	OPENWEATHER_CACHE_TTL  string
+	WEATHER_FETCH_INTERVAL string
 )
 
 func Load() {
@@ -30,6 +33,9 @@ func Load() {
 	viper.SetDefault("JWT_SECRET_KEY", "jwt_secret_key")
 	viper.SetDefault("GOOGLE_REDIRECT_URL", "http://localhost:8000/auth/login/google")
 	viper.SetDefault("RABBITMQ_URL", "amqp://user:password@localhost:5672/")
+	viper.SetDefault("OPENWEATHER_API_KEY", "openweather_api_key")
+	viper.SetDefault("OPENWEATHER_CACHE_TTL", "15m")
+	viper.SetDefault("WEATHER_FETCH_INTERVAL", "15m")
 
 	viper.SetConfigFile(".env")
 	viper.AddConfigPath("../../.")
@@ -50,4 +56,7 @@ func Load() {
 	GOOGLE_REDIRECT_URL = viper.GetString("GOOGLE_REDIRECT_URL")
 	JWT_SECRET_KEY = viper.GetString("JWT_SECRET_KEY")
 	RABBITMQ_URL = viper.GetString("RABBITMQ_URL")
+	OPENWEATHER_API_KEY = viper.GetString("OPENWEATHER_API_KEY")
+	OPENWEATHER_CACHE_TTL = viper.GetString("OPENWEATHER_CACHE_TTL")
+	WEATHER_FETCH_INTERVAL = viper.GetString("WEATHER_FETCH_INTERVAL")
 }
