@@ -82,10 +82,14 @@ export type HarvestUnits = {
   name: string;
 };
 
-export type CreateInventoryItemInput = Omit<
-  InventoryItem,
-  "id" | "lastUpdated" | "status"
->;
+export type CreateInventoryItemInput = {
+  name: string;
+  categoryId: number;
+  quantity: number;
+  unitId: number;
+  lastUpdated: string;
+  statusId: number;
+};
 
 export interface Blog {
   id: number;

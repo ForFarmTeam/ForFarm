@@ -22,11 +22,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TriangleAlertIcon } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
   PaginationItem,
 } from "@/components/ui/pagination";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Search } from "lucide-react";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 import { fetchHarvestUnits } from "@/api/harvest";
@@ -92,6 +94,8 @@ export default function InventoryPage() {
   //////////////////////////////
   // console.table(inventoryItems);
   // console.table(inventoryStatus);
+  // console.table(harvestUnits);
+
   const [searchTerm, setSearchTerm] = useState("");
   const filteredItems = useMemo(() => {
     return inventoryItems
@@ -195,6 +199,22 @@ export default function InventoryPage() {
   const isLoading = loadingStates.some((loading) => loading);
   const isError = errorStates.some((error) => error);
 
+  if (inventoryItems.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh]">
+        <Alert variant="destructive" className="w-full max-w-md text-center">
+          <div className="flex flex-col items-center">
+            <TriangleAlertIcon className="h-6 w-6 text-red-500 mb-2" />
+            <AlertTitle>No Inventory Data</AlertTitle>
+            <AlertDescription>
+              You currently have no inventory items. Add a new item to get
+              started!
+            </AlertDescription>
+          </div>
+        </Alert>
+      </div>
+    );
+  }
   if (isLoading)
     return (
       <div className="flex min-h-screen items-center justify-center">

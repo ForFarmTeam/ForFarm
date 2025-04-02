@@ -3,6 +3,7 @@ import type {
   InventoryItem,
   InventoryItemStatus,
   InventoryItemCategory,
+  CreateInventoryItemInput,
 } from "@/types";
 
 /**
@@ -39,9 +40,11 @@ export async function fetchInventoryCategory(): Promise<
 
 export async function fetchInventoryItems(): Promise<InventoryItem[]> {
   try {
-    const response = await axiosInstance.get<InventoryItem[]>("/api/inventory");
+    const response = await axiosInstance.get<InventoryItem[]>("/inventory");
     return response.data;
   } catch (error) {
+    // console.error("Error while fetching inventory items! " + error);
+    // throw error;
     // Fallback dummy data
     return [
       {
@@ -100,18 +103,16 @@ export async function fetchInventoryItems(): Promise<InventoryItem[]> {
  * Note: The function accepts all fields except id, lastUpdated, and status.
  */
 export async function createInventoryItem(
-  item: Omit<InventoryItem, "id" | "lastUpdated" | "status">
+  item: Omit<CreateInventoryItemInput, "id" | "lastUpdated" | "status">
 ): Promise<InventoryItem> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
   try {
     const response = await axiosInstance.post<InventoryItem>(
-      "/api/inventory",
+      "/inventory",
       item
     );
     return response.data;
   } catch (error) {
-    console.error("Error while creating Inventory Item!" + error);
+    console.error("Error while creating Inventory Item! " + error);
     throw new Error("Failed to create inventory item: " + error);
   }
 }
