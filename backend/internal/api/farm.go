@@ -95,11 +95,11 @@ type UpdateFarmInput struct {
 	Header string `header:"Authorization" required:"true" example:"Bearer token"`
 	FarmID string `path:"farm_id"`
 	Body   struct {
-		Name      string   `json:"name,omitempty"`
-		Lat       *float64 `json:"lat,omitempty"`
-		Lon       *float64 `json:"lon,omitempty"`
-		FarmType  *string  `json:"farm_type,omitempty"`
-		TotalSize *string  `json:"total_size,omitempty"`
+		Name      string   `json:"Name,omitempty"`
+		Lat       *float64 `json:"Lat,omitempty"`
+		Lon       *float64 `json:"Lon,omitempty"`
+		FarmType  *string  `json:"FarmType,omitempty"`
+		TotalSize *string  `json:"TotalSize,omitempty"`
 	}
 }
 

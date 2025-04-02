@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
@@ -15,9 +16,11 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/forfarm/backend/internal/config"
 	"github.com/forfarm/backend/internal/domain"
 	m "github.com/forfarm/backend/internal/middlewares"
 	"github.com/forfarm/backend/internal/repository"
+	"github.com/forfarm/backend/internal/services/weather"
 	"github.com/forfarm/backend/internal/utilities"
 )
 
@@ -32,20 +35,46 @@ type api struct {
 	plantRepo     domain.PlantRepository
 	inventoryRepo domain.InventoryRepository
 	harvestRepo   domain.HarvestRepository
+	analyticsRepo domain.AnalyticsRepository
+
+	weatherFetcher domain.WeatherFetcher
 }
 
-func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, eventPublisher domain.EventPublisher) *api {
+var weatherFetcherInstance domain.WeatherFetcher
+
+func GetWeatherFetcher() domain.WeatherFetcher {
+	return weatherFetcherInstance
+}
+
+func NewAPI(
+	ctx context.Context,
+	logger *slog.Logger,
+	pool *pgxpool.Pool,
+	eventPublisher domain.EventPublisher,
+	analyticsRepo domain.AnalyticsRepository,
+	inventoryRepo domain.InventoryRepository,
+	croplandRepo domain.CroplandRepository,
+	farmRepo domain.FarmRepository,
+) *api {
 
 	client := &http.Client{}
 
 	userRepository := repository.NewPostgresUser(pool)
-	croplandRepository := repository.NewPostgresCropland(pool)
-	farmRepository := repository.NewPostgresFarm(pool)
 	plantRepository := repository.NewPostgresPlant(pool)
-	inventoryRepository := repository.NewPostgresInventory(pool)
 	harvestRepository := repository.NewPostgresHarvest(pool)
 
-	farmRepository.SetEventPublisher(eventPublisher)
+	owmFetcher := weather.NewOpenWeatherMapFetcher(config.OPENWEATHER_API_KEY, client, logger)
+	cacheTTL, err := time.ParseDuration(config.OPENWEATHER_CACHE_TTL)
+	if err != nil {
+		logger.Warn("Invalid OPENWEATHER_CACHE_TTL format, using default 15m", "value", config.OPENWEATHER_CACHE_TTL, "error", err)
+		cacheTTL = 15 * time.Minute
+	}
+	cleanupInterval := cacheTTL * 2
+	if cleanupInterval < 5*time.Minute {
+		cleanupInterval = 5 * time.Minute
+	}
+	cachedWeatherFetcher := weather.NewCachedWeatherFetcher(owmFetcher, cacheTTL, cleanupInterval, logger)
+	weatherFetcherInstance = cachedWeatherFetcher
 
 	return &api{
 		logger:         logger,
@@ -53,11 +82,14 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, eventP
 		eventPublisher: eventPublisher,
 
 		userRepo:      userRepository,
-		cropRepo:      croplandRepository,
-		farmRepo:      farmRepository,
+		cropRepo:      croplandRepo,
+		farmRepo:      farmRepo,
 		plantRepo:     plantRepository,
-		inventoryRepo: inventoryRepository,
+		inventoryRepo: inventoryRepo,
 		harvestRepo:   harvestRepository,
+		analyticsRepo: analyticsRepo,
+
+		weatherFetcher: cachedWeatherFetcher,
 	}
 }
 
@@ -107,6 +139,7 @@ func (a *api) Routes() *chi.Mux {
 		a.registerFarmRoutes(r, api)
 		a.registerUserRoutes(r, api)
 		a.registerInventoryRoutes(r, api)
+		a.registerAnalyticsRoutes(r, api)
 	})
 
 	return router
