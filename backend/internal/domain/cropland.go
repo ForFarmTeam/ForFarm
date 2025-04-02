@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -16,6 +17,7 @@ type Cropland struct {
 	GrowthStage string
 	PlantID     string
 	FarmID      string
+	GeoFeature  json.RawMessage
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -32,7 +34,8 @@ func (c *Cropland) Validate() error {
 type CroplandRepository interface {
 	GetByID(context.Context, string) (Cropland, error)
 	GetByFarmID(ctx context.Context, farmID string) ([]Cropland, error)
-	GetAll(ctx context.Context) ([]Cropland, error) // Add this method
+	GetAll(ctx context.Context) ([]Cropland, error)
 	CreateOrUpdate(context.Context, *Cropland) error
 	Delete(context.Context, string) error
+	SetEventPublisher(EventPublisher)
 }

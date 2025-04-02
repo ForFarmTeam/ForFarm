@@ -6,84 +6,46 @@ import (
 )
 
 type FarmAnalytics struct {
-	FarmID          string
-	Name            string
-	OwnerID         string
-	LastUpdated     time.Time
-	WeatherData     *WeatherAnalytics     `json:"weather_data,omitempty"`
-	InventoryData   *InventoryAnalytics   `json:"inventory_data,omitempty"`
-	PlantHealthData *PlantHealthAnalytics `json:"plant_health_data,omitempty"`
-	FinancialData   *FinancialAnalytics   `json:"financial_data,omitempty"`
-	ProductionData  *ProductionAnalytics  `json:"production_data,omitempty"`
+	FarmID        string  `json:"farm_id"`
+	FarmName      string  `json:"farm_name"`
+	OwnerID       string  `json:"owner_id"`
+	FarmType      *string `json:"farm_type,omitempty"`
+	TotalSize     *string `json:"total_size,omitempty"`
+	Latitude      float64 `json:"latitude"`
+	Longitude     float64 `json:"longitude"`
+	Weather       *WeatherData
+	InventoryInfo struct {
+		TotalItems    int        `json:"total_items"`
+		LowStockCount int        `json:"low_stock_count"`
+		LastUpdated   *time.Time `json:"last_updated,omitempty"`
+	} `json:"inventory_info"`
+	CropInfo struct {
+		TotalCount   int        `json:"total_count"`
+		GrowingCount int        `json:"growing_count"`
+		LastUpdated  *time.Time `json:"last_updated,omitempty"`
+	} `json:"crop_info"`
+	OverallStatus        *string   `json:"overall_status,omitempty"`
+	AnalyticsLastUpdated time.Time `json:"analytics_last_updated"`
 }
 
-type WeatherAnalytics struct {
-	LastUpdated     time.Time
-	Temperature     float64
-	Humidity        float64
-	Rainfall        float64
-	WindSpeed       float64
-	WeatherStatus   string
-	AlertLevel      string
-	ForecastSummary string
-}
-
-type InventoryAnalytics struct {
-	LastUpdated   time.Time
-	TotalItems    int
-	LowStockItems int
-	TotalValue    float64
-	RecentChanges []InventoryChange
-}
-
-type InventoryChange struct {
-	ItemID       string
-	ItemName     string
-	ChangeAmount float64
-	ChangeType   string
-	ChangedAt    time.Time
-}
-
-type PlantHealthAnalytics struct {
-	LastUpdated        time.Time
-	HealthyPlants      int
-	UnhealthyPlants    int
-	CriticalPlants     int
-	RecentHealthIssues []PlantHealthIssue
-}
-
-type PlantHealthIssue struct {
-	PlantID      string
-	PlantName    string
-	HealthStatus string
-	AlertLevel   string
-	RecordedAt   time.Time
-}
-
-type FinancialAnalytics struct {
-	LastUpdated        time.Time
-	TotalRevenue       float64
-	TotalExpenses      float64
-	NetProfit          float64
-	RecentTransactions []TransactionSummary
-}
-
-type TransactionSummary struct {
-	TransactionID string
-	Type          string
-	Amount        float64
-	Status        string
-	CreatedAt     time.Time
-}
-
-type ProductionAnalytics struct {
-	LastUpdated     time.Time
-	TotalProduction float64
-	YieldRate       float64
-	HarvestForecast float64
+type CropAnalytics struct {
+	CropID        string    `json:"crop_id"`
+	CropName      string    `json:"crop_name"`
+	FarmID        string    `json:"farm_id"`
+	PlantName     string    `json:"plant_name"`
+	Variety       *string   `json:"variety,omitempty"`
+	CurrentStatus string    `json:"current_status"`
+	GrowthStage   string    `json:"growth_stage"`
+	LandSize      float64   `json:"land_size"`
+	LastUpdated   time.Time `json:"last_updated"`
 }
 
 type AnalyticsRepository interface {
 	GetFarmAnalytics(ctx context.Context, farmID string) (*FarmAnalytics, error)
-	SaveFarmAnalytics(ctx context.Context, farmID string, data interface{}) error
+	CreateOrUpdateFarmBaseData(ctx context.Context, farm *Farm) error
+	UpdateFarmAnalyticsWeather(ctx context.Context, farmID string, weatherData *WeatherData) error
+	UpdateFarmAnalyticsCropStats(ctx context.Context, farmID string) error
+	UpdateFarmAnalyticsInventoryStats(ctx context.Context, farmID string) error
+	DeleteFarmAnalytics(ctx context.Context, farmID string) error
+	UpdateFarmOverallStatus(ctx context.Context, farmID string, status string) error
 }

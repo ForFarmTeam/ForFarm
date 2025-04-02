@@ -8,16 +8,16 @@ import (
 )
 
 type Farm struct {
-	UUID      string
-	Name      string
-	Lat       float64 // single latitude value
-	Lon       float64 // single longitude value
-	FarmType  string  // e.g., "Durian", "mango", "mixed-crop", "others"
-	TotalSize string  // e.g., "10 Rai" (optional)
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	OwnerID   string
-	Crops     []Cropland
+	UUID      string     `json:"uuid"`
+	Name      string     `json:"name"`
+	Lat       float64    `json:"latitude"`
+	Lon       float64    `json:"longitude"`
+	FarmType  string     `json:"farm_type,omitempty"`
+	TotalSize string     `json:"total_size,omitempty"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	OwnerID   string     `json:"owner_id"`
+	Crops     []Cropland `json:"crops,omitempty"`
 }
 
 func (f *Farm) Validate() error {
