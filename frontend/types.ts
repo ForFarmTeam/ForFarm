@@ -91,6 +91,8 @@ export type CreateInventoryItemInput = {
   statusId: number;
 };
 
+export type UpdateInventoryItemInput = CreateInventoryItemInput & {};
+
 export interface Blog {
   id: number;
   title: string;

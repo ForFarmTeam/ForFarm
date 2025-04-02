@@ -4,6 +4,7 @@ import type {
   InventoryItemStatus,
   InventoryItemCategory,
   CreateInventoryItemInput,
+  UpdateInventoryItemInput,
 } from "@/types";
 
 /**
@@ -113,12 +114,25 @@ export async function createInventoryItem(
 
 export async function deleteInventoryItem(id: string) {
   try {
-    const response = await axiosInstance.delete<InventoryItem>(
-      "/inventory/" + id
-    );
+    const response = await axiosInstance.delete("/inventory/" + id);
     return response.data;
   } catch (error) {
     console.error("Error while deleting Inventory Item! " + error);
     throw new Error("Failed to deleting inventory item: " + error);
+  }
+}
+export async function updateInventoryItem(
+  id: string,
+  item: UpdateInventoryItemInput
+) {
+  try {
+    const response = await axiosInstance.put<InventoryItem>(
+      "/inventory/" + id,
+      item
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error while updating Inventory Item! " + error);
+    throw new Error("Failed to updating inventory item: " + error);
   }
 }
