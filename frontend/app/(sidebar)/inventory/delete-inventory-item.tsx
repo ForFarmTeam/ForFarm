@@ -8,13 +8,26 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteInventoryItem } from "@/api/inventory";
 
 export function DeleteInventoryItem({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { mutate: deleteItem, status } = useMutation({
+    mutationFn: deleteInventoryItem,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      setOpen(false); // Close dialog on success
+    },
+    onError: (error) => {
+      console.error("Failed to delete item:", error);
+    },
+  });
 
   const handleDelete = () => {
-    console.log(`Item with ID ${id} deleted.`);
-    setOpen(false);
+    deleteItem(id.toString());
   };
 
   return (
@@ -47,8 +60,9 @@ export function DeleteInventoryItem({ id }: { id: string }) {
             <Button
               className="bg-red-600 hover:bg-red-800 text-white"
               onClick={handleDelete}
+              disabled={status === "pending"}
             >
-              Confirm Delete
+              {status === "pending" ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

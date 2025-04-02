@@ -96,12 +96,6 @@ export async function fetchInventoryItems(): Promise<InventoryItem[]> {
   }
 }
 
-/**
- * Simulates creating a new inventory item.
- * Uses axios POST and if unavailable, returns a simulated response.
- *
- * Note: The function accepts all fields except id, lastUpdated, and status.
- */
 export async function createInventoryItem(
   item: Omit<CreateInventoryItemInput, "id" | "lastUpdated" | "status">
 ): Promise<InventoryItem> {
@@ -114,5 +108,17 @@ export async function createInventoryItem(
   } catch (error) {
     console.error("Error while creating Inventory Item! " + error);
     throw new Error("Failed to create inventory item: " + error);
+  }
+}
+
+export async function deleteInventoryItem(id: string) {
+  try {
+    const response = await axiosInstance.delete<InventoryItem>(
+      "/inventory/" + id
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error while deleting Inventory Item! " + error);
+    throw new Error("Failed to deleting inventory item: " + error);
   }
 }
