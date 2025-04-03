@@ -11,21 +11,27 @@ import (
 	"time"
 
 	"github.com/forfarm/backend/internal/domain"
+	"github.com/forfarm/backend/internal/services"
 	"github.com/jackc/pgx/v5"
 )
 
 type postgresFarmAnalyticsRepository struct {
-	conn   Connection
-	logger *slog.Logger
+	conn             Connection
+	logger           *slog.Logger
+	analyticsService *services.AnalyticsService
 }
 
-func NewPostgresFarmAnalyticsRepository(conn Connection, logger *slog.Logger) domain.AnalyticsRepository {
+func NewPostgresFarmAnalyticsRepository(conn Connection, logger *slog.Logger, analyticsService *services.AnalyticsService) domain.AnalyticsRepository {
 	if logger == nil {
 		logger = slog.Default()
 	}
+	if analyticsService == nil {
+		analyticsService = services.NewAnalyticsService()
+	}
 	return &postgresFarmAnalyticsRepository{
-		conn:   conn,
-		logger: logger,
+		conn:             conn,
+		logger:           logger,
+		analyticsService: analyticsService,
 	}
 }
 
@@ -131,13 +137,13 @@ func calculateGrowthProgress(plantedAt time.Time, daysToMaturity *int) int {
 
 // --- GetCropAnalytics ---
 
-// GetCropAnalytics retrieves and calculates analytics data for a specific crop.
 func (r *postgresFarmAnalyticsRepository) GetCropAnalytics(ctx context.Context, cropID string) (*domain.CropAnalytics, error) {
+	// Fetch base data from croplands and plants
 	query := `
 		SELECT
 			c.uuid, c.name, c.farm_id, c.status, c.growth_stage, c.land_size, c.updated_at,
 			p.name, p.variety, p.days_to_maturity,
-			c.created_at -- Needed for growth calculation
+			c.created_at -- Planted date proxy
 		FROM
 			croplands c
 		JOIN
@@ -146,13 +152,13 @@ func (r *postgresFarmAnalyticsRepository) GetCropAnalytics(ctx context.Context, 
 			c.uuid = $1
 	`
 
-	var analytics domain.CropAnalytics
+	var analytics domain.CropAnalytics // Initialize the struct to be populated
 	var plantName string
 	var variety sql.NullString
 	var daysToMaturity sql.NullInt32
-	var plantedAt time.Time // Use cropland created_at as planted date proxy
+	var plantedAt time.Time
+	var croplandLastUpdated time.Time // Capture cropland specific update time
 
-	// Use r.conn here
 	err := r.conn.QueryRow(ctx, query, cropID).Scan(
 		&analytics.CropID,
 		&analytics.CropName,
@@ -160,7 +166,7 @@ func (r *postgresFarmAnalyticsRepository) GetCropAnalytics(ctx context.Context, 
 		&analytics.CurrentStatus,
 		&analytics.GrowthStage,
 		&analytics.LandSize,
-		&analytics.LastUpdated,
+		&croplandLastUpdated, // Use this for action suggestion timing
 		&plantName,
 		&variety,
 		&daysToMaturity,
@@ -168,20 +174,25 @@ func (r *postgresFarmAnalyticsRepository) GetCropAnalytics(ctx context.Context, 
 	)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, pgx.ErrNoRows) { // Check pgx error too
-			r.logger.Warn("Crop analytics query returned no rows", "crop_id", cropID)
+		// ... (error handling as before) ...
+		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, pgx.ErrNoRows) {
+			r.logger.Warn("Crop analytics base data query returned no rows", "crop_id", cropID)
 			return nil, domain.ErrNotFound
 		}
-		r.logger.Error("Failed to query crop analytics data", "crop_id", cropID, "error", err)
-		return nil, fmt.Errorf("database query failed for crop analytics: %w", err)
+		r.logger.Error("Failed to query crop base data", "crop_id", cropID, "error", err)
+		return nil, fmt.Errorf("database query failed for crop base data: %w", err)
 	}
 
+	// --- Populate direct fields ---
 	analytics.PlantName = plantName
 	if variety.Valid {
 		analytics.Variety = &variety.String
 	}
+	analytics.LastUpdated = time.Now().UTC() // Set analytics generation time
 
-	// Calculate Growth Progress
+	// --- Calculate/Fetch derived fields using the service ---
+
+	// Growth Progress
 	var maturityDaysPtr *int
 	if daysToMaturity.Valid {
 		maturityInt := int(daysToMaturity.Int32)
@@ -189,31 +200,27 @@ func (r *postgresFarmAnalyticsRepository) GetCropAnalytics(ctx context.Context, 
 	}
 	analytics.GrowthProgress = calculateGrowthProgress(plantedAt, maturityDaysPtr)
 
-	// Fetch Farm Analytics to get weather
-	farmAnalytics, err := r.GetFarmAnalytics(ctx, analytics.FarmID) // Call using r receiver
-	if err == nil && farmAnalytics != nil && farmAnalytics.Weather != nil {
-		analytics.Temperature = farmAnalytics.Weather.TempCelsius
-		analytics.Humidity = farmAnalytics.Weather.Humidity
-		windSpeedStr := fmt.Sprintf("%.2f", *farmAnalytics.Weather.WindSpeed)
-		analytics.WindSpeed = &windSpeedStr
-		if farmAnalytics.Weather.RainVolume1h != nil {
-			rainStr := fmt.Sprintf("%.2f", *farmAnalytics.Weather.RainVolume1h)
-			analytics.Rainfall = &rainStr
-		}
-		analytics.Sunlight = nil     // Placeholder - requires source
-		analytics.SoilMoisture = nil // Placeholder - requires source
-	} else if err != nil && !errors.Is(err, domain.ErrNotFound) {
-		r.logger.Warn("Could not fetch farm analytics for weather data", "farm_id", analytics.FarmID, "error", err)
+	// Environmental Data (includes placeholders)
+	farmAnalytics, farmErr := r.GetFarmAnalytics(ctx, analytics.FarmID)
+	if farmErr != nil && !errors.Is(farmErr, domain.ErrNotFound) {
+		r.logger.Warn("Could not fetch associated farm analytics for crop context", "farm_id", analytics.FarmID, "crop_id", cropID, "error", farmErr)
+		// Proceed without farm-level weather data if farm analytics fetch fails
 	}
+	analytics.Temperature, analytics.Humidity, analytics.WindSpeed, analytics.Rainfall, analytics.Sunlight, analytics.SoilMoisture = r.analyticsService.GetEnvironmentalData(farmAnalytics)
 
-	// Placeholder for other fields
-	analytics.PlantHealth = new(string) // Initialize pointer
-	*analytics.PlantHealth = "good"     // Default/placeholder value
-	analytics.NextAction = nil
-	analytics.NextActionDue = nil
-	analytics.NutrientLevels = nil // Needs dedicated data source
+	// Plant Health (Dummy)
+	health := r.analyticsService.CalculatePlantHealth(analytics.CurrentStatus, analytics.GrowthStage)
+	analytics.PlantHealth = &health
 
-	r.logger.Debug("Successfully retrieved crop analytics", "crop_id", cropID, "farm_id", analytics.FarmID)
+	// Next Action (Dummy)
+	analytics.NextAction, analytics.NextActionDue = r.analyticsService.SuggestNextAction(analytics.GrowthStage, croplandLastUpdated) // Use cropland update time
+
+	// Nutrient Levels (Dummy)
+	analytics.NutrientLevels = r.analyticsService.GetNutrientLevels(analytics.CropID)
+
+	// --- End Service Usage ---
+
+	r.logger.Debug("Successfully constructed crop analytics", "crop_id", cropID)
 	return &analytics, nil
 }
 
