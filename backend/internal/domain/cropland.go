@@ -9,17 +9,17 @@ import (
 )
 
 type Cropland struct {
-	UUID        string
-	Name        string
-	Status      string
-	Priority    int
-	LandSize    float64
-	GrowthStage string
-	PlantID     string
-	FarmID      string
-	GeoFeature  json.RawMessage
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	UUID        string          `json:"uuid"`
+	Name        string          `json:"name"`
+	Status      string          `json:"status"`
+	Priority    int             `json:"priority"`
+	LandSize    float64         `json:"landSize"`
+	GrowthStage string          `json:"growthStage"`
+	PlantID     string          `json:"plantId"`
+	FarmID      string          `json:"farmId"`
+	GeoFeature  json.RawMessage `json:"geoFeature,omitempty"`
+	CreatedAt   time.Time       `json:"createdAt"`
+	UpdatedAt   time.Time       `json:"updatedAt"`
 }
 
 func (c *Cropland) Validate() error {

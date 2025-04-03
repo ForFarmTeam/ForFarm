@@ -6,42 +6,58 @@ import (
 )
 
 type FarmAnalytics struct {
-	FarmID        string  `json:"farm_id"`
-	FarmName      string  `json:"farm_name"`
-	OwnerID       string  `json:"owner_id"`
-	FarmType      *string `json:"farm_type,omitempty"`
-	TotalSize     *string `json:"total_size,omitempty"`
+	FarmID        string  `json:"farmId"`
+	FarmName      string  `json:"farmName"`
+	OwnerID       string  `json:"ownerId"`
+	FarmType      *string `json:"farmType,omitempty"`
+	TotalSize     *string `json:"totalSize,omitempty"`
 	Latitude      float64 `json:"latitude"`
 	Longitude     float64 `json:"longitude"`
 	Weather       *WeatherData
 	InventoryInfo struct {
-		TotalItems    int        `json:"total_items"`
-		LowStockCount int        `json:"low_stock_count"`
-		LastUpdated   *time.Time `json:"last_updated,omitempty"`
-	} `json:"inventory_info"`
+		TotalItems    int        `json:"totalItems"`
+		LowStockCount int        `json:"lowStockCount"`
+		LastUpdated   *time.Time `json:"lastUpdated,omitempty"`
+	} `json:"inventoryInfo"`
 	CropInfo struct {
-		TotalCount   int        `json:"total_count"`
-		GrowingCount int        `json:"growing_count"`
-		LastUpdated  *time.Time `json:"last_updated,omitempty"`
-	} `json:"crop_info"`
-	OverallStatus        *string   `json:"overall_status,omitempty"`
-	AnalyticsLastUpdated time.Time `json:"analytics_last_updated"`
+		TotalCount   int        `json:"totalCount"`
+		GrowingCount int        `json:"growingCount"`
+		LastUpdated  *time.Time `json:"lastUpdated,omitempty"`
+	} `json:"cropInfo"`
+	OverallStatus        *string   `json:"overallStatus,omitempty"`
+	AnalyticsLastUpdated time.Time `json:"analyticsLastUpdated"`
 }
 
 type CropAnalytics struct {
-	CropID        string    `json:"crop_id"`
-	CropName      string    `json:"crop_name"`
-	FarmID        string    `json:"farm_id"`
-	PlantName     string    `json:"plant_name"`
-	Variety       *string   `json:"variety,omitempty"`
-	CurrentStatus string    `json:"current_status"`
-	GrowthStage   string    `json:"growth_stage"`
-	LandSize      float64   `json:"land_size"`
-	LastUpdated   time.Time `json:"last_updated"`
+	CropID         string     `json:"cropId"`
+	CropName       string     `json:"cropName"`
+	FarmID         string     `json:"farmId"`
+	PlantName      string     `json:"plantName"`
+	Variety        *string    `json:"variety,omitempty"`
+	CurrentStatus  string     `json:"currentStatus"`
+	GrowthStage    string     `json:"growthStage"`
+	LandSize       float64    `json:"landSize"`
+	LastUpdated    time.Time  `json:"lastUpdated"`
+	Temperature    *float64   `json:"temperature,omitempty"`
+	Humidity       *float64   `json:"humidity,omitempty"`
+	SoilMoisture   *float64   `json:"soilMoisture,omitempty"`
+	Sunlight       *float64   `json:"sunlight,omitempty"`
+	WindSpeed      *string    `json:"windSpeed,omitempty"`
+	Rainfall       *string    `json:"rainfall,omitempty"`
+	GrowthProgress int        `json:"growthProgress"`
+	NextAction     *string    `json:"nextAction,omitempty"`
+	NextActionDue  *time.Time `json:"nextActionDue,omitempty"`
+	NutrientLevels *struct {
+		Nitrogen   *float64 `json:"nitrogen,omitempty"`
+		Phosphorus *float64 `json:"phosphorus,omitempty"`
+		Potassium  *float64 `json:"potassium,omitempty"`
+	} `json:"nutrientLevels,omitempty"`
+	PlantHealth *string `json:"plantHealth,omitempty"`
 }
 
 type AnalyticsRepository interface {
 	GetFarmAnalytics(ctx context.Context, farmID string) (*FarmAnalytics, error)
+	GetCropAnalytics(ctx context.Context, cropID string) (*CropAnalytics, error)
 	CreateOrUpdateFarmBaseData(ctx context.Context, farm *Farm) error
 	UpdateFarmAnalyticsWeather(ctx context.Context, farmID string, weatherData *WeatherData) error
 	UpdateFarmAnalyticsCropStats(ctx context.Context, farmID string) error

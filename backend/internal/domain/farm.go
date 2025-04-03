@@ -10,13 +10,13 @@ import (
 type Farm struct {
 	UUID      string     `json:"uuid"`
 	Name      string     `json:"name"`
-	Lat       float64    `json:"latitude"`
-	Lon       float64    `json:"longitude"`
-	FarmType  string     `json:"farm_type,omitempty"`
-	TotalSize string     `json:"total_size,omitempty"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	OwnerID   string     `json:"owner_id"`
+	Lat       float64    `json:"lat"`
+	Lon       float64    `json:"lon"`
+	FarmType  string     `json:"farmType,omitempty"`
+	TotalSize string     `json:"totalSize,omitempty"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	OwnerID   string     `json:"ownerId"`
 	Crops     []Cropland `json:"crops,omitempty"`
 }
 

@@ -1,33 +1,54 @@
 import axiosInstance from "./config";
-import type { Cropland } from "@/types";
+// Use refactored types
+import type { Cropland, CropAnalytics } from "@/types";
 
 export interface CropResponse {
   croplands: Cropland[];
 }
 
 /**
- * Fetch a specific Crop by FarmID.
- * Calls GET /crop/farm/{farm_id} and returns fallback data on failure.
+ * Fetch all Croplands for a specific FarmID. Returns CropResponse.
  */
-export async function getCrop(farmId: string): Promise<CropResponse> {
+export async function getCropsByFarmId(farmId: string): Promise<CropResponse> {
+  // Assuming backend returns { "croplands": [...] }
   return axiosInstance.get<CropResponse>(`/crop/farm/${farmId}`).then((res) => res.data);
 }
 
-// body
-// {
-//     "farm_id": "string",
-//     "growth_stage": "string",
-//     "land_size": 0,
-//     "name": "string",
-//     "plant_id": "string",
-//     "priority": 0,
-//     "status": "string",
-// }
+/**
+ * Fetch a specific Cropland by its ID. Returns Cropland.
+ */
+export async function getCropById(cropId: string): Promise<Cropland> {
+  // Assuming backend returns { "cropland": ... }
+  return axiosInstance.get<Cropland>(`/crop/${cropId}`).then((res) => res.data);
+  // If backend returns object directly: return axiosInstance.get<Cropland>(`/crop/${cropId}`).then((res) => res.data);
+}
 
 /**
- * Create a new crop by FarmID.
- * Calls POST /crop and returns fallback data on failure.
+ * Create a new crop (Cropland). Sends camelCase data matching backend tags. Returns Cropland.
  */
-export async function createCrop(data: Partial<Cropland>): Promise<Cropland> {
-  return axiosInstance.post<Cropland>(`/crop`, data).then((res) => res.data);
+export async function createCrop(data: Partial<Omit<Cropland, "uuid" | "createdAt" | "updatedAt">>): Promise<Cropland> {
+  if (!data.farmId) {
+    throw new Error("farmId is required to create a crop.");
+  }
+  // Payload uses camelCase keys matching backend JSON tags
+  const payload = {
+    name: data.name,
+    status: data.status,
+    priority: data.priority,
+    landSize: data.landSize,
+    growthStage: data.growthStage,
+    plantId: data.plantId,
+    farmId: data.farmId,
+    geoFeature: data.geoFeature, // Send the GeoFeature object
+  };
+  return axiosInstance.post<{ cropland: Cropland }>(`/crop`, payload).then((res) => res.data.cropland); // Assuming backend wraps in { "cropland": ... }
+  // If backend returns object directly: return axiosInstance.post<Cropland>(`/crop`, payload).then((res) => res.data);
+}
+
+/**
+ * Fetch analytics data for a specific crop by its ID. Returns CropAnalytics.
+ */
+export async function fetchCropAnalytics(cropId: string): Promise<CropAnalytics> {
+  // Assuming backend returns { body: { ... } } structure from Huma
+  return axiosInstance.get<CropAnalytics>(`/analytics/crop/${cropId}`).then((res) => res.data);
 }
