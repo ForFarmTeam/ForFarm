@@ -22,7 +22,7 @@ export function GoogleSigninButton() {
       const exchangeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/oauth/exchange`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ access_token: credentialResponse.credential }),
+        body: JSON.stringify({ accessToken: credentialResponse.credential }),
       });
       if (!exchangeRes.ok) {
         throw new Error("Exchange token request failed");
