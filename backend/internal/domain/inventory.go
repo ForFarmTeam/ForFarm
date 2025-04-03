@@ -23,19 +23,19 @@ type HarvestUnit struct {
 }
 
 type InventoryItem struct {
-	ID         string
-	UserID     string
-	Name       string
-	CategoryID int
-	Category   InventoryCategory
-	Quantity   float64
-	UnitID     int
-	Unit       HarvestUnit
-	DateAdded  time.Time
-	StatusID   int
-	Status     InventoryStatus
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	ID         string            `json:"id"`
+	UserID     string            `json:"userId"`
+	Name       string            `json:"name"`
+	CategoryID int               `json:"categoryId"`
+	Category   InventoryCategory `json:"category"`
+	Quantity   float64           `json:"quantity"`
+	UnitID     int               `json:"unitId"`
+	Unit       HarvestUnit       `json:"unit"`
+	DateAdded  time.Time         `json:"dateAdded"`
+	StatusID   int               `json:"statusId"`
+	Status     InventoryStatus   `json:"status"`
+	CreatedAt  time.Time         `json:"createdAt"`
+	UpdatedAt  time.Time         `json:"updatedAt"`
 }
 
 type InventoryFilter struct {

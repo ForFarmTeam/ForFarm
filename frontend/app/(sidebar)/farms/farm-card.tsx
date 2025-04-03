@@ -9,7 +9,7 @@ import type { Farm } from "@/types";
 
 export interface FarmCardProps {
   variant: "farm" | "add";
-  farm?: Farm;
+  farm?: Farm; // Use updated Farm type
   onClick?: () => void;
 }
 
@@ -40,7 +40,7 @@ export function FarmCard({ variant, farm, onClick }: FarmCardProps) {
       year: "numeric",
       month: "short",
       day: "numeric",
-    }).format(farm.createdAt);
+    }).format(new Date(farm.createdAt));
 
     return (
       <Card className={cardClasses} onClick={onClick}>
@@ -49,7 +49,7 @@ export function FarmCard({ variant, farm, onClick }: FarmCardProps) {
             <Badge
               variant="outline"
               className="capitalize bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-300 border-green-200">
-              {farm.type}
+              {farm.farmType}
             </Badge>
             <div className="flex items-center text-xs text-muted-foreground">
               <CalendarDays className="h-3 w-3 mr-1" />
@@ -66,16 +66,16 @@ export function FarmCard({ variant, farm, onClick }: FarmCardProps) {
               <h3 className="text-xl font-medium mb-1 truncate">{farm.name}</h3>
               <div className="flex items-center text-sm text-muted-foreground mb-2">
                 <MapPin className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
-                <span className="truncate">{farm.location}</span>
+                <span className="truncate">{farm.lat}</span>
               </div>
               <div className="grid grid-cols-2 gap-2 mt-3">
                 <div className="bg-muted/30 dark:bg-muted/20 rounded-md p-2 text-center">
                   <p className="text-xs text-muted-foreground">Area</p>
-                  <p className="font-medium">{farm.area}</p>
+                  <p className="font-medium">{farm.totalSize}</p>
                 </div>
                 <div className="bg-muted/30 dark:bg-muted/20 rounded-md p-2 text-center">
                   <p className="text-xs text-muted-foreground">Crops</p>
-                  <p className="font-medium">{farm.crops}</p>
+                  <p className="font-medium">{farm.crops ? farm.crops.length : 0}</p>
                 </div>
               </div>
             </div>

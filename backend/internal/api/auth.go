@@ -55,6 +55,7 @@ type RegisterInput struct {
 
 type RegisterOutput struct {
 	Body struct {
+		// Use camelCase for JSON tags
 		Token string `json:"token" example:"JWT token for the user"`
 	}
 }
@@ -85,73 +86,97 @@ func (a *api) registerHandler(ctx context.Context, input *RegisterInput) (*Regis
 	}
 
 	if err := validateEmail(input.Body.Email); err != nil {
-		return nil, err
+		// Return validation error in a structured way if Huma supports it, otherwise basic error
+		return nil, huma.Error422UnprocessableEntity("Validation failed", err)
 	}
 	if err := validatePassword(input.Body.Password); err != nil {
-		return nil, err
+		return nil, huma.Error422UnprocessableEntity("Validation failed", err)
 	}
 
 	_, err := a.userRepo.GetByEmail(ctx, input.Body.Email)
-	if err == domain.ErrNotFound {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Body.Password), bcrypt.DefaultCost)
-		if err != nil {
-			return nil, err
+	// Check if the error is specifically ErrNotFound
+	if errors.Is(err, domain.ErrNotFound) {
+		hashedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(input.Body.Password), bcrypt.DefaultCost)
+		if hashErr != nil {
+			a.logger.Error("Failed to hash password during registration", "error", hashErr)
+			return nil, huma.Error500InternalServerError("Registration failed due to internal error")
 		}
 
-		err = a.userRepo.CreateOrUpdate(ctx, &domain.User{
+		newUser := &domain.User{
 			Email:    input.Body.Email,
 			Password: string(hashedPassword),
-		})
-		if err != nil {
-			return nil, err
+			IsActive: true,
 		}
 
-		user, err := a.userRepo.GetByEmail(ctx, input.Body.Email)
-		if err != nil {
-			return nil, err
+		createErr := a.userRepo.CreateOrUpdate(ctx, newUser)
+		if createErr != nil {
+			a.logger.Error("Failed to create user", "email", input.Body.Email, "error", createErr)
+			// Check for specific database errors if needed (e.g., unique constraint violation)
+			return nil, huma.Error500InternalServerError("Failed to register user")
 		}
 
-		token, err := utilities.CreateJwtToken(user.UUID)
-		if err != nil {
-			return nil, err
+		token, tokenErr := utilities.CreateJwtToken(newUser.UUID)
+		if tokenErr != nil {
+			a.logger.Error("Failed to create JWT token after registration", "user_uuid", newUser.UUID, "error", tokenErr)
+			// Consider how to handle this - user is created but can't log in immediately.
+			// Maybe log the error and return success but without a token? Or return an error.
+			return nil, huma.Error500InternalServerError("Registration partially succeeded, but failed to generate token")
 		}
 
 		resp.Body.Token = token
 		return resp, nil
+	} else if err == nil {
+		return nil, huma.Error409Conflict("User with this email already exists")
+	} else {
+		// Other database error occurred during GetByEmail
+		a.logger.Error("Database error checking user email", "email", input.Body.Email, "error", err)
+		return nil, huma.Error500InternalServerError("Failed to check user existence")
 	}
-
-	return nil, errors.New("user already exists")
 }
 
 func (a *api) loginHandler(ctx context.Context, input *LoginInput) (*LoginOutput, error) {
 	resp := &LoginOutput{}
 
 	if input == nil {
-		return nil, errors.New("invalid input")
+		return nil, huma.Error400BadRequest("Invalid input: missing request body")
 	}
 	if input.Body.Email == "" {
-		return nil, errors.New("email field is required")
+		return nil, huma.Error400BadRequest("Email field is required")
 	}
 	if input.Body.Password == "" {
-		return nil, errors.New("password field is required")
+		return nil, huma.Error400BadRequest("Password field is required")
 	}
 
 	if err := validateEmail(input.Body.Email); err != nil {
-		return nil, err
+		return nil, huma.Error422UnprocessableEntity("Validation failed", err)
 	}
 
 	user, err := a.userRepo.GetByEmail(ctx, input.Body.Email)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, domain.ErrNotFound) {
+			a.logger.Warn("Login attempt for non-existent user", "email", input.Body.Email)
+			return nil, huma.Error401Unauthorized("Invalid email or password") // Generic error for security
+		}
+		a.logger.Error("Database error during login lookup", "email", input.Body.Email, "error", err)
+		return nil, huma.Error500InternalServerError("Login failed due to an internal error")
+	}
+
+	// Check if the user is active
+	if !user.IsActive {
+		a.logger.Warn("Login attempt for inactive user", "email", input.Body.Email, "user_uuid", user.UUID)
+		return nil, huma.Error403Forbidden("Account is inactive")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Body.Password)); err != nil {
-		return nil, err
+		a.logger.Warn("Incorrect password attempt", "email", input.Body.Email, "user_uuid", user.UUID)
+		// Do not differentiate between wrong email and wrong password for security
+		return nil, huma.Error401Unauthorized("Invalid email or password")
 	}
 
 	token, err := utilities.CreateJwtToken(user.UUID)
 	if err != nil {
-		return nil, err
+		a.logger.Error("Failed to create JWT token during login", "user_uuid", user.UUID, "error", err)
+		return nil, huma.Error500InternalServerError("Failed to generate login token")
 	}
 
 	resp.Body.Token = token

@@ -8,13 +8,16 @@ import (
 )
 
 type Farm struct {
-	UUID      string
-	Name      string
-	Lat       []float64
-	Lon       []float64
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	OwnerID   string
+	UUID      string     `json:"uuid"`
+	Name      string     `json:"name"`
+	Lat       float64    `json:"lat"`
+	Lon       float64    `json:"lon"`
+	FarmType  string     `json:"farmType,omitempty"`
+	TotalSize string     `json:"totalSize,omitempty"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	OwnerID   string     `json:"ownerId"`
+	Crops     []Cropland `json:"crops,omitempty"`
 }
 
 func (f *Farm) Validate() error {
@@ -27,8 +30,9 @@ func (f *Farm) Validate() error {
 }
 
 type FarmRepository interface {
-	GetByID(context.Context, string) (Farm, error)
+	GetByID(context.Context, string) (*Farm, error)
 	GetByOwnerID(context.Context, string) ([]Farm, error)
 	CreateOrUpdate(context.Context, *Farm) error
 	Delete(context.Context, string) error
+	SetEventPublisher(EventPublisher)
 }

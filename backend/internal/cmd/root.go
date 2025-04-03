@@ -19,6 +19,7 @@ func Execute(ctx context.Context) int {
 
 	rootCmd.AddCommand(APICmd(ctx))
 	rootCmd.AddCommand(MigrateCmd(ctx, "pgx", config.DATABASE_URL))
+	rootCmd.AddCommand(RollbackCmd(ctx, "pgx", config.DATABASE_URL))
 
 	if err := rootCmd.Execute(); err != nil {
 		return 1
