@@ -40,11 +40,9 @@ import {
   fetchInventoryCategory,
 } from "@/api/inventory";
 import { AddInventoryItem } from "./add-inventory-item";
-import {
-  EditInventoryItem,
-  EditInventoryItemProps,
-} from "./edit-inventory-item";
+import { EditInventoryItem } from "./edit-inventory-item";
 import { DeleteInventoryItem } from "./delete-inventory-item";
+import { InventoryItem } from "@/types";
 
 export default function InventoryPage() {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -105,12 +103,9 @@ export default function InventoryPage() {
     return inventoryItems
       .map((item) => ({
         ...item,
-        status: item.status.name,
-        category: item.category.name,
-        categoryId: item.categoryId,
-        unit: item.unit.name,
-        unitId: item.unitId,
-        statusId: item.statusId,
+        status: { id: item.status.id, name: item.status.name },
+        category: { id: item.category.id, name: item.category.name },
+        unit: { id: item.unit.id, name: item.unit.name },
         fetchedInventoryStatus: inventoryStatus,
         fetchedInventoryCategory: inventoryCategory,
         fetchedHarvestUnits: harvestUnits,
@@ -132,15 +127,31 @@ export default function InventoryPage() {
 
   const columns = [
     { accessorKey: "name", header: "Name" },
-    { accessorKey: "category", header: "Category" },
-    { accessorKey: "quantity", header: "Quantity" },
-    { accessorKey: "unit", header: "Unit" },
-    { accessorKey: "lastUpdated", header: "Last Updated" },
+    {
+      accessorKey: "category",
+      header: "Category",
+      cell: ({ row }: { row: { original: InventoryItem } }) =>
+        row.original.category.name,
+    },
+    {
+      accessorKey: "quantity",
+      header: "Quantity",
+    },
+    {
+      accessorKey: "unit",
+      header: "Unit",
+      cell: ({ row }: { row: { original: InventoryItem } }) =>
+        row.original.unit.name,
+    },
+    {
+      accessorKey: "lastUpdated",
+      header: "Last Updated",
+    },
     {
       accessorKey: "status",
       header: "Status",
-      cell: (info: { getValue: () => string }) => {
-        const status = info.getValue();
+      cell: ({ row }: { row: { original: InventoryItem } }) => {
+        const status = row.original.status.name;
 
         let statusClass = "";
 
@@ -166,11 +177,20 @@ export default function InventoryPage() {
     {
       accessorKey: "edit",
       header: "Edit",
-      cell: ({ row }: { row: { original: EditInventoryItemProps } }) => (
+      cell: ({ row }: { row: { original: InventoryItem } }) => (
         <EditInventoryItem
-          {...row.original}
+          item={{
+            id: row.original.id,
+            name: row.original.name,
+            categoryId: row.original.categoryId,
+            quantity: row.original.quantity,
+            unitId: row.original.unitId,
+            dateAdded: row.original.dateAdded,
+            statusId: row.original.statusId,
+          }}
           fetchedInventoryStatus={inventoryStatus}
           fetchedInventoryCategory={inventoryCategory}
+          fetchedHarvestUnits={harvestUnits}
         />
       ),
       enableSorting: false,
@@ -178,7 +198,7 @@ export default function InventoryPage() {
     {
       accessorKey: "delete",
       header: "Delete",
-      cell: ({ row }: { row: { original: EditInventoryItemProps } }) => (
+      cell: ({ row }: { row: { original: InventoryItem } }) => (
         <DeleteInventoryItem id={row.original.id} />
       ),
       enableSorting: false,

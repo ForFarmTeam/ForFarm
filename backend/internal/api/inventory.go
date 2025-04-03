@@ -160,7 +160,6 @@ type GetInventoryItemOutput struct {
 
 type DeleteInventoryItemInput struct {
 	Header string `header:"Authorization" required:"true" example:"Bearer token"`
-	UserID string `header:"userId" required:"true" example:"user-uuid"`
 	ID     string `path:"id"`
 }
 
@@ -347,7 +346,8 @@ func (a *api) updateInventoryItemHandler(ctx context.Context, input *UpdateInven
 }
 
 func (a *api) deleteInventoryItemHandler(ctx context.Context, input *DeleteInventoryItemInput) (*DeleteInventoryItemOutput, error) {
-	err := a.inventoryRepo.Delete(ctx, input.ID, input.UserID)
+	userID, err := a.getUserIDFromHeader(input.Header)
+	err = a.inventoryRepo.Delete(ctx, input.ID, userID)
 	if err != nil {
 		return nil, err
 	}

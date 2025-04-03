@@ -160,9 +160,12 @@ export type CreateInventoryItemInput = {
   statusId: number;
 };
 
-export type UpdateInventoryItemInput = CreateInventoryItemInput & {};
+// export type UpdateInventoryItemInput = CreateInventoryItemInput & {};
+// export type EditInventoryItemInput = CreateInventoryItemInput & { id: number };
 
-// export type UpdateInventoryItemInput = Partial<CreateInventoryItemInput> & { id: string };
+export type UpdateInventoryItemInput = Partial<CreateInventoryItemInput> & {
+  id: string;
+};
 
 export interface Blog {
   id: number;

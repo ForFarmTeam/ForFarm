@@ -27,47 +27,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { InventoryStatus, InventoryItemCategory, HarvestUnits } from "@/types";
+import {
+  InventoryStatus,
+  InventoryItemCategory,
+  HarvestUnits,
+  UpdateInventoryItemInput,
+} from "@/types";
 import { updateInventoryItem } from "@/api/inventory";
-import type { UpdateInventoryItemInput } from "@/types";
-
-export interface EditInventoryItemProps {
-  id: string;
-  name: string;
-  categoryId: number;
-  statusId: number;
-  unitId: number;
-  quantity: number;
-  fetchedInventoryStatus: InventoryStatus[];
-  fetchedInventoryCategory: InventoryItemCategory[];
-  fetchedHarvestUnits: HarvestUnits[];
-}
 
 export function EditInventoryItem({
-  id,
-  name,
-  categoryId,
-  statusId,
-  unitId,
-  quantity,
+  item,
   fetchedInventoryStatus,
   fetchedInventoryCategory,
   fetchedHarvestUnits,
-}: EditInventoryItemProps) {
+}: {
+  item: UpdateInventoryItemInput;
+  fetchedInventoryStatus: InventoryStatus[];
+  fetchedInventoryCategory: InventoryItemCategory[];
+  fetchedHarvestUnits: HarvestUnits[];
+}) {
+  console.table(item);
   const [open, setOpen] = useState(false);
-  const [itemName, setItemName] = useState(name);
+  const [itemName, setItemName] = useState(item.name);
   const [itemCategory, setItemCategory] = useState(
-    fetchedInventoryCategory.find(
-      (categoryItem) => categoryItem.id === categoryId
-    )?.name
+    fetchedInventoryCategory.find((x) => x.id === item.categoryId)?.name
   );
-  const [itemQuantity, setItemQuantity] = useState(quantity);
+
+  const [itemQuantity, setItemQuantity] = useState(item.quantity);
+
   const [itemUnit, setItemUnit] = useState(
-    fetchedHarvestUnits.find((harvestItem) => harvestItem.id === unitId)?.name
+    fetchedHarvestUnits.find((x) => x.id === item.unitId)?.name
   );
+
   const [itemStatus, setItemStatus] = useState(
-    fetchedInventoryStatus.find((statusItem) => statusItem.id === statusId)
-      ?.name
+    fetchedInventoryStatus.find((x) => x.id === item.statusId)?.name
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -75,7 +68,7 @@ export function EditInventoryItem({
 
   const mutation = useMutation({
     mutationFn: (item: UpdateInventoryItemInput) =>
-      updateInventoryItem(id, item),
+      updateInventoryItem(item.id, item),
     onSuccess: () => {
       // invalidate queries to refresh inventory data.
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
@@ -108,26 +101,9 @@ export function EditInventoryItem({
       );
       return;
     }
-    // console.table({
-    //   name: itemName,
-    //   categoryId:
-    //     fetchedInventoryCategory.find(
-    //       (category) => category.name === itemCategory
-    //     )?.id ?? 0,
-    //   quantity: itemQuantity,
-    //   unitId:
-    //     fetchedHarvestUnits.find((unit) => unit.name === itemUnit)?.id ?? 0,
-    //   statusId:
-    //     fetchedInventoryStatus.find((status) => status.name === itemStatus)
-    //       ?.id ?? 0,
-    //   lastUpdated: new Date().toISOString(),
-    // });
     mutation.mutate({
       name: itemName,
-      categoryId:
-        fetchedInventoryCategory.find(
-          (category) => category.name === itemCategory
-        )?.id ?? 0,
+      categoryId: item.categoryId,
       quantity: itemQuantity,
       unitId:
         fetchedHarvestUnits.find((unit) => unit.name === itemUnit)?.id ?? 0,
@@ -135,6 +111,7 @@ export function EditInventoryItem({
         fetchedInventoryStatus.find((status) => status.name === itemStatus)
           ?.id ?? 0,
       dateAdded: new Date().toISOString(),
+      id: "",
     });
   };
 

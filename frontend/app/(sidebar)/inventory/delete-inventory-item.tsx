@@ -19,7 +19,6 @@ export function DeleteInventoryItem({ id }: { id: string }) {
     mutationFn: deleteInventoryItem,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
-      setOpen(false); // Close dialog on success
     },
     onError: (error) => {
       console.error("Failed to delete item:", error);
@@ -32,7 +31,7 @@ export function DeleteInventoryItem({ id }: { id: string }) {
 
   return (
     <div>
-      {/* trigger button for the confirmation dialog */}
+      {/* delete confirmation dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button
@@ -48,8 +47,6 @@ export function DeleteInventoryItem({ id }: { id: string }) {
             Are you sure you want to delete this item? This action cannot be
             undone.
           </DialogDescription>
-
-          {/* footer with confirm and cancel buttons */}
           <DialogFooter>
             <Button
               className="bg-gray-500 hover:bg-gray-700 text-white"

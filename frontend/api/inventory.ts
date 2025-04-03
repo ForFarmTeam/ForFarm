@@ -92,9 +92,32 @@ export async function deleteInventoryItem(id: string) {
   try {
     const response = await axiosInstance.delete("/inventory/" + id);
     return response.data;
-  } catch (error) {
-    console.error("Error while deleting Inventory Item! " + error);
-    throw new Error("Failed to deleting inventory item: " + error);
+  } catch (error: unknown) {
+    // Cast error to AxiosError to safely access response properties
+    if (error instanceof AxiosError && error.response) {
+      // Log the detailed error message
+      console.error("Error while deleting Inventory Item!");
+      console.error("Response Status:", error.response.status); // e.g., 422
+      console.error("Error Detail:", error.response.data?.detail); // Custom error message from backend
+      console.error("Full Error Response:", error.response.data); // Entire error object (including details)
+
+      // Throw a new error with a more specific message
+      throw new Error(
+        `Failed to delete inventory item: ${
+          error.response.data?.detail || error.message
+        }`
+      );
+    } else {
+      // Handle other errors (e.g., network errors or unknown errors)
+      console.error(
+        "Error while deleting Inventory Item, unknown error:",
+        error
+      );
+      throw new Error(
+        "Failed to delete inventory item: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
+    }
   }
 }
 export async function updateInventoryItem(
