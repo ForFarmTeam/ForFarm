@@ -71,11 +71,11 @@ export function AddFarmForm({ onSubmit, onCancel }: AddFarmFormProps) {
     try {
       setIsSubmitting(true);
       const farmData: Partial<Farm> = {
-        Name: values.name,
-        Lat: values.latitude,
-        Lon: values.longitude,
-        FarmType: values.type,
-        TotalSize: values.area,
+        name: values.name,
+        lat: values.latitude,
+        lon: values.longitude,
+        farmType: values.type,
+        totalSize: values.area,
       };
       await onSubmit(farmData);
       form.reset();

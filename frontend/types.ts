@@ -1,131 +1,156 @@
-export interface Plant {
-  UUID: string;
-  Name: string;
-  Variety: string;
-  AverageHeight: number;
-  DaysToEmerge: number;
-  DaysToFlower: number;
-  DaysToMaturity: number;
-  EstimateLossRate: number;
-  EstimateRevenuePerHU: number;
-  HarvestUnitID: number;
-  HarvestWindow: number;
-  IsPerennial: boolean;
-  LightProfileID: number;
-  OptimalTemp: number;
-  PHValue: number;
-  PlantingDepth: number;
-  PlantingDetail: string;
-  RowSpacing: number;
-  SoilConditionID: number;
-  WaterNeeds: number;
-  CreatedAt: string;
-  UpdatedAt: string;
+export interface GeoPosition {
+  lat: number;
+  lng: number;
 }
 
-export interface Crop {
-  id: string;
-  farmId: string;
+export interface GeoMarker {
+  type: "marker";
+  position: GeoPosition;
+}
+
+export interface GeoPolygon {
+  type: "polygon";
+  path: GeoPosition[];
+}
+
+export interface GeoPolyline {
+  type: "polyline";
+  path: GeoPosition[];
+}
+
+export type GeoFeatureData = GeoMarker | GeoPolygon | GeoPolyline;
+
+export interface Plant {
+  uuid: string;
   name: string;
-  plantedDate: Date;
-  expectedHarvest?: Date;
-  status: string;
   variety?: string;
-  area?: string;
-  healthScore?: number;
-  progress?: number;
+  averageHeight?: number;
+  daysToEmerge?: number;
+  daysToFlower?: number;
+  daysToMaturity?: number;
+  estimateLossRate?: number;
+  estimateRevenuePerHu?: number;
+  harvestUnitId: number;
+  harvestWindow?: number;
+  isPerennial: boolean;
+  lightProfileId: number;
+  optimalTemp?: number;
+  phValue?: number;
+  plantingDepth?: number;
+  plantingDetail?: string;
+  rowSpacing?: number;
+  soilConditionId: number;
+  waterNeeds?: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Cropland {
-  UUID: string;
-  Name: string;
-  Status: string;
-  Priority: number;
-  LandSize: number;
-  GrowthStage: string;
-  PlantID: string;
-  FarmID: string;
-  CreatedAt: Date;
-  UpdatedAt: Date;
+  uuid: string;
+  name: string;
+  status: string;
+  priority: number;
+  landSize: number;
+  growthStage: string;
+  plantId: string;
+  farmId: string;
+  geoFeature?: GeoFeatureData | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface CropAnalytics {
   cropId: string;
+  cropName: string;
+  farmId: string;
+  plantName: string;
+  variety?: string;
+  currentStatus: string;
+  growthStage: string;
+  landSize: number;
+  lastUpdated: string;
+  temperature?: number | null;
+  humidity?: number | null;
+  soilMoisture?: number | null;
+  sunlight?: number | null;
+  windSpeed?: number | null;
+  rainfall?: number | null;
   growthProgress: number;
-  humidity: number;
-  temperature: number;
-  sunlight: number;
-  waterLevel: number;
-  plantHealth: "good" | "warning" | "critical";
-  nextAction: string;
-  nextActionDue: Date;
-  soilMoisture: number;
-  windSpeed: string;
-  rainfall: string;
-  nutrientLevels: {
-    nitrogen: number;
-    phosphorus: number;
-    potassium: number;
-  };
+  plantHealth?: "good" | "warning" | "critical";
+  nextAction?: string | null;
+  nextActionDue?: string | null;
+  nutrientLevels?: {
+    nitrogen: number | null;
+    phosphorus: number | null;
+    potassium: number | null;
+  } | null;
 }
 
 export interface Farm {
-  CreatedAt: Date;
-  FarmType: string;
-  Lat: number;
-  Lon: number;
-  Name: string;
-  OwnerID: string;
-  TotalSize: string;
-  UUID: string;
-  UpdatedAt: Date;
-  Crops: Cropland[];
+  uuid: string;
+  name: string;
+  farmType: string;
+  lat: number;
+  lon: number;
+  ownerId: string;
+  totalSize: string;
+  createdAt: Date;
+  updatedAt: Date;
+  crops: Cropland[];
 }
-
-// export interface Farm {
-//   id: string;
-//   name: string;
-//   location: string;
-//   type: string;
-//   createdAt: Date;
-//   area?: string;
-//   crops: number;
-//   weather?: {
-//     temperature: number;
-//     humidity: number;
-//     rainfall: string;
-//     sunlight: number;
-//   };
-// }
 
 export interface User {
-  ID: number;
-  UUID: string;
-  Username: string;
-  Password: string;
-  Email: string;
-  CreatedAt: string;
-  UpdatedAt: string;
-  Avatar: string;
-  IsActive: boolean;
+  id: number;
+  uuid: string;
+  username?: string;
+  password?: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+  avatar?: string;
+  isActive: boolean;
 }
 
-export type InventoryItem = {
-  id: number;
+export interface InventoryItem {
+  id: string;
+  userId: string;
   name: string;
-  category: string;
-  type: string;
+  categoryId: number;
+  category: { id: number; name: string };
   quantity: number;
-  unit: string;
-  lastUpdated: string;
-  status: string;
-};
-export type InventoryItemStatus = {
+  unitId: number;
+  unit: { id: number; name: string };
+  dateAdded: string;
+  statusId: number;
+  status: { id: number; name: string };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InventoryStatus {
   id: number;
   name: string;
-};
+}
 
-export type CreateInventoryItemInput = Omit<InventoryItem, "id" | "lastUpdated" | "status">;
+export interface InventoryCategory {
+  id: number;
+  name: string;
+}
+
+export interface HarvestUnit {
+  id: number;
+  name: string;
+}
+
+export interface CreateInventoryItemInput {
+  name: string;
+  categoryId: number;
+  quantity: number;
+  unitId: number;
+  dateAdded: string;
+  statusId: number;
+}
+export type UpdateInventoryItemInput = Partial<CreateInventoryItemInput> & { id: string };
 
 export interface Blog {
   id: number;
@@ -151,8 +176,6 @@ export interface Blog {
     featured?: boolean;
   }[];
 }
-
-// ----------- Maps -----------$
 
 export type OverlayGeometry =
   | google.maps.Marker

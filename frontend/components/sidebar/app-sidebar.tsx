@@ -107,10 +107,11 @@ export function AppSidebar({ config, ...props }: AppSidebarProps) {
     async function getUser() {
       try {
         const data = await fetchUserMe();
+        console.log(data);
         setUser({
-          name: data.user.UUID,
-          email: data.user.Email,
-          avatar: data.user.Avatar || "/avatars/avatar.webp",
+          name: data.user.uuid,
+          email: data.user.email,
+          avatar: data.user.avatar || "/avatars/avatar.webp",
         });
       } catch (err: unknown) {
         if (err instanceof Error) {

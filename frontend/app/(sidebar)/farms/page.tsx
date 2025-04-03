@@ -36,18 +36,21 @@ export default function FarmSetupPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const {
-    data: farms,
+    data: farms, // Type is Farm[] now
     isLoading,
     isError,
     error,
   } = useQuery<Farm[]>({
+    // Use Farm[] type
     queryKey: ["farms"],
     queryFn: fetchFarms,
     staleTime: 60 * 1000,
   });
 
   const mutation = useMutation({
-    mutationFn: (data: Partial<Farm>) => createFarm(data),
+    // Pass the correct type to createFarm
+    mutationFn: (data: Partial<Omit<Farm, "uuid" | "createdAt" | "updatedAt" | "crops" | "ownerId">>) =>
+      createFarm(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["farms"] });
       setIsDialogOpen(false);
@@ -69,23 +72,23 @@ export default function FarmSetupPage() {
   const filteredAndSortedFarms = (farms || [])
     .filter(
       (farm) =>
-        (activeFilter === "all" || farm.FarmType === activeFilter) &&
-        (farm.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          // farm.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          farm.FarmType.toLowerCase().includes(searchQuery.toLowerCase()))
+        (activeFilter === "all" || farm.farmType === activeFilter) && // Use camelCase farmType
+        (farm.name.toLowerCase().includes(searchQuery.toLowerCase()) || // Use camelCase name
+          // farm.location is no longer a single string, use lat/lon if needed for search
+          farm.farmType.toLowerCase().includes(searchQuery.toLowerCase())) // Use camelCase farmType
     )
     .sort((a, b) => {
       if (sortOrder === "newest") {
-        return new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime();
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // Use camelCase createdAt
       } else if (sortOrder === "oldest") {
-        return new Date(a.CreatedAt).getTime() - new Date(b.CreatedAt).getTime();
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(); // Use camelCase createdAt
       } else {
-        return a.Name.localeCompare(b.Name);
+        return a.name.localeCompare(b.name); // Use camelCase name
       }
     });
 
   // Get distinct farm types.
-  const farmTypes = ["all", ...new Set((farms || []).map((farm) => farm.FarmType))];
+  const farmTypes = ["all", ...new Set((farms || []).map((farm) => farm.farmType))]; // Use camelCase farmType
 
   const handleAddFarm = async (data: Partial<Farm>) => {
     await mutation.mutateAsync(data);
@@ -133,6 +136,7 @@ export default function FarmSetupPage() {
                 </Badge>
               ))}
             </div>
+            {/* DropdownMenu remains the same, Check icon was missing */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="gap-2">
@@ -228,23 +232,17 @@ export default function FarmSetupPage() {
           {!isLoading && !isError && filteredAndSortedFarms.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               <AnimatePresence>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.2 }}
-                  className="col-span-1">
+                <motion.div /* ... */>
                   <FarmCard variant="add" onClick={() => setIsDialogOpen(true)} />
                 </motion.div>
                 {filteredAndSortedFarms.map((farm, index) => (
                   <motion.div
-                    key={farm.UUID}
-                    initial={{ opacity: 0, y: 20 }}
+                    key={farm.uuid} // Use camelCase uuid                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.2, delay: index * 0.05 }}
                     className="col-span-1">
-                    <FarmCard variant="farm" farm={farm} onClick={() => router.push(`/farms/${farm.UUID}`)} />
+                    <FarmCard variant="farm" farm={farm} onClick={() => router.push(`/farms/${farm.uuid}`)} />
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -260,6 +258,7 @@ export default function FarmSetupPage() {
             <DialogTitle>Add New Farm</DialogTitle>
             <DialogDescription>Fill out the details below to add a new farm to your account.</DialogDescription>
           </DialogHeader>
+          {/* Pass handleAddFarm (which now expects Partial<Farm>) */}
           <AddFarmForm onSubmit={handleAddFarm} onCancel={() => setIsDialogOpen(false)} />
         </DialogContent>
       </Dialog>
