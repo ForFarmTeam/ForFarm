@@ -18,7 +18,6 @@ import { loginUser } from "@/api/authentication";
 import { SessionContext } from "@/context/SessionContext";
 import { Eye, EyeOff, Leaf, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function SigninPage() {
   const [serverError, setServerError] = useState<string | null>(null);
