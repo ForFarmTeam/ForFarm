@@ -27,11 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  InventoryItemStatus,
-  InventoryItemCategory,
-  HarvestUnits,
-} from "@/types";
+import { InventoryStatus, InventoryItemCategory, HarvestUnits } from "@/types";
 import { updateInventoryItem } from "@/api/inventory";
 import type { UpdateInventoryItemInput } from "@/types";
 
@@ -42,7 +38,7 @@ export interface EditInventoryItemProps {
   statusId: string;
   unitId: string;
   quantity: number;
-  fetchedInventoryStatus: InventoryItemStatus[];
+  fetchedInventoryStatus: InventoryStatus[];
   fetchedInventoryCategory: InventoryItemCategory[];
   fetchedHarvestUnits: HarvestUnits[];
 }

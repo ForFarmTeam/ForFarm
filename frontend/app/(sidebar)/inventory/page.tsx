@@ -103,16 +103,19 @@ export default function InventoryPage() {
         ...item,
         status:
           inventoryStatus.find(
-            (statusItem) => statusItem.id.toString() === item.statusId
+            (statusItem) => statusItem.id.toString() === item.statusId.toString()
           )?.name || "",
         category:
           inventoryCategory.find(
             (categoryItem) =>
               categoryItem.id.toString() === item.categoryId.toString()
           )?.name || "",
+        categoryId: item.categoryId.toString(),
         unit:
-          harvestUnits.find((unit) => unit.id.toString() === item.unitId)
+          harvestUnits.find((unit) => unit.id === item.unitId)
             ?.name || "",
+        unitId: item.unitId.toString(),
+        statusId: item.statusId.toString(),
         fetchedInventoryStatus: inventoryStatus,
         fetchedInventoryCategory: inventoryCategory,
         fetchedHarvestUnits: harvestUnits,

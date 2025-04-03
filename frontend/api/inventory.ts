@@ -1,7 +1,7 @@
 import axiosInstance from "./config";
 import type {
   InventoryItem,
-  InventoryItemStatus,
+  InventoryStatus,
   InventoryItemCategory,
   CreateInventoryItemInput,
   UpdateInventoryItemInput,
@@ -14,9 +14,9 @@ import type {
  *
  *
  */
-export async function fetchInventoryStatus(): Promise<InventoryItemStatus[]> {
+export async function fetchInventoryStatus(): Promise<InventoryStatus[]> {
   try {
-    const response = await axiosInstance.get<InventoryItemStatus[]>(
+    const response = await axiosInstance.get<InventoryStatus[]>(
       "/inventory/status"
     );
     return response.data;
@@ -44,56 +44,9 @@ export async function fetchInventoryItems(): Promise<InventoryItem[]> {
     const response = await axiosInstance.get<InventoryItem[]>("/inventory");
     return response.data;
   } catch (error) {
-    // console.error("Error while fetching inventory items! " + error);
-    // throw error;
-    // Fallback dummy data
-    return [
-      {
-        id: "1",
-        name: "Tomato Seeds",
-        categoryId: "1",
-        quantity: 500,
-        unitId: "1",
-        lastUpdated: "2023-03-01",
-        statusId: "1",
-      },
-      {
-        id: "2",
-        name: "NPK Fertilizer",
-        categoryId: "3",
-        quantity: 200,
-        unitId: "2",
-        lastUpdated: "2023-03-05",
-        statusId: "2",
-      },
-      {
-        id: "3",
-        name: "Corn Seeds",
-        categoryId: "1",
-        quantity: 300,
-        unitId: "1",
-        lastUpdated: "2023-03-10",
-        statusId: "3",
-      },
-      {
-        id: "4",
-        name: "Organic Compost",
-        categoryId: "3",
-        quantity: 150,
-        unitId: "2",
-        lastUpdated: "2023-03-15",
-        statusId: "1",
-      },
-      {
-        id: "5",
-        name: "Wheat Seeds",
-        categoryId: "1",
-        quantity: 250,
-        unitId: "2",
-        lastUpdated: "2023-03-20",
-        statusId: "2",
-      },
-    ];
+    console.error("Error while fetching inventory items! " + error);
+    throw error;
+    
   }
 }
 

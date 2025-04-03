@@ -36,14 +36,14 @@ import { cn } from "@/lib/utils";
 import { createInventoryItem } from "@/api/inventory";
 import type {
   CreateInventoryItemInput,
-  InventoryItemStatus,
+  InventoryStatus,
   InventoryItemCategory,
   HarvestUnits,
 } from "@/types";
 
 interface AddInventoryItemProps {
   inventoryCategory: InventoryItemCategory[];
-  inventoryStatus: InventoryItemStatus[];
+  inventoryStatus: InventoryStatus[];
   harvestUnits: HarvestUnits[];
 }
 

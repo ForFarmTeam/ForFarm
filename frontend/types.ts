@@ -161,15 +161,8 @@ export type CreateInventoryItemInput = {
 };
 
 export type UpdateInventoryItemInput = CreateInventoryItemInput & {};
-export interface CreateInventoryItemInput {
-  name: string;
-  categoryId: number;
-  quantity: number;
-  unitId: number;
-  dateAdded: string;
-  statusId: number;
-}
-export type UpdateInventoryItemInput = Partial<CreateInventoryItemInput> & { id: string };
+
+// export type UpdateInventoryItemInput = Partial<CreateInventoryItemInput> & { id: string };
 
 export interface Blog {
   id: number;
