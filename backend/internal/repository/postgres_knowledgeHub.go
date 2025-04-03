@@ -34,6 +34,7 @@ func (p *postgresKnowledgeHubRepository) fetchArticles(ctx context.Context, quer
 			&a.PublishDate,
 			&a.ReadTime,
 			&a.Categories,
+			&a.ImageURL,
 			&a.CreatedAt,
 			&a.UpdatedAt,
 		); err != nil {
@@ -46,7 +47,7 @@ func (p *postgresKnowledgeHubRepository) fetchArticles(ctx context.Context, quer
 
 func (p *postgresKnowledgeHubRepository) GetArticleByID(ctx context.Context, uuid string) (domain.KnowledgeArticle, error) {
 	query := `
-		SELECT uuid, title, content, author, publish_date, read_time, categories, created_at, updated_at
+		SELECT uuid, title, content, author, publish_date, read_time, categories, image_url, created_at, updated_at
 		FROM knowledge_articles
 		WHERE uuid = $1`
 
@@ -62,7 +63,7 @@ func (p *postgresKnowledgeHubRepository) GetArticleByID(ctx context.Context, uui
 
 func (p *postgresKnowledgeHubRepository) GetArticlesByCategory(ctx context.Context, category string) ([]domain.KnowledgeArticle, error) {
 	query := `
-		SELECT uuid, title, content, author, publish_date, read_time, categories, created_at, updated_at
+		SELECT uuid, title, content, author, publish_date, read_time, categories, image_url, created_at, updated_at
 		FROM knowledge_articles
 		WHERE $1 = ANY(categories)`
 
@@ -71,20 +72,24 @@ func (p *postgresKnowledgeHubRepository) GetArticlesByCategory(ctx context.Conte
 
 func (p *postgresKnowledgeHubRepository) GetAllArticles(ctx context.Context) ([]domain.KnowledgeArticle, error) {
 	query := `
-		SELECT uuid, title, content, author, publish_date, read_time, categories, created_at, updated_at
+		SELECT uuid, title, content, author, publish_date, read_time, categories, image_url, created_at, updated_at
 		FROM knowledge_articles`
 
 	return p.fetchArticles(ctx, query)
 }
 
-func (p *postgresKnowledgeHubRepository) CreateOrUpdateArticle(ctx context.Context, article *domain.KnowledgeArticle) error {
+func (p *postgresKnowledgeHubRepository) CreateOrUpdateArticle(
+	ctx context.Context,
+	article *domain.KnowledgeArticle,
+) error {
 	if strings.TrimSpace(article.UUID) == "" {
 		article.UUID = uuid.New().String()
 	}
 
 	query := `  
-        INSERT INTO knowledge_articles (uuid, title, content, author, publish_date, read_time, categories, created_at, updated_at)  
-        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+        INSERT INTO knowledge_articles 
+        (uuid, title, content, author, publish_date, read_time, categories, image_url, created_at, updated_at)  
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
         ON CONFLICT (uuid) DO UPDATE
         SET title = EXCLUDED.title,
             content = EXCLUDED.content,
@@ -92,6 +97,7 @@ func (p *postgresKnowledgeHubRepository) CreateOrUpdateArticle(ctx context.Conte
             publish_date = EXCLUDED.publish_date,
             read_time = EXCLUDED.read_time,
             categories = EXCLUDED.categories,
+            image_url = EXCLUDED.image_url,
             updated_at = NOW()
         RETURNING uuid, created_at, updated_at`
 
@@ -105,6 +111,7 @@ func (p *postgresKnowledgeHubRepository) CreateOrUpdateArticle(ctx context.Conte
 		article.PublishDate,
 		article.ReadTime,
 		article.Categories,
+		article.ImageURL,
 	).Scan(&article.UUID, &article.CreatedAt, &article.UpdatedAt)
 }
 
@@ -188,8 +195,8 @@ func (p *postgresKnowledgeHubRepository) CreateRelatedArticle(
 	articleID string,
 	related *domain.RelatedArticle,
 ) error {
-	related.UUID = uuid.New().String() // Generate UUID
-	related.ArticleID = articleID      // Link to main article
+	related.UUID = uuid.New().String()
+	related.ArticleID = articleID
 
 	query := `
         INSERT INTO related_articles 

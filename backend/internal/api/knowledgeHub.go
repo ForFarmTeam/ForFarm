@@ -81,13 +81,14 @@ type GetKnowledgeArticleByIDOutput struct {
 
 type CreateOrUpdateKnowledgeArticleInput struct {
 	Body struct {
-		UUID        string    `json:"uuid,omitempty"` // Optional for create, required for update
+		UUID        string    `json:"uuid,omitempty"`
 		Title       string    `json:"title"`
 		Content     string    `json:"content"`
 		Author      string    `json:"author"`
 		PublishDate time.Time `json:"publish_date"`
 		ReadTime    string    `json:"read_time"`
 		Categories  []string  `json:"categories"`
+		ImageURL    string    `json:"image_url"`
 	} `json:"body"`
 }
 
@@ -130,7 +131,7 @@ func (a *api) getAllKnowledgeArticlesHandler(ctx context.Context, input *struct{
 }
 
 func (a *api) getKnowledgeArticleByIDHandler(ctx context.Context, input *struct {
-	UUID string `path:"uuid" example:"550e8400-e29b-41d4-a716-446655440000"`
+	UUID string `path:"uuid"`
 }) (*GetKnowledgeArticleByIDOutput, error) {
 	resp := &GetKnowledgeArticleByIDOutput{}
 
@@ -138,8 +139,7 @@ func (a *api) getKnowledgeArticleByIDHandler(ctx context.Context, input *struct 
 		return nil, huma.Error400BadRequest("UUID parameter is required")
 	}
 
-	_, err := uuid.FromString(input.UUID)
-	if err != nil {
+	if _, err := uuid.FromString(input.UUID); err != nil {
 		return nil, huma.Error400BadRequest("invalid UUID format")
 	}
 
@@ -156,7 +156,7 @@ func (a *api) getKnowledgeArticleByIDHandler(ctx context.Context, input *struct 
 }
 
 func (a *api) getKnowledgeArticlesByCategoryHandler(ctx context.Context, input *struct {
-	Category string `path:"category" example:"Sustainability"`
+	Category string `path:"category"`
 }) (*GetKnowledgeArticlesOutput, error) {
 	resp := &GetKnowledgeArticlesOutput{}
 
@@ -190,8 +190,7 @@ func (a *api) createOrUpdateKnowledgeArticleHandler(ctx context.Context, input *
 	}
 
 	if input.Body.UUID != "" {
-		_, err := uuid.FromString(input.Body.UUID)
-		if err != nil {
+		if _, err := uuid.FromString(input.Body.UUID); err != nil {
 			return nil, huma.Error400BadRequest("invalid UUID format")
 		}
 	}
@@ -204,10 +203,10 @@ func (a *api) createOrUpdateKnowledgeArticleHandler(ctx context.Context, input *
 		PublishDate: input.Body.PublishDate,
 		ReadTime:    input.Body.ReadTime,
 		Categories:  input.Body.Categories,
+		ImageURL:    input.Body.ImageURL,
 	}
 
-	err := a.knowledgeHubRepo.CreateOrUpdateArticle(ctx, article)
-	if err != nil {
+	if err := a.knowledgeHubRepo.CreateOrUpdateArticle(ctx, article); err != nil {
 		return nil, err
 	}
 
@@ -216,7 +215,7 @@ func (a *api) createOrUpdateKnowledgeArticleHandler(ctx context.Context, input *
 }
 
 func (a *api) getArticleTableOfContentsHandler(ctx context.Context, input *struct {
-	UUID string `path:"uuid" example:"550e8400-e29b-41d4-a716-446655440000"`
+	UUID string `path:"uuid"`
 }) (*GetTableOfContentsOutput, error) {
 	resp := &GetTableOfContentsOutput{}
 
@@ -224,8 +223,7 @@ func (a *api) getArticleTableOfContentsHandler(ctx context.Context, input *struc
 		return nil, huma.Error400BadRequest("UUID parameter is required")
 	}
 
-	_, err := uuid.FromString(input.UUID)
-	if err != nil {
+	if _, err := uuid.FromString(input.UUID); err != nil {
 		return nil, huma.Error400BadRequest("invalid UUID format")
 	}
 
@@ -242,7 +240,7 @@ func (a *api) getArticleTableOfContentsHandler(ctx context.Context, input *struc
 }
 
 func (a *api) getArticleRelatedArticlesHandler(ctx context.Context, input *struct {
-	UUID string `path:"uuid" example:"550e8400-e29b-41d4-a716-446655440000"`
+	UUID string `path:"uuid"`
 }) (*GetRelatedArticlesOutput, error) {
 	resp := &GetRelatedArticlesOutput{}
 
@@ -250,8 +248,7 @@ func (a *api) getArticleRelatedArticlesHandler(ctx context.Context, input *struc
 		return nil, huma.Error400BadRequest("UUID parameter is required")
 	}
 
-	_, err := uuid.FromString(input.UUID)
-	if err != nil {
+	if _, err := uuid.FromString(input.UUID); err != nil {
 		return nil, huma.Error400BadRequest("invalid UUID format")
 	}
 
@@ -286,5 +283,5 @@ func (a *api) createRelatedArticleHandler(
 		return nil, huma.Error500InternalServerError("failed to create related article")
 	}
 
-	return nil, nil // HTTP 204 No Content
+	return nil, nil
 }

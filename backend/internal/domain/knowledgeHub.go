@@ -2,6 +2,8 @@ package domain
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -15,6 +17,7 @@ type KnowledgeArticle struct {
 	PublishDate time.Time
 	ReadTime    string
 	Categories  []string
+	ImageURL    string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -25,6 +28,16 @@ func (k *KnowledgeArticle) Validate() error {
 		validation.Field(&k.Content, validation.Required),
 		validation.Field(&k.Author, validation.Required),
 		validation.Field(&k.PublishDate, validation.Required),
+		validation.Field(&k.ImageURL,
+			validation.By(func(value interface{}) error {
+				if url, ok := value.(string); ok && url != "" {
+					if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+						return fmt.Errorf("must be a valid URL starting with http:// or https://")
+					}
+				}
+				return nil
+			}),
+		),
 	)
 }
 
