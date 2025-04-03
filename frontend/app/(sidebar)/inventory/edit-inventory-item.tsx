@@ -32,8 +32,8 @@ import {
   InventoryItemCategory,
   HarvestUnits,
 } from "@/types";
-// import { updateInventoryItem } from "@/api/inventory";
-// import type { UpdateInventoryItemInput } from "@/types";
+import { updateInventoryItem } from "@/api/inventory";
+import type { UpdateInventoryItemInput } from "@/types";
 
 export interface EditInventoryItemProps {
   id: string;
@@ -76,35 +76,73 @@ export function EditInventoryItem({
       (statusItem) => statusItem.id.toString() === statusId
     )?.name
   );
+  const [error, setError] = useState<string | null>(null);
 
-  // const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-  // const mutation = useMutation({
-  //   mutationFn: (item: UpdateInventoryItemInput) => UpdateInventoryItem(item),
-  //   onSuccess: () => {
-  //     // Invalidate queries to refresh inventory data.
-  //     queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
-  //     // Reset form fields and close dialog.
-  //     setItemName("");
-  //     setItemType("");
-  //     setItemCategory("");
-  //     setItemQuantity(0);
-  //     setItemUnit("");
-  //     setDate(undefined);
-  //     setOpen(false);
-  //   },
-  // });
+  const mutation = useMutation({
+    mutationFn: (item: UpdateInventoryItemInput) =>
+      updateInventoryItem(id, item),
+    onSuccess: () => {
+      // invalidate queries to refresh inventory data.
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      // reset form fields and close dialog.
+      setItemName("");
+      setItemCategory("");
+      setItemQuantity(0);
+      setItemUnit("");
+      setOpen(false);
+      setItemStatus("");
+    },
+  });
 
+  // send edit request
   const handleEdit = () => {
-    //   // Basic validation (you can extend this as needed)
-    //   if (!itemName || !itemType || !itemCategory || !itemUnit) return;
-    //   mutation.mutate({
-    //     name: itemName,
-    //     type: itemType,
-    //     category: itemCategory,
-    //     quantity: itemQuantity,
-    //     unit: itemUnit,
-    //   });
+    if (!itemName || !itemCategory || !itemUnit) {
+      setError("All fields are required. Please fill in missing details.");
+      return;
+    }
+
+    const category = fetchedInventoryCategory.find(
+      (c) => c.name === itemCategory
+    );
+    const unit = fetchedHarvestUnits.find((u) => u.name === itemUnit);
+    const status = fetchedInventoryStatus.find((s) => s.name === itemStatus);
+
+    if (!category || !unit || !status) {
+      setError(
+        "Invalid category, unit, or status. Please select a valid option."
+      );
+      return;
+    }
+    // console.table({
+    //   name: itemName,
+    //   categoryId:
+    //     fetchedInventoryCategory.find(
+    //       (category) => category.name === itemCategory
+    //     )?.id ?? 0,
+    //   quantity: itemQuantity,
+    //   unitId:
+    //     fetchedHarvestUnits.find((unit) => unit.name === itemUnit)?.id ?? 0,
+    //   statusId:
+    //     fetchedInventoryStatus.find((status) => status.name === itemStatus)
+    //       ?.id ?? 0,
+    //   lastUpdated: new Date().toISOString(),
+    // });
+    mutation.mutate({
+      name: itemName,
+      categoryId:
+        fetchedInventoryCategory.find(
+          (category) => category.name === itemCategory
+        )?.id ?? 0,
+      quantity: itemQuantity,
+      unitId:
+        fetchedHarvestUnits.find((unit) => unit.name === itemUnit)?.id ?? 0,
+      statusId:
+        fetchedInventoryStatus.find((status) => status.name === itemStatus)
+          ?.id ?? 0,
+      lastUpdated: new Date().toISOString(),
+    });
   };
 
   return (
@@ -205,6 +243,7 @@ export function EditInventoryItem({
           </div>
         </div>
         <DialogFooter>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
           <Button type="submit" onClick={handleEdit}>
             Save
           </Button>

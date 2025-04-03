@@ -60,23 +60,13 @@ export function AddInventoryItem({
   const [itemUnit, setItemUnit] = useState("");
   const [itemStatus, setItemStatus] = useState("");
 
-  // const {
-  //   data: inventoryItems = [],
-  //   isLoading: isItemLoading,
-  //   isError: isItemError,
-  // } = useQuery({
-  //   queryKey: ["inventoryItems"],
-  //   queryFn: fetchInventoryItems,
-  //   staleTime: 60 * 1000,
-  // });
-
   const mutation = useMutation({
     mutationFn: (item: CreateInventoryItemInput) => createInventoryItem(item),
     onSuccess: () => {
-      // Invalidate queries to refresh inventory data.
+      // invalidate queries to refresh inventory data.
       const queryClient = useQueryClient();
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
-      // Reset form fields and close dialog.
+      // reset form fields and close dialog.
       setItemName("");
       setItemCategory("");
       setItemQuantity(0);
@@ -86,9 +76,27 @@ export function AddInventoryItem({
     },
   });
 
+  const inputStates = [itemName, itemCategory, itemUnit, itemStatus, date];
+  const isInputValid = inputStates.every((input) => input);
+
   const handleSave = () => {
-    // Basic validation (you can extend this as needed)
-    if (!itemName || !itemCategory || !itemUnit) return;
+    if (!isInputValid) {
+      console.error("All fields are required");
+      return;
+    }
+
+    const newItem: CreateInventoryItemInput = {
+      name: itemName,
+      categoryId:
+        inventoryCategory.find((item) => item.name === itemCategory)?.id || 0,
+      quantity: itemQuantity,
+      unitId: harvestUnits.find((item) => item.name === itemUnit)?.id || 0,
+      statusId:
+        inventoryStatus.find((item) => item.name === itemStatus)?.id || 0,
+      lastUpdated: date ? date.toISOString() : new Date().toISOString(),
+    };
+    console.table(newItem);
+    mutation.mutate(newItem);
   };
 
   return (
@@ -163,7 +171,7 @@ export function AddInventoryItem({
               id="quantity"
               type="number"
               className="col-span-3"
-              value={itemQuantity}
+              value={itemQuantity === 0 ? "" : itemQuantity}
               onChange={(e) => setItemQuantity(Number(e.target.value))}
             />
           </div>

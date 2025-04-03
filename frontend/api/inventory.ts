@@ -3,6 +3,8 @@ import type {
   InventoryItem,
   InventoryItemStatus,
   InventoryItemCategory,
+  CreateInventoryItemInput,
+  UpdateInventoryItemInput,
 } from "@/types";
 
 /**
@@ -39,9 +41,11 @@ export async function fetchInventoryCategory(): Promise<
 
 export async function fetchInventoryItems(): Promise<InventoryItem[]> {
   try {
-    const response = await axiosInstance.get<InventoryItem[]>("/api/inventory");
+    const response = await axiosInstance.get<InventoryItem[]>("/inventory");
     return response.data;
   } catch (error) {
+    // console.error("Error while fetching inventory items! " + error);
+    // throw error;
     // Fallback dummy data
     return [
       {
@@ -93,25 +97,42 @@ export async function fetchInventoryItems(): Promise<InventoryItem[]> {
   }
 }
 
-/**
- * Simulates creating a new inventory item.
- * Uses axios POST and if unavailable, returns a simulated response.
- *
- * Note: The function accepts all fields except id, lastUpdated, and status.
- */
 export async function createInventoryItem(
-  item: Omit<InventoryItem, "id" | "lastUpdated" | "status">
+  item: Omit<CreateInventoryItemInput, "id" | "lastUpdated" | "status">
 ): Promise<InventoryItem> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
   try {
     const response = await axiosInstance.post<InventoryItem>(
-      "/api/inventory",
+      "/inventory",
       item
     );
     return response.data;
   } catch (error) {
-    console.error("Error while creating Inventory Item!" + error);
+    console.error("Error while creating Inventory Item! " + error);
     throw new Error("Failed to create inventory item: " + error);
+  }
+}
+
+export async function deleteInventoryItem(id: string) {
+  try {
+    const response = await axiosInstance.delete("/inventory/" + id);
+    return response.data;
+  } catch (error) {
+    console.error("Error while deleting Inventory Item! " + error);
+    throw new Error("Failed to deleting inventory item: " + error);
+  }
+}
+export async function updateInventoryItem(
+  id: string,
+  item: UpdateInventoryItemInput
+) {
+  try {
+    const response = await axiosInstance.put<InventoryItem>(
+      "/inventory/" + id,
+      item
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error while updating Inventory Item! " + error);
+    throw new Error("Failed to updating inventory item: " + error);
   }
 }
