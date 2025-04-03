@@ -36,15 +36,15 @@ type CropAnalytics struct {
 	Variety        *string    `json:"variety,omitempty"`
 	CurrentStatus  string     `json:"currentStatus"`
 	GrowthStage    string     `json:"growthStage"`
+	GrowthProgress int        `json:"growthProgress"`
 	LandSize       float64    `json:"landSize"`
 	LastUpdated    time.Time  `json:"lastUpdated"`
 	Temperature    *float64   `json:"temperature,omitempty"`
 	Humidity       *float64   `json:"humidity,omitempty"`
 	SoilMoisture   *float64   `json:"soilMoisture,omitempty"`
 	Sunlight       *float64   `json:"sunlight,omitempty"`
-	WindSpeed      *string    `json:"windSpeed,omitempty"`
-	Rainfall       *string    `json:"rainfall,omitempty"`
-	GrowthProgress int        `json:"growthProgress"`
+	WindSpeed      *float64   `json:"windSpeed,omitempty"`
+	Rainfall       *float64   `json:"rainfall,omitempty"` //  (maps to RainVolume1h)	GrowthProgress int        `json:"growthProgress"`
 	NextAction     *string    `json:"nextAction,omitempty"`
 	NextActionDue  *time.Time `json:"nextActionDue,omitempty"`
 	NutrientLevels *struct {

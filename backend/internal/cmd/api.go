@@ -16,6 +16,7 @@ import (
 	"github.com/forfarm/backend/internal/config"
 	"github.com/forfarm/backend/internal/event"
 	"github.com/forfarm/backend/internal/repository"
+	"github.com/forfarm/backend/internal/services"
 	"github.com/forfarm/backend/internal/workers"
 )
 
@@ -46,7 +47,10 @@ func APICmd(ctx context.Context) *cobra.Command {
 			defer eventBus.Close()
 			logger.Info("connected to event bus", "url", config.RABBITMQ_URL)
 
-			analyticsRepo := repository.NewPostgresFarmAnalyticsRepository(pool, logger)
+			logger.Info("starting AnalyticService worker for farm-crop analytics")
+			analyticService := services.NewAnalyticsService()
+
+			analyticsRepo := repository.NewPostgresFarmAnalyticsRepository(pool, logger, analyticService)
 
 			farmRepo := repository.NewPostgresFarm(pool)
 			farmRepo.SetEventPublisher(eventBus)
