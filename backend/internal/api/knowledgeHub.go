@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -65,6 +66,13 @@ func (a *api) registerKnowledgeHubRoutes(_ chi.Router, api huma.API) {
 		Path:        prefix + "/{uuid}/related",
 		Tags:        tags,
 	}, a.createRelatedArticleHandler)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "generateTableOfContents",
+		Method:      http.MethodPost,
+		Path:        prefix + "/{uuid}/generate-toc",
+		Tags:        tags,
+	}, a.generateTOCHandler)
 }
 
 type GetKnowledgeArticlesOutput struct {
@@ -115,6 +123,16 @@ type CreateRelatedArticleInput struct {
 	Body struct {
 		RelatedTitle string `json:"related_title"`
 		RelatedTag   string `json:"related_tag"`
+	} `json:"body"`
+}
+
+type GenerateTOCInput struct {
+	UUID string `path:"uuid"`
+}
+
+type GenerateTOCOutput struct {
+	Body struct {
+		TableOfContents []domain.TableOfContent `json:"table_of_contents"`
 	} `json:"body"`
 }
 
@@ -284,4 +302,71 @@ func (a *api) createRelatedArticleHandler(
 	}
 
 	return nil, nil
+}
+
+func generateTOCFromContent(content string) []domain.TableOfContent {
+	var toc []domain.TableOfContent
+	lines := strings.Split(content, "\n")
+	order := 0
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "# ") {
+			order++
+			toc = append(toc, domain.TableOfContent{
+				Title: strings.TrimPrefix(line, "# "),
+				Level: 1,
+				Order: order,
+			})
+		} else if strings.HasPrefix(line, "## ") {
+			order++
+			toc = append(toc, domain.TableOfContent{
+				Title: strings.TrimPrefix(line, "## "),
+				Level: 2,
+				Order: order,
+			})
+		} else if strings.HasPrefix(line, "### ") {
+			order++
+			toc = append(toc, domain.TableOfContent{
+				Title: strings.TrimPrefix(line, "### "),
+				Level: 3,
+				Order: order,
+			})
+		}
+		// Add more levels if needed
+	}
+
+	return toc
+}
+
+func (a *api) generateTOCHandler(
+	ctx context.Context,
+	input *GenerateTOCInput,
+) (*GenerateTOCOutput, error) {
+	resp := &GenerateTOCOutput{}
+
+	// Validate UUID format
+	if _, err := uuid.FromString(input.UUID); err != nil {
+		return nil, huma.Error400BadRequest("invalid UUID format")
+	}
+
+	// Get the article
+	article, err := a.knowledgeHubRepo.GetArticleByID(ctx, input.UUID)
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			return nil, huma.Error404NotFound("article not found")
+		}
+		return nil, err
+	}
+
+	// Generate TOC from content
+	tocItems := generateTOCFromContent(article.Content)
+
+	// Save to database
+	if err := a.knowledgeHubRepo.CreateTableOfContents(ctx, input.UUID, tocItems); err != nil {
+		return nil, huma.Error500InternalServerError("failed to save table of contents")
+	}
+
+	resp.Body.TableOfContents = tocItems
+	return resp, nil
 }

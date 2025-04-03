@@ -42,12 +42,13 @@ func (k *KnowledgeArticle) Validate() error {
 }
 
 type TableOfContent struct {
-	UUID      string
-	ArticleID string
-	Title     string
-	Order     int
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	UUID      string    `json:"uuid"`
+	ArticleID string    `json:"article_id"`
+	Title     string    `json:"title"`
+	Level     int       `json:"level"`
+	Order     int       `json:"order"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type RelatedArticle struct {
@@ -60,13 +61,18 @@ type RelatedArticle struct {
 }
 
 type KnowledgeHubRepository interface {
+	// Article methods
 	GetArticleByID(context.Context, string) (KnowledgeArticle, error)
 	GetArticlesByCategory(ctx context.Context, category string) ([]KnowledgeArticle, error)
 	GetAllArticles(ctx context.Context) ([]KnowledgeArticle, error)
 	CreateOrUpdateArticle(context.Context, *KnowledgeArticle) error
 	DeleteArticle(context.Context, string) error
 
+	// Table of Contents methods
 	GetTableOfContents(ctx context.Context, articleID string) ([]TableOfContent, error)
+	CreateTableOfContents(ctx context.Context, articleID string, items []TableOfContent) error
+
+	// Related Articles methods
 	GetRelatedArticles(ctx context.Context, articleID string) ([]RelatedArticle, error)
 	CreateRelatedArticle(ctx context.Context, articleID string, related *RelatedArticle) error
 }

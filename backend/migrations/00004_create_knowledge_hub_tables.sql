@@ -13,13 +13,13 @@ CREATE TABLE knowledge_articles (
 );
 
 CREATE TABLE table_of_contents (
-                                   uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                                   article_id UUID NOT NULL,
-                                   title TEXT NOT NULL,
-                                   "order" INT NOT NULL,
-                                   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                                   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                                   CONSTRAINT fk_toc_article FOREIGN KEY (article_id) REFERENCES knowledge_articles(uuid) ON DELETE CASCADE
+    uuid UUID PRIMARY KEY,
+    article_id UUID NOT NULL REFERENCES knowledge_articles(uuid),
+    title TEXT NOT NULL,
+    level INT NOT NULL,
+    "order" INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE related_articles (

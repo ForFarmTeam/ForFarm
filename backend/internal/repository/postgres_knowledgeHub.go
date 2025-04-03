@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"github.com/jackc/pgx/v5"
 	"strings"
 
 	"github.com/forfarm/backend/internal/domain"
@@ -212,4 +214,52 @@ func (p *postgresKnowledgeHubRepository) CreateRelatedArticle(
 		related.RelatedTag,
 	)
 	return err
+}
+
+func (p *postgresKnowledgeHubRepository) CreateTableOfContents(
+	ctx context.Context,
+	articleID string,
+	items []domain.TableOfContent,
+) error {
+	// Begin transaction
+	tx, err := p.conn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback(ctx)
+		}
+	}()
+
+	// First delete existing TOC items for this article
+	_, err = tx.Exec(ctx, `DELETE FROM table_of_contents WHERE article_id = $1`, articleID)
+	if err != nil {
+		return fmt.Errorf("failed to delete existing TOC items: %w", err)
+	}
+
+	// Insert new TOC items
+	for _, item := range items {
+		item.UUID = uuid.New().String()
+		_, err = tx.Exec(ctx, `
+            INSERT INTO table_of_contents 
+            (uuid, article_id, title, level, "order", created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
+			item.UUID,
+			articleID,
+			item.Title,
+			item.Level,
+			item.Order,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to insert TOC item: %w", err)
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
 }
