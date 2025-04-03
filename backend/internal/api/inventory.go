@@ -100,7 +100,6 @@ type HarvestUnit struct {
 
 type CreateInventoryItemInput struct {
 	Header string `header:"Authorization" required:"true" example:"Bearer token"`
-	UserID string `header:"userId" required:"true" example:"user-uuid"`
 	Body   struct {
 		Name       string    `json:"name" required:"true"`
 		CategoryID int       `json:"categoryId" required:"true"`
@@ -119,7 +118,6 @@ type CreateInventoryItemOutput struct {
 
 type UpdateInventoryItemInput struct {
 	Header string `header:"Authorization" required:"true" example:"Bearer token"`
-	UserID string `header:"userId" required:"true" example:"user-uuid"`
 	ID     string `path:"id"`
 	Body   struct {
 		Name       string    `json:"name"`
@@ -137,7 +135,6 @@ type UpdateInventoryItemOutput struct {
 
 type GetInventoryItemsInput struct {
 	Header      string    `header:"Authorization" required:"true" example:"Bearer token"`
-	UserID      string    `header:"userId" required:"true" example:"user-uuid"`
 	CategoryID  int       `query:"categoryId"`
 	StatusID    int       `query:"statusId"`
 	StartDate   time.Time `query:"startDate" format:"date-time"`
@@ -186,8 +183,9 @@ type GetHarvestUnitsOutput struct {
 }
 
 func (a *api) createInventoryItemHandler(ctx context.Context, input *CreateInventoryItemInput) (*CreateInventoryItemOutput, error) {
+	userID, err := a.getUserIDFromHeader(input.Header)
 	item := &domain.InventoryItem{
-		UserID:     input.UserID,
+		UserID:     userID,
 		Name:       input.Body.Name,
 		CategoryID: input.Body.CategoryID,
 		Quantity:   input.Body.Quantity,
@@ -200,7 +198,7 @@ func (a *api) createInventoryItemHandler(ctx context.Context, input *CreateInven
 		return nil, huma.Error422UnprocessableEntity(err.Error())
 	}
 
-	err := a.inventoryRepo.CreateOrUpdate(ctx, item)
+	err = a.inventoryRepo.CreateOrUpdate(ctx, item)
 	if err != nil {
 		return nil, err
 	}
@@ -211,8 +209,9 @@ func (a *api) createInventoryItemHandler(ctx context.Context, input *CreateInven
 }
 
 func (a *api) getInventoryItemsByUserHandler(ctx context.Context, input *GetInventoryItemsInput) (*GetInventoryItemsOutput, error) {
+	userID, err := a.getUserIDFromHeader(input.Header)
 	filter := domain.InventoryFilter{
-		UserID:      input.UserID,
+		UserID:      userID,
 		CategoryID:  input.CategoryID,
 		StatusID:    input.StatusID,
 		StartDate:   input.StartDate,
@@ -225,7 +224,7 @@ func (a *api) getInventoryItemsByUserHandler(ctx context.Context, input *GetInve
 		Direction: input.SortOrder,
 	}
 
-	items, err := a.inventoryRepo.GetByUserID(ctx, input.UserID, filter, sort)
+	items, err := a.inventoryRepo.GetByUserID(ctx, userID, filter, sort)
 	if err != nil {
 		return nil, err
 	}
@@ -286,7 +285,8 @@ func (a *api) getInventoryItemHandler(ctx context.Context, input *GetInventoryIt
 }
 
 func (a *api) updateInventoryItemHandler(ctx context.Context, input *UpdateInventoryItemInput) (*UpdateInventoryItemOutput, error) {
-	item, err := a.inventoryRepo.GetByID(ctx, input.ID, input.UserID)
+	userID, err := a.getUserIDFromHeader(input.Header)
+	item, err := a.inventoryRepo.GetByID(ctx, input.ID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +319,7 @@ func (a *api) updateInventoryItemHandler(ctx context.Context, input *UpdateInven
 		return nil, err
 	}
 
-	updatedItem, err := a.inventoryRepo.GetByID(ctx, input.ID, input.UserID)
+	updatedItem, err := a.inventoryRepo.GetByID(ctx, input.ID, userID)
 	if err != nil {
 		return nil, err
 	}

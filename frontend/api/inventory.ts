@@ -6,6 +6,7 @@ import type {
   CreateInventoryItemInput,
   UpdateInventoryItemInput,
 } from "@/types";
+import { AxiosError } from "axios";
 
 /**
  * Simulates an API call to fetch inventory items.
@@ -46,7 +47,6 @@ export async function fetchInventoryItems(): Promise<InventoryItem[]> {
   } catch (error) {
     console.error("Error while fetching inventory items! " + error);
     throw error;
-    
   }
 }
 
@@ -59,9 +59,32 @@ export async function createInventoryItem(
       item
     );
     return response.data;
-  } catch (error) {
-    console.error("Error while creating Inventory Item! " + error);
-    throw new Error("Failed to create inventory item: " + error);
+  } catch (error: unknown) {
+    // Cast error to AxiosError to safely access response properties
+    if (error instanceof AxiosError && error.response) {
+      // Log the detailed error message
+      console.error("Error while creating Inventory Item!");
+      console.error("Response Status:", error.response.status); // e.g., 422
+      console.error("Error Detail:", error.response.data?.detail); // Custom error message from backend
+      console.error("Full Error Response:", error.response.data); // Entire error object (including details)
+
+      // Throw a new error with a more specific message
+      throw new Error(
+        `Failed to create inventory item: ${
+          error.response.data?.detail || error.message
+        }`
+      );
+    } else {
+      // Handle other errors (e.g., network errors or unknown errors)
+      console.error(
+        "Error while creating Inventory Item, unknown error:",
+        error
+      );
+      throw new Error(
+        "Failed to create inventory item: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
+    }
   }
 }
 

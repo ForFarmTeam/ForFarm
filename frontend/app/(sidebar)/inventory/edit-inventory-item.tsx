@@ -34,9 +34,9 @@ import type { UpdateInventoryItemInput } from "@/types";
 export interface EditInventoryItemProps {
   id: string;
   name: string;
-  categoryId: string;
-  statusId: string;
-  unitId: string;
+  categoryId: number;
+  statusId: number;
+  unitId: number;
   quantity: number;
   fetchedInventoryStatus: InventoryStatus[];
   fetchedInventoryCategory: InventoryItemCategory[];
@@ -58,19 +58,16 @@ export function EditInventoryItem({
   const [itemName, setItemName] = useState(name);
   const [itemCategory, setItemCategory] = useState(
     fetchedInventoryCategory.find(
-      (categoryItem) => categoryItem.id.toString() === categoryId
+      (categoryItem) => categoryItem.id === categoryId
     )?.name
   );
   const [itemQuantity, setItemQuantity] = useState(quantity);
   const [itemUnit, setItemUnit] = useState(
-    fetchedHarvestUnits.find(
-      (harvestItem) => harvestItem.id.toString() === unitId
-    )?.name
+    fetchedHarvestUnits.find((harvestItem) => harvestItem.id === unitId)?.name
   );
   const [itemStatus, setItemStatus] = useState(
-    fetchedInventoryStatus.find(
-      (statusItem) => statusItem.id.toString() === statusId
-    )?.name
+    fetchedInventoryStatus.find((statusItem) => statusItem.id === statusId)
+      ?.name
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -137,7 +134,7 @@ export function EditInventoryItem({
       statusId:
         fetchedInventoryStatus.find((status) => status.name === itemStatus)
           ?.id ?? 0,
-      lastUpdated: new Date().toISOString(),
+      dateAdded: new Date().toISOString(),
     });
   };
 

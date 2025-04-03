@@ -63,6 +63,8 @@ export default function InventoryPage() {
     queryFn: fetchInventoryItems,
     staleTime: 60 * 1000,
   });
+  // console.table(inventoryItems);
+  // console.log(inventoryItems);
 
   const {
     data: inventoryStatus = [],
@@ -73,6 +75,8 @@ export default function InventoryPage() {
     queryFn: fetchInventoryStatus,
     staleTime: 60 * 1000,
   });
+
+  // console.log(inventoryStatus);
   const {
     data: inventoryCategory = [],
     isLoading: isLoadingCategory,
@@ -101,24 +105,23 @@ export default function InventoryPage() {
     return inventoryItems
       .map((item) => ({
         ...item,
-        status:
-          inventoryStatus.find(
-            (statusItem) => statusItem.id.toString() === item.statusId.toString()
-          )?.name || "",
-        category:
-          inventoryCategory.find(
-            (categoryItem) =>
-              categoryItem.id.toString() === item.categoryId.toString()
-          )?.name || "",
-        categoryId: item.categoryId.toString(),
-        unit:
-          harvestUnits.find((unit) => unit.id === item.unitId)
-            ?.name || "",
-        unitId: item.unitId.toString(),
-        statusId: item.statusId.toString(),
+        status: item.status.name,
+        category: item.category.name,
+        categoryId: item.categoryId,
+        unit: item.unit.name,
+        unitId: item.unitId,
+        statusId: item.statusId,
         fetchedInventoryStatus: inventoryStatus,
         fetchedInventoryCategory: inventoryCategory,
         fetchedHarvestUnits: harvestUnits,
+        lastUpdated: new Date(item.updatedAt).toLocaleString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
       }))
       .filter((item) =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -139,12 +142,18 @@ export default function InventoryPage() {
       cell: (info: { getValue: () => string }) => {
         const status = info.getValue();
 
-        let statusClass = ""; // default status class
+        let statusClass = "";
 
-        if (status === "Low Stock") {
-          statusClass = "bg-yellow-300"; // yellow for low stock
-        } else if (status === "Out Of Stock") {
-          statusClass = "bg-red-500 text-white"; // red for out of stock
+        if (status === "In Stock") {
+          statusClass = "bg-green-500 hover:bg-green-600 text-white";
+        } else if (status === "Low Stock") {
+          statusClass = "bg-yellow-300 hover:bg-yellow-400";
+        } else if (status === "Out of Stock") {
+          statusClass = "bg-red-500 hover:bg-red-600 text-white";
+        } else if (status === "Expired") {
+          statusClass = "bg-gray-500 hover:bg-gray-600 text-white";
+        } else if (status === "Reserved") {
+          statusClass = "bg-blue-500 hover:bg-blue-600 text-white";
         }
 
         return (
@@ -201,6 +210,19 @@ export default function InventoryPage() {
 
   const isLoading = loadingStates.some((loading) => loading);
   const isError = errorStates.some((error) => error);
+  if (isLoading)
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
+
+  if (isError)
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        Error loading inventory data.
+      </div>
+    );
 
   if (inventoryItems.length === 0) {
     return (
@@ -210,26 +232,23 @@ export default function InventoryPage() {
             <TriangleAlertIcon className="h-6 w-6 text-red-500 mb-2" />
             <AlertTitle>No Inventory Data</AlertTitle>
             <AlertDescription>
-              You currently have no inventory items. Add a new item to get
-              started!
+              <div>
+                You currently have no inventory items. Add a new item to get
+                started!
+              </div>
+              <div className="mt-5">
+                <AddInventoryItem
+                  inventoryCategory={inventoryCategory}
+                  inventoryStatus={inventoryStatus}
+                  harvestUnits={harvestUnits}
+                />
+              </div>
             </AlertDescription>
           </div>
         </Alert>
       </div>
     );
   }
-  if (isLoading)
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        Loading...
-      </div>
-    );
-  if (isError)
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        Error loading inventory data.
-      </div>
-    );
 
   return (
     <div className="flex min-h-screen bg-background">
