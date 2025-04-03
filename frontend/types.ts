@@ -161,7 +161,7 @@ export type CreateInventoryItemInput = {
 };
 
 // export type UpdateInventoryItemInput = CreateInventoryItemInput & {};
-// export type EditInventoryItemInput = CreateInventoryItemInput & { id: number };
+export type EditInventoryItemInput = CreateInventoryItemInput;
 
 export type UpdateInventoryItemInput = Partial<CreateInventoryItemInput> & {
   id: string;

@@ -94,7 +94,7 @@ export default function InventoryPage() {
     staleTime: 60 * 1000,
   });
   //////////////////////////////
-  // console.table(inventoryItems);
+  console.table(inventoryItems);
   // console.table(inventoryStatus);
   // console.table(harvestUnits);
 
@@ -182,11 +182,11 @@ export default function InventoryPage() {
           item={{
             id: row.original.id,
             name: row.original.name,
-            categoryId: row.original.categoryId,
+            categoryId: row.original.category.id,
             quantity: row.original.quantity,
-            unitId: row.original.unitId,
+            unitId: row.original.unit.id,
             dateAdded: row.original.dateAdded,
-            statusId: row.original.statusId,
+            statusId: row.original.status.id,
           }}
           fetchedInventoryStatus={inventoryStatus}
           fetchedInventoryCategory={inventoryCategory}

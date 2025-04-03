@@ -32,6 +32,7 @@ import {
   InventoryItemCategory,
   HarvestUnits,
   UpdateInventoryItemInput,
+  EditInventoryItemInput,
 } from "@/types";
 import { updateInventoryItem } from "@/api/inventory";
 
@@ -46,7 +47,8 @@ export function EditInventoryItem({
   fetchedInventoryCategory: InventoryItemCategory[];
   fetchedHarvestUnits: HarvestUnits[];
 }) {
-  console.table(item);
+  // console.table(item);
+  // console.log(item.id);
   const [open, setOpen] = useState(false);
   const [itemName, setItemName] = useState(item.name);
   const [itemCategory, setItemCategory] = useState(
@@ -67,8 +69,7 @@ export function EditInventoryItem({
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (item: UpdateInventoryItemInput) =>
-      updateInventoryItem(item.id, item),
+    mutationFn: (x: EditInventoryItemInput) => updateInventoryItem(item.id, x),
     onSuccess: () => {
       // invalidate queries to refresh inventory data.
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
@@ -101,17 +102,18 @@ export function EditInventoryItem({
       );
       return;
     }
+    // console.log("Mutate called");
+    console.log(item.id);
     mutation.mutate({
       name: itemName,
-      categoryId: item.categoryId,
-      quantity: itemQuantity,
+      categoryId: item.categoryId ?? 0,
+      quantity: itemQuantity ?? 0,
       unitId:
         fetchedHarvestUnits.find((unit) => unit.name === itemUnit)?.id ?? 0,
       statusId:
         fetchedInventoryStatus.find((status) => status.name === itemStatus)
           ?.id ?? 0,
       dateAdded: new Date().toISOString(),
-      id: "",
     });
   };
 
