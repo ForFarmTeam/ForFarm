@@ -5,6 +5,14 @@ const nextConfig: NextConfig = {
   devIndicators: {
     buildActivity: false,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

@@ -1,148 +1,103 @@
 import axiosInstance from "./config";
+import type {
+  KnowledgeArticle as BackendArticle,
+  TableOfContent as BackendTOC,
+  RelatedArticle as BackendRelated,
+} from "@/types";
 import type { Blog } from "@/types";
 
-// Dummy blog data used as a fallback.
-const dummyBlogs: Blog[] = [
-  {
-    id: 1,
-    title: "Sustainable Farming Practices for Modern Agriculture",
-    description:
-      "Learn about eco-friendly farming techniques that can increase yield while preserving the environment.",
-    date: "2023-05-15",
-    author: "Emma Johnson",
-    topic: "Sustainability",
-    image: "/placeholder.svg?height=400&width=600",
-    readTime: "5 min read",
-    featured: true,
-    content: `<p>Sustainable farming is not just a trend; it's a necessary evolution in agricultural practices. […]</p>`,
-    tableOfContents: [
-      { id: "importance", title: "The Importance of Sustainable Agriculture", level: 1 },
-      { id: "crop-rotation", title: "Crop Rotation and Diversification", level: 1 },
-      { id: "ipm", title: "Integrated Pest Management (IPM)", level: 1 },
-      { id: "water-conservation", title: "Water Conservation Techniques", level: 1 },
-      { id: "soil-health", title: "Soil Health Management", level: 1 },
-      { id: "renewable-energy", title: "Renewable Energy Integration", level: 1 },
-      { id: "conclusion", title: "Conclusion", level: 1 },
-    ],
-    relatedArticles: [
-      {
-        id: 2,
-        title: "Optimizing Fertilizer Usage for Maximum Crop Yield",
-        topic: "Fertilizers",
-        image: "/placeholder.svg?height=200&width=300",
-        description: "",
-        date: "",
-        author: "",
-        readTime: "",
-        featured: false,
-      },
-      {
-        id: 4,
-        title: "Water Conservation Techniques for Drought-Prone Areas",
-        topic: "Sustainability",
-        image: "/placeholder.svg?height=200&width=300",
-        description: "",
-        date: "",
-        author: "",
-        readTime: "",
-        featured: false,
-      },
-      {
-        id: 5,
-        title: "Organic Pest Control Methods That Actually Work",
-        topic: "Organic",
-        image: "/placeholder.svg?height=200&width=300",
-        description: "",
-        date: "",
-        author: "",
-        readTime: "",
-        featured: false,
-      },
-    ],
-  },
-  {
-    id: 2,
-    title: "Optimizing Fertilizer Usage for Maximum Crop Yield",
-    description: "Discover the perfect balance of fertilizers to maximize your harvest without wasting resources.",
-    date: "2023-06-02",
-    author: "Michael Chen",
-    topic: "Fertilizers",
-    image: "/placeholder.svg?height=400&width=600",
-    readTime: "7 min read",
-    featured: false,
-  },
-  {
-    id: 3,
-    title: "Seasonal Planting Guide: What to Grow and When",
-    description:
-      "A comprehensive guide to help you plan your planting schedule throughout the year for optimal results.",
-    date: "2023-06-18",
-    author: "Sarah Williams",
-    topic: "Plantation",
-    image: "/placeholder.svg?height=400&width=600",
-    readTime: "8 min read",
-    featured: false,
-  },
-  {
-    id: 4,
-    title: "Water Conservation Techniques for Drought-Prone Areas",
-    description: "Essential strategies to maintain your crops during water shortages and drought conditions.",
-    date: "2023-07-05",
-    author: "David Rodriguez",
-    topic: "Sustainability",
-    image: "/placeholder.svg?height=400&width=600",
-    readTime: "6 min read",
-    featured: false,
-  },
-  {
-    id: 5,
-    title: "Organic Pest Control Methods That Actually Work",
-    description: "Natural and effective ways to keep pests at bay without resorting to harmful chemicals.",
-    date: "2023-07-22",
-    author: "Lisa Thompson",
-    topic: "Organic",
-    image: "/placeholder.svg?height=400&width=600",
-    readTime: "9 min read",
-    featured: false,
-  },
-  {
-    id: 6,
-    title: "The Future of Smart Farming: IoT and Agriculture",
-    description: "How Internet of Things technology is revolutionizing the way we monitor and manage farms.",
-    date: "2023-08-10",
-    author: "James Wilson",
-    topic: "Technology",
-    image: "/placeholder.svg?height=400&width=600",
-    readTime: "10 min read",
-    featured: true,
-  },
-];
+function mapBackendArticleToFrontendBlog(
+  backendArticle: BackendArticle,
+  toc?: BackendTOC[],
+  related?: BackendRelated[]
+): Blog {
+  return {
+    id: backendArticle.UUID,
+    title: backendArticle.Title,
+    description: backendArticle.Content.substring(0, 150) + "...",
+    date: backendArticle.PublishDate.toString(),
+    author: backendArticle.Author,
+    topic: backendArticle.Categories.length > 0 ? backendArticle.Categories[0] : "General",
+    image: backendArticle.ImageURL || "/placeholder.svg",
+    readTime: backendArticle.ReadTime || "5 min read",
+    featured: backendArticle.Categories.includes("Featured"),
+    content: backendArticle.Content,
+    tableOfContents: toc
+      ? toc.map((item) => ({
+          id: item.UUID,
+          title: item.Title,
+          level: item.Level,
+        }))
+      : [],
+    relatedArticles: related
+      ? related.map((item) => ({
+          id: item.UUID,
+          title: item.RelatedTitle,
+          topic: item.RelatedTag,
+          image: "/placeholder.svg",
+        }))
+      : [],
+  };
+}
 
-/**
- * Fetches a list of blog posts.
- * Simulates a network delay and returns dummy data when the API endpoint is unavailable.
- */
 export async function fetchBlogs(): Promise<Blog[]> {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
   try {
-    const response = await axiosInstance.get<Blog[]>("/api/blogs");
-    return response.data;
+    interface BackendResponse {
+      articles: BackendArticle[];
+    }
+    const response = await axiosInstance.get<BackendResponse>("/knowledge-hub");
+
+    if (response.data && Array.isArray(response.data.articles)) {
+      return response.data.articles.map((article) => mapBackendArticleToFrontendBlog(article));
+    } else {
+      console.warn("Received unexpected data structure from /knowledge-hub:", response.data);
+      return [];
+    }
   } catch (error) {
-    return dummyBlogs;
+    console.error("Error fetching knowledge articles:", error);
+    // Return empty array to avoid breaking the UI completely
+    return [];
   }
 }
 
-/**
- * Fetches a single blog post by its id.
- * Returns the API result if available; otherwise falls back to dummy data.
- */
-export async function fetchBlogById(id: string): Promise<Blog | null> {
-  await new Promise((resolve) => setTimeout(resolve, 500));
+export async function fetchBlogById(uuid: string): Promise<Blog | null> {
   try {
-    const response = await axiosInstance.get<Blog>(`/api/blogs/${id}`);
-    return response.data;
+    interface BackendSingleResponse {
+      article: BackendArticle;
+    }
+    const articleResponse = await axiosInstance.get<BackendSingleResponse>(`/knowledge-hub/${uuid}`);
+
+    if (articleResponse.data && articleResponse.data.article) {
+      const article = articleResponse.data.article;
+
+      // --- Fetch TOC and Related separately ---
+      let tocItems: BackendTOC[] = [];
+      let relatedItems: BackendRelated[] = [];
+
+      try {
+        const tocResponse = await axiosInstance.get<{ table_of_contents: BackendTOC[] }>(`/knowledge-hub/${uuid}/toc`);
+        tocItems = tocResponse.data.table_of_contents || [];
+      } catch (tocError) {
+        console.warn(`Could not fetch TOC for article ${uuid}:`, tocError);
+      }
+
+      try {
+        const relatedResponse = await axiosInstance.get<{ related_articles: BackendRelated[] }>(
+          `/knowledge-hub/${uuid}/related`
+        );
+        relatedItems = relatedResponse.data.related_articles || [];
+      } catch (relatedError) {
+        console.warn(`Could not fetch related articles for ${uuid}:`, relatedError);
+      }
+      // --- End separate fetches ---
+
+      return mapBackendArticleToFrontendBlog(article, tocItems, relatedItems);
+    } else {
+      console.warn(`Received unexpected data structure from /knowledge-hub/${uuid}:`, articleResponse.data);
+      return null;
+    }
   } catch (error) {
-    const blog = dummyBlogs.find((blog) => blog.id === Number(id));
-    return blog || null;
+    console.error(`Error fetching knowledge article by UUID ${uuid}:`, error);
+    return null;
   }
 }
