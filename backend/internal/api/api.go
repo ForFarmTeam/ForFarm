@@ -30,13 +30,14 @@ type api struct {
 	httpClient     *http.Client
 	eventPublisher domain.EventPublisher
 
-	userRepo      domain.UserRepository
-	cropRepo      domain.CroplandRepository
-	farmRepo      domain.FarmRepository
-	plantRepo     domain.PlantRepository
-	inventoryRepo domain.InventoryRepository
-	harvestRepo   domain.HarvestRepository
-	analyticsRepo domain.AnalyticsRepository
+	userRepo         domain.UserRepository
+	cropRepo         domain.CroplandRepository
+	farmRepo         domain.FarmRepository
+	plantRepo        domain.PlantRepository
+	inventoryRepo    domain.InventoryRepository
+	harvestRepo      domain.HarvestRepository
+	analyticsRepo    domain.AnalyticsRepository
+	knowledgeHubRepo domain.KnowledgeHubRepository
 
 	weatherFetcher domain.WeatherFetcher
 
@@ -61,8 +62,9 @@ func NewAPI(
 	client := &http.Client{}
 
 	userRepository := repository.NewPostgresUser(pool)
-	harvestRepository := repository.NewPostgresHarvest(pool)
 	plantRepository := repository.NewPostgresPlant(pool)
+	knowledgeHubRepository := repository.NewPostgresKnowledgeHub(pool)
+	harvestRepository := repository.NewPostgresHarvest(pool)
 
 	owmFetcher := weather.NewOpenWeatherMapFetcher(config.OPENWEATHER_API_KEY, client, logger)
 	cacheTTL, err := time.ParseDuration(config.OPENWEATHER_CACHE_TTL)
@@ -87,15 +89,15 @@ func NewAPI(
 		httpClient:     client,
 		eventPublisher: eventPublisher,
 
-		userRepo:      userRepository,
-		cropRepo:      croplandRepo,
-		farmRepo:      farmRepo,
-		plantRepo:     plantRepository,
-		inventoryRepo: inventoryRepo,
-		harvestRepo:   harvestRepository,
-		analyticsRepo: analyticsRepo,
-
-		weatherFetcher: cachedWeatherFetcher,
+		userRepo:         userRepository,
+		cropRepo:         croplandRepo,
+		farmRepo:         farmRepo,
+		plantRepo:        plantRepository,
+		inventoryRepo:    inventoryRepo,
+		harvestRepo:      harvestRepository,
+		analyticsRepo:    analyticsRepo,
+		knowledgeHubRepo: knowledgeHubRepository,
+		weatherFetcher:   cachedWeatherFetcher,
 
 		chatService: chatService,
 	}
@@ -138,6 +140,7 @@ func (a *api) Routes() *chi.Mux {
 		a.registerAuthRoutes(r, api)
 		a.registerCropRoutes(r, api)
 		a.registerPlantRoutes(r, api)
+		a.registerKnowledgeHubRoutes(r, api)
 		a.registerOauthRoutes(r, api)
 		a.registerChatRoutes(r, api)
 		a.registerInventoryRoutes(r, api)

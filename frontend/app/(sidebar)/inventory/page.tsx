@@ -22,22 +22,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TriangleAlertIcon } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
   PaginationItem,
 } from "@/components/ui/pagination";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Search } from "lucide-react";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
+import { fetchHarvestUnits } from "@/api/harvest";
 
 import { Badge } from "@/components/ui/badge";
-import { fetchInventoryItems, fetchInventoryStatus } from "@/api/inventory";
-import { AddInventoryItem } from "./add-inventory-item";
 import {
-  EditInventoryItem,
-  EditInventoryItemProps,
-} from "./edit-inventory-item";
+  fetchInventoryItems,
+  fetchInventoryStatus,
+  fetchInventoryCategory,
+} from "@/api/inventory";
+import { AddInventoryItem } from "./add-inventory-item";
+import { EditInventoryItem } from "./edit-inventory-item";
 import { DeleteInventoryItem } from "./delete-inventory-item";
+import { InventoryItem } from "@/types";
 
 export default function InventoryPage() {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -45,7 +50,8 @@ export default function InventoryPage() {
     pageIndex: 0,
     pageSize: 10,
   });
-
+  //////////////////////////////
+  // query the necessary data for edit and etc.
   const {
     data: inventoryItems = [],
     isLoading: isItemLoading,
@@ -55,6 +61,8 @@ export default function InventoryPage() {
     queryFn: fetchInventoryItems,
     staleTime: 60 * 1000,
   });
+  // console.table(inventoryItems);
+  // console.log(inventoryItems);
 
   const {
     data: inventoryStatus = [],
@@ -65,38 +73,98 @@ export default function InventoryPage() {
     queryFn: fetchInventoryStatus,
     staleTime: 60 * 1000,
   });
+
+  // console.log(inventoryStatus);
+  const {
+    data: inventoryCategory = [],
+    isLoading: isLoadingCategory,
+    isError: isErrorCategory,
+  } = useQuery({
+    queryKey: ["inventoryCategory"],
+    queryFn: fetchInventoryCategory,
+    staleTime: 60 * 1000,
+  });
+  const {
+    data: harvestUnits = [],
+    isLoading: isLoadingHarvestUnits,
+    isError: isErrorHarvestUnits,
+  } = useQuery({
+    queryKey: ["harvestUnits"],
+    queryFn: fetchHarvestUnits,
+    staleTime: 60 * 1000,
+  });
+  //////////////////////////////
   // console.table(inventoryItems);
-  console.table(inventoryStatus);
+  // console.table(inventoryStatus);
+  // console.table(harvestUnits);
+
   const [searchTerm, setSearchTerm] = useState("");
   const filteredItems = useMemo(() => {
     return inventoryItems
       .map((item) => ({
         ...item,
-        id: String(item.id), // Convert `id` to string here
+        status: { id: item.status.id, name: item.status.name },
+        category: { id: item.category.id, name: item.category.name },
+        unit: { id: item.unit.id, name: item.unit.name },
+        fetchedInventoryStatus: inventoryStatus,
+        fetchedInventoryCategory: inventoryCategory,
+        fetchedHarvestUnits: harvestUnits,
+        lastUpdated: new Date(item.updatedAt).toLocaleString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
       }))
       .filter((item) =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
   }, [inventoryItems, searchTerm]);
 
+  //  prepare columns for table
+
   const columns = [
     { accessorKey: "name", header: "Name" },
-    { accessorKey: "category", header: "Category" },
-    { accessorKey: "quantity", header: "Quantity" },
-    { accessorKey: "unit", header: "Unit" },
-    { accessorKey: "lastUpdated", header: "Last Updated" },
+    {
+      accessorKey: "category",
+      header: "Category",
+      cell: ({ row }: { row: { original: InventoryItem } }) =>
+        row.original.category.name,
+    },
+    {
+      accessorKey: "quantity",
+      header: "Quantity",
+    },
+    {
+      accessorKey: "unit",
+      header: "Unit",
+      cell: ({ row }: { row: { original: InventoryItem } }) =>
+        row.original.unit.name,
+    },
+    {
+      accessorKey: "lastUpdated",
+      header: "Last Updated",
+    },
     {
       accessorKey: "status",
       header: "Status",
-      cell: (info: { getValue: () => string }) => {
-        const status = info.getValue();
+      cell: ({ row }: { row: { original: InventoryItem } }) => {
+        const status = row.original.status.name;
 
-        let statusClass = ""; // default status class
+        let statusClass = "";
 
-        if (status === "Low Stock") {
-          statusClass = "bg-yellow-300"; // yellow for low stock
-        } else if (status === "Out Of Stock") {
-          statusClass = "bg-red-500 text-white"; // red for out of stock
+        if (status === "In Stock") {
+          statusClass = "bg-green-500 hover:bg-green-600 text-white";
+        } else if (status === "Low Stock") {
+          statusClass = "bg-yellow-300 hover:bg-yellow-400";
+        } else if (status === "Out of Stock") {
+          statusClass = "bg-red-500 hover:bg-red-600 text-white";
+        } else if (status === "Expired") {
+          statusClass = "bg-gray-500 hover:bg-gray-600 text-white";
+        } else if (status === "Reserved") {
+          statusClass = "bg-blue-500 hover:bg-blue-600 text-white";
         }
 
         return (
@@ -109,15 +177,30 @@ export default function InventoryPage() {
     {
       accessorKey: "edit",
       header: "Edit",
-      cell: ({ row }: { row: { original: EditInventoryItemProps } }) => (
-        <EditInventoryItem {...row.original} />
+      cell: ({ row }: { row: { original: InventoryItem } }) => (
+        <EditInventoryItem
+          item={{
+            id: row.original.id,
+            name: row.original.name,
+            categoryId: row.original.category.id,
+            quantity: row.original.quantity,
+            unitId: row.original.unit.id,
+            dateAdded: row.original.dateAdded,
+            statusId: row.original.status.id,
+          }}
+          fetchedInventoryStatus={inventoryStatus}
+          fetchedInventoryCategory={inventoryCategory}
+          fetchedHarvestUnits={harvestUnits}
+        />
       ),
       enableSorting: false,
     },
     {
       accessorKey: "delete",
       header: "Delete",
-      cell: () => <DeleteInventoryItem />,
+      cell: ({ row }: { row: { original: InventoryItem } }) => (
+        <DeleteInventoryItem id={row.original.id} />
+      ),
       enableSorting: false,
     },
   ];
@@ -132,19 +215,60 @@ export default function InventoryPage() {
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
   });
+  const loadingStates = [
+    isItemLoading,
+    isLoadingStatus,
+    isLoadingCategory,
+    isLoadingHarvestUnits,
+  ];
+  const errorStates = [
+    isItemError,
+    isErrorStatus,
+    isErrorCategory,
+    isErrorHarvestUnits,
+  ];
 
-  if (isItemLoading || isLoadingStatus)
+  const isLoading = loadingStates.some((loading) => loading);
+  const isError = errorStates.some((error) => error);
+  if (isLoading)
     return (
       <div className="flex min-h-screen items-center justify-center">
         Loading...
       </div>
     );
-  if (isItemError || isErrorStatus)
+
+  if (isError)
     return (
       <div className="flex min-h-screen items-center justify-center">
         Error loading inventory data.
       </div>
     );
+
+  if (inventoryItems.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh]">
+        <Alert variant="destructive" className="w-full max-w-md text-center">
+          <div className="flex flex-col items-center">
+            <TriangleAlertIcon className="h-6 w-6 text-red-500 mb-2" />
+            <AlertTitle>No Inventory Data</AlertTitle>
+            <AlertDescription>
+              <div>
+                You currently have no inventory items. Add a new item to get
+                started!
+              </div>
+              <div className="mt-5">
+                <AddInventoryItem
+                  inventoryCategory={inventoryCategory}
+                  inventoryStatus={inventoryStatus}
+                  harvestUnits={harvestUnits}
+                />
+              </div>
+            </AlertDescription>
+          </div>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -159,7 +283,11 @@ export default function InventoryPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <AddInventoryItem />
+            <AddInventoryItem
+              inventoryCategory={inventoryCategory}
+              inventoryStatus={inventoryStatus}
+              harvestUnits={harvestUnits}
+            />
           </div>
           <div className="border rounded-md">
             <Table>

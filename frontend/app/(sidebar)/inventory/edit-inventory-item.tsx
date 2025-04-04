@@ -1,12 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -19,11 +15,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
   Select,
   SelectContent,
   SelectGroup,
@@ -32,65 +23,93 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-// import { updateInventoryItem } from "@/api/inventory";
-// import type { UpdateInventoryItemInput } from "@/types";
-
-export interface EditInventoryItemProps {
-  id: string;
-  name: string;
-  category: string;
-  status: string;
-  type: string;
-  unit: string;
-  quantity: number;
-}
+import {
+  InventoryStatus,
+  InventoryItemCategory,
+  HarvestUnits,
+  UpdateInventoryItemInput,
+  EditInventoryItemInput,
+} from "@/types";
+import { updateInventoryItem } from "@/api/inventory";
 
 export function EditInventoryItem({
-  id,
-  name,
-  category,
-  status,
-  type,
-  unit,
-  quantity,
-}: EditInventoryItemProps) {
+  item,
+  fetchedInventoryStatus,
+  fetchedInventoryCategory,
+  fetchedHarvestUnits,
+}: {
+  item: UpdateInventoryItemInput;
+  fetchedInventoryStatus: InventoryStatus[];
+  fetchedInventoryCategory: InventoryItemCategory[];
+  fetchedHarvestUnits: HarvestUnits[];
+}) {
+  // console.table(item);
+  // console.log(item.id);
   const [open, setOpen] = useState(false);
-  const [itemName, setItemName] = useState(name);
-  const [itemType, setItemType] = useState(type);
-  const [itemCategory, setItemCategory] = useState(category);
-  const [itemQuantity, setItemQuantity] = useState(quantity);
-  const [itemUnit, setItemUnit] = useState(unit);
-  const [itemStatus, setItemStatus] = useState(status);
+  const [itemName, setItemName] = useState(item.name);
+  const [itemCategory, setItemCategory] = useState(
+    fetchedInventoryCategory.find((x) => x.id === item.categoryId)?.name
+  );
 
-  // const queryClient = useQueryClient();
+  const [itemQuantity, setItemQuantity] = useState(item.quantity);
 
-  // const mutation = useMutation({
-  //   mutationFn: (item: UpdateInventoryItemInput) => UpdateInventoryItem(item),
-  //   onSuccess: () => {
-  //     // Invalidate queries to refresh inventory data.
-  //     queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
-  //     // Reset form fields and close dialog.
-  //     setItemName("");
-  //     setItemType("");
-  //     setItemCategory("");
-  //     setItemQuantity(0);
-  //     setItemUnit("");
-  //     setDate(undefined);
-  //     setOpen(false);
-  //   },
-  // });
+  const [itemUnit, setItemUnit] = useState(
+    fetchedHarvestUnits.find((x) => x.id === item.unitId)?.name
+  );
 
+  const [itemStatus, setItemStatus] = useState(
+    fetchedInventoryStatus.find((x) => x.id === item.statusId)?.name
+  );
+  const [error, setError] = useState<string | null>(null);
+
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (x: EditInventoryItemInput) => updateInventoryItem(item.id, x),
+    onSuccess: () => {
+      // invalidate queries to refresh inventory data.
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      // reset form fields and close dialog.
+      setItemName("");
+      setItemCategory("");
+      setItemQuantity(0);
+      setItemUnit("");
+      setOpen(false);
+      setItemStatus("");
+    },
+  });
+
+  // send edit request
   const handleEdit = () => {
-    //   // Basic validation (you can extend this as needed)
-    //   if (!itemName || !itemType || !itemCategory || !itemUnit) return;
-    //   mutation.mutate({
-    //     name: itemName,
-    //     type: itemType,
-    //     category: itemCategory,
-    //     quantity: itemQuantity,
-    //     unit: itemUnit,
-    //   });
+    if (!itemName || !itemCategory || !itemUnit) {
+      setError("All fields are required. Please fill in missing details.");
+      return;
+    }
+
+    const category = fetchedInventoryCategory.find(
+      (c) => c.name === itemCategory
+    )?.id;
+    const unit = fetchedHarvestUnits.find((u) => u.name === itemUnit)?.id;
+    const status = fetchedInventoryStatus.find(
+      (s) => s.name === itemStatus
+    )?.id;
+
+    if (!category || !unit || !status) {
+      setError(
+        "Invalid category, unit, or status. Please select a valid option."
+      );
+      return;
+    }
+    // console.log("Mutate called");
+    // console.log(item.id);
+    mutation.mutate({
+      name: itemName,
+      categoryId: category,
+      quantity: itemQuantity ?? 0,
+      unitId: unit,
+      statusId: status,
+      dateAdded: new Date().toISOString(),
+    });
   };
 
   return (
@@ -119,17 +138,20 @@ export function EditInventoryItem({
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="type" className="text-right">
-              Type
+              Category
             </Label>
-            <Select value={itemType.toLowerCase()} onValueChange={setItemType}>
+            <Select value={itemCategory} onValueChange={setItemCategory}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectLabel>Type</SelectLabel>
-                  <SelectItem value="plantation">Plantation</SelectItem>
-                  <SelectItem value="fertilizer">Fertilizer</SelectItem>
+                  <SelectLabel>Category</SelectLabel>
+                  {fetchedInventoryCategory.map((categoryItem, _) => (
+                    <SelectItem key={categoryItem.id} value={categoryItem.name}>
+                      {categoryItem.name}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -138,34 +160,21 @@ export function EditInventoryItem({
             <Label htmlFor="type" className="text-right">
               Status
             </Label>
-            <Select
-              value={itemStatus.toLowerCase()}
-              onValueChange={setItemStatus}
-            >
+            <Select value={itemStatus} onValueChange={setItemStatus}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Status</SelectLabel>
-                  <SelectItem value="in stock">In Stock</SelectItem>
-                  <SelectItem value="low stock">Low Stock</SelectItem>
-                  <SelectItem value="out of stock">Out Of Stock</SelectItem>
+                  {fetchedInventoryStatus.map((statusItem, _) => (
+                    <SelectItem key={statusItem.id} value={statusItem.name}>
+                      {statusItem.name}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="category" className="text-right">
-              Category
-            </Label>
-            <Input
-              id="category"
-              className="col-span-3"
-              placeholder="e.g., Seeds, Organic"
-              value={itemCategory}
-              onChange={(e) => setItemCategory(e.target.value)}
-            />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="quantity" className="text-right">
@@ -180,21 +189,30 @@ export function EditInventoryItem({
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="unit" className="text-right">
+            <Label htmlFor="type" className="text-right">
               Unit
             </Label>
-            <Input
-              id="unit"
-              className="col-span-3"
-              placeholder="e.g., kg, packets"
-              value={itemUnit}
-              onChange={(e) => setItemUnit(e.target.value)}
-            />
+            <Select value={itemUnit} onValueChange={setItemUnit}>
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Unit</SelectLabel>
+                  {fetchedHarvestUnits.map((unit, _) => (
+                    <SelectItem key={unit.id} value={unit.name}>
+                      {unit.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <DialogFooter>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
           <Button type="submit" onClick={handleEdit}>
-            Edit Item
+            Save
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -142,15 +142,30 @@ export interface HarvestUnit {
   name: string;
 }
 
-export interface CreateInventoryItemInput {
+export type InventoryItemCategory = {
+  id: number;
+  name: string;
+};
+export type HarvestUnits = {
+  id: number;
+  name: string;
+};
+
+export type CreateInventoryItemInput = {
   name: string;
   categoryId: number;
   quantity: number;
   unitId: number;
   dateAdded: string;
   statusId: number;
-}
-export type UpdateInventoryItemInput = Partial<CreateInventoryItemInput> & { id: string };
+};
+
+// export type UpdateInventoryItemInput = CreateInventoryItemInput & {};
+export type EditInventoryItemInput = CreateInventoryItemInput;
+
+export type UpdateInventoryItemInput = Partial<CreateInventoryItemInput> & {
+  id: string;
+};
 
 export interface Blog {
   id: number;
@@ -227,22 +242,32 @@ export interface SetOverlayAction {
 
 export type Action = ActionWithTypeOnly | SetOverlayAction;
 
-export function isCircle(overlay: OverlayGeometry): overlay is google.maps.Circle {
+export function isCircle(
+  overlay: OverlayGeometry
+): overlay is google.maps.Circle {
   return (overlay as google.maps.Circle).getCenter !== undefined;
 }
 
-export function isMarker(overlay: OverlayGeometry): overlay is google.maps.Marker {
+export function isMarker(
+  overlay: OverlayGeometry
+): overlay is google.maps.Marker {
   return (overlay as google.maps.Marker).getPosition !== undefined;
 }
 
-export function isPolygon(overlay: OverlayGeometry): overlay is google.maps.Polygon {
+export function isPolygon(
+  overlay: OverlayGeometry
+): overlay is google.maps.Polygon {
   return (overlay as google.maps.Polygon).getPath !== undefined;
 }
 
-export function isPolyline(overlay: OverlayGeometry): overlay is google.maps.Polyline {
+export function isPolyline(
+  overlay: OverlayGeometry
+): overlay is google.maps.Polyline {
   return (overlay as google.maps.Polyline).getPath !== undefined;
 }
 
-export function isRectangle(overlay: OverlayGeometry): overlay is google.maps.Rectangle {
+export function isRectangle(
+  overlay: OverlayGeometry
+): overlay is google.maps.Rectangle {
   return (overlay as google.maps.Rectangle).getBounds !== undefined;
 }

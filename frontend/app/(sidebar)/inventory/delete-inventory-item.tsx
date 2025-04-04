@@ -1,63 +1,69 @@
-"use client";
-
 import { useState } from "react";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
+  DialogTrigger,
   DialogContent,
+  DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-// import { deleteInventoryItem } from "@/api/inventory";
-// import type { DeleteInventoryItemInput } from "@/types";
+import { Button } from "@/components/ui/button";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteInventoryItem } from "@/api/inventory";
 
-export function DeleteInventoryItem() {
-  const [date, setDate] = useState<Date | undefined>();
+export function DeleteInventoryItem({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
-  const [itemName, setItemName] = useState("");
-  const [itemType, setItemType] = useState("");
-  const [itemCategory, setItemCategory] = useState("");
-  const [itemQuantity, setItemQuantity] = useState(0);
-  const [itemUnit, setItemUnit] = useState("");
+  const queryClient = useQueryClient();
 
-  // const queryClient = useQueryClient();
+  const { mutate: deleteItem, status } = useMutation({
+    mutationFn: deleteInventoryItem,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+    },
+    onError: (error) => {
+      console.error("Failed to delete item:", error);
+    },
+  });
 
   const handleDelete = () => {
-    // handle delete item
+    deleteItem(id.toString());
   };
 
   return (
-    <Button
-      type="submit"
-      className="bg-red-500 hover:bg-red-800 text-white"
-      onClick={handleDelete}
-    >
-      Delete Item
-    </Button>
+    <div>
+      {/* delete confirmation dialog */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button
+            type="button"
+            className="bg-red-500 hover:bg-red-800 text-white"
+          >
+            Delete Item
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogTitle>Confirm Deletion</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete this item? This action cannot be
+            undone.
+          </DialogDescription>
+          <DialogFooter>
+            <Button
+              className="bg-gray-500 hover:bg-gray-700 text-white"
+              onClick={() => setOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-800 text-white"
+              onClick={handleDelete}
+              disabled={status === "pending"}
+            >
+              {status === "pending" ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
