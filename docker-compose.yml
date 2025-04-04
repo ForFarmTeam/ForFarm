@@ -1,47 +1,90 @@
 services:
-  go-api:
-    container_name: go-api
-    # image: goapi
+  db:
+    image: postgres:16-alpine
+    container_name: forfarm_db
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-@Password123}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: forfarm_rabbitmq
+    restart: unless-stopped
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-user}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-password}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    container_name: forfarm_backend
     build:
       context: ./backend
       dockerfile: go.dockerfile
-    environment:
-      DATABASE_URL: 'postgres://postgres:@Password123@psqldb:5432/postgres?sslmode=disable'
+    restart: unless-stopped
     ports:
-      - '8000:8000'
-    volumes:  
-        - ./backend:/app
+      - "8000:8000"
     depends_on:
-      - psqldb
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - ./backend/.env
+    # If running migrations inside the container:
+    # command: sh -c "/app/api migrate && /app/api api"
+    # If running migrations separately (preferred):
+    command: ["api"] # Runs the default command in the Dockerfile
+    volumes: # Optional: Mount source for live reload during dev (remove for prod builds)
+      - ./backend:/app
+    # networks:
+    #   - forfarm-net
 
-  psqldb:
-    container_name: psqldb
-    image: postgres:17
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: '@Password123'
-      POSTGRES_DB: postgres
-    ports:
-      - '5433:5432'
-    volumes:
-      - pgsqldata:/var/lib/postgresql/data
-
-  next-frontend:
-    container_name: next-frontend
-    # image: nextfront
+  frontend:
+    container_name: forfarm_frontend
     build:
       context: ./frontend
       dockerfile: next.dockerfile
-    environment:
-      NEXT_PUBLIC_API_URL: 'localhost:8000/api'
+      # args:
+      #   NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL}
+    restart: unless-stopped
     ports:
-      - '3000:3000'
-    volumes:  
-          - ./frontend:/app
-          - /app/node_modules
+      - "3000:3000"
     depends_on:
-      - go-api
+      - backend
+    env_file:
+      - ./frontend/.env
+    # volumes: # Mount source for live reload during dev (remove for prod builds)
+    #   - ./frontend:/app
+    #   - /app/node_modules # Avoid overwriting node_modules
+    #   - /app/.next # Avoid overwriting build artifacts
+    # networks:
+    #   - forfarm-net
 
 volumes:
-  pgsqldata:
+  postgres_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+# networks:
+#   forfarm-net:
+#     driver: bridge

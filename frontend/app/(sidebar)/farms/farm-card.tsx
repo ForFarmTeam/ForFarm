@@ -49,11 +49,11 @@ export function FarmCard({ variant, farm, onClick, onEditClick, onDeleteClick }:
   }
 
   if (variant === "farm" && farm) {
-    const formattedDate = new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(farm.createdAt));
+    // const formattedDate = new Intl.DateTimeFormat("en-US", {
+    //   year: "numeric",
+    //   month: "short",
+    //   day: "numeric",
+    // }).format(new Date(farm.createdAt));
 
     return (
       <Card className={cardClasses}>
