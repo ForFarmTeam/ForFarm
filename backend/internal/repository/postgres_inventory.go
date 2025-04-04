@@ -3,20 +3,28 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
+	"github.com/forfarm/backend/internal/cache"
 	"github.com/forfarm/backend/internal/domain"
 	"github.com/google/uuid"
+)
+
+const (
+	cacheKeyInventoryStatuses   = "inventory:statuses"
+	cacheKeyInventoryCategories = "inventory:categories"
 )
 
 type postgresInventoryRepository struct {
 	conn           Connection
 	eventPublisher domain.EventPublisher
+	cache          cache.Cache
 }
 
-func NewPostgresInventory(conn Connection, publisher domain.EventPublisher) domain.InventoryRepository {
-	return &postgresInventoryRepository{conn: conn, eventPublisher: publisher}
+func NewPostgresInventory(conn Connection, publisher domain.EventPublisher, c cache.Cache) domain.InventoryRepository {
+	return &postgresInventoryRepository{conn: conn, eventPublisher: publisher, cache: c}
 }
 
 func (p *postgresInventoryRepository) fetch(ctx context.Context, query string, args ...interface{}) ([]domain.InventoryItem, error) {
@@ -342,6 +350,14 @@ func (p *postgresInventoryRepository) Delete(ctx context.Context, id, userID str
 }
 
 func (p *postgresInventoryRepository) GetStatuses(ctx context.Context) ([]domain.InventoryStatus, error) {
+	if cached, found := p.cache.Get(cacheKeyInventoryStatuses); found {
+		if statuses, ok := cached.([]domain.InventoryStatus); ok {
+			slog.DebugContext(ctx, "Cache hit for GetInventoryStatuses", "key", cacheKeyInventoryStatuses)
+			return statuses, nil
+		}
+	}
+	slog.DebugContext(ctx, "Cache miss for GetInventoryStatuses", "key", cacheKeyInventoryStatuses)
+
 	query := `SELECT id, name FROM inventory_status ORDER BY id`
 	rows, err := p.conn.Query(ctx, query)
 	if err != nil {
@@ -357,10 +373,26 @@ func (p *postgresInventoryRepository) GetStatuses(ctx context.Context) ([]domain
 		}
 		statuses = append(statuses, s)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(statuses) > 0 {
+		p.cache.Set(cacheKeyInventoryStatuses, statuses, cacheTTLStatic)
+	}
+
 	return statuses, nil
 }
 
 func (p *postgresInventoryRepository) GetCategories(ctx context.Context) ([]domain.InventoryCategory, error) {
+	if cached, found := p.cache.Get(cacheKeyInventoryCategories); found {
+		if categories, ok := cached.([]domain.InventoryCategory); ok {
+			slog.DebugContext(ctx, "Cache hit for GetInventoryCategories", "key", cacheKeyInventoryCategories)
+			return categories, nil
+		}
+	}
+	slog.DebugContext(ctx, "Cache miss for GetInventoryCategories", "key", cacheKeyInventoryCategories)
+
 	query := `SELECT id, name FROM inventory_category ORDER BY id`
 	rows, err := p.conn.Query(ctx, query)
 	if err != nil {
@@ -376,5 +408,13 @@ func (p *postgresInventoryRepository) GetCategories(ctx context.Context) ([]doma
 		}
 		categories = append(categories, c)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(categories) > 0 {
+		p.cache.Set(cacheKeyInventoryCategories, categories, cacheTTLStatic)
+	}
+
 	return categories, nil
 }
