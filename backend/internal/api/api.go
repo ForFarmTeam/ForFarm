@@ -36,6 +36,7 @@ type api struct {
 	inventoryRepo domain.InventoryRepository
 	harvestRepo   domain.HarvestRepository
 	analyticsRepo domain.AnalyticsRepository
+	knowledgeHubRepo domain.KnowledgeHubRepository
 
 	weatherFetcher domain.WeatherFetcher
 }
@@ -61,6 +62,7 @@ func NewAPI(
 
 	userRepository := repository.NewPostgresUser(pool)
 	plantRepository := repository.NewPostgresPlant(pool)
+	knowledgeHubRepository := repository.NewPostgresKnowledgeHub(pool)
 	harvestRepository := repository.NewPostgresHarvest(pool)
 
 	owmFetcher := weather.NewOpenWeatherMapFetcher(config.OPENWEATHER_API_KEY, client, logger)
@@ -88,7 +90,7 @@ func NewAPI(
 		inventoryRepo: inventoryRepo,
 		harvestRepo:   harvestRepository,
 		analyticsRepo: analyticsRepo,
-
+		knowledgeHubRepo: knowledgeHubRepository,
 		weatherFetcher: cachedWeatherFetcher,
 	}
 }
@@ -130,7 +132,9 @@ func (a *api) Routes() *chi.Mux {
 		a.registerAuthRoutes(r, api)
 		a.registerCropRoutes(r, api)
 		a.registerPlantRoutes(r, api)
+		a.registerKnowledgeHubRoutes(r, api)
 		a.registerOauthRoutes(r, api)
+		
 		a.registerInventoryRoutes(r, api)
 	})
 
