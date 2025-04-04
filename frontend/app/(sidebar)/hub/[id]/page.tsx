@@ -67,7 +67,7 @@ export default function BlogPage() {
       {/* Header */}
       <header className="border-b sticky top-0 z-10 bg-background/95 backdrop-blur">
         <div className="container flex items-center justify-between h-16 px-4">
-          <Link href="/knowledge-hub">
+          <Link href="/hub">
             <Button variant="ghost" size="sm" className="gap-1">
               <ArrowLeft className="h-4 w-4" /> Back to Knowledge Hub
             </Button>
@@ -162,7 +162,7 @@ export default function BlogPage() {
                   <CardContent>
                     <div className="space-y-4">
                       {blog.relatedArticles.map((article) => (
-                        <Link href={`/blog/${article.id}`} key={article.id}>
+                        <Link href={`/hub/${article.id}`} key={article.id}>
                           <div className="flex gap-3 group">
                             <div className="relative w-16 h-16 rounded overflow-hidden flex-shrink-0">
                               <Image
