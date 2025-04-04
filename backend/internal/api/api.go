@@ -165,11 +165,11 @@ func (a *api) Routes() *chi.Mux {
 		a.registerOauthRoutes(r, api)
 		a.registerChatRoutes(r, api)
 		a.registerInventoryRoutes(r, api)
+		a.registerHealthRoutes(r, api)
 	})
 
 	router.Group(func(r chi.Router) {
 		api.UseMiddleware(m.AuthMiddleware(api))
-		a.registerHelloRoutes(r, api)
 		a.registerFarmRoutes(r, api)
 		a.registerUserRoutes(r, api)
 		a.registerAnalyticsRoutes(r, api)

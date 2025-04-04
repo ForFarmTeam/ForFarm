@@ -58,7 +58,7 @@ export function EditFarmForm({ initialData, onSubmit, onCancel, isSubmitting }: 
       type: initialData.farmType || "",
       area: initialData.totalSize || "",
     });
-  }, [initialData, form.reset]);
+  }, [initialData, form]);
 
   const handleSubmit = async (values: z.infer<typeof farmFormSchema>) => {
     try {
