@@ -36,16 +36,17 @@ import GoogleMapWithDrawing, { type ShapeData } from "@/components/google-map-wi
 interface CropDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: Partial<Cropland>) => Promise<void>;
+  onSubmit: (data: Partial<Omit<Cropland, "uuid" | "farmId">>) => Promise<void>;
   isSubmitting: boolean;
+  initialData?: Cropland | null;
+  isEditing?: boolean;
 }
 
-export function CropDialog({ open, onOpenChange, onSubmit, isSubmitting }: CropDialogProps) {
+export function CropDialog({ open, onOpenChange, onSubmit, isSubmitting, initialData, isEditing }: CropDialogProps) {
   // --- State ---
   const [selectedPlantUUID, setSelectedPlantUUID] = useState<string | null>(null);
-  // State to hold the structured GeoFeature data
   const [geoFeature, setGeoFeature] = useState<GeoFeatureData | null>(null);
-  const [calculatedArea, setCalculatedArea] = useState<number | null>(null); // Keep for display
+  const [calculatedArea, setCalculatedArea] = useState<number | null>(null);
 
   // --- Load Google Maps Geometry Library ---
   const geometryLib = useMapsLibrary("geometry");
@@ -63,6 +64,7 @@ export function CropDialog({ open, onOpenChange, onSubmit, isSubmitting }: CropD
     refetchOnWindowFocus: false,
   });
   const plants = useMemo(() => plantData?.plants || [], [plantData]);
+
   const selectedPlant = useMemo(() => {
     return plants.find((p) => p.uuid === selectedPlantUUID);
   }, [plants, selectedPlantUUID]);
@@ -71,10 +73,14 @@ export function CropDialog({ open, onOpenChange, onSubmit, isSubmitting }: CropD
   useEffect(() => {
     if (!open) {
       setSelectedPlantUUID(null);
-      setGeoFeature(null); // Reset geoFeature state
+      setGeoFeature(null);
       setCalculatedArea(null);
+    } else if (initialData) {
+      setSelectedPlantUUID(initialData.plantId);
+      setGeoFeature(initialData.geoFeature ?? null);
+      setCalculatedArea(initialData.landSize ?? null);
     }
-  }, [open]);
+  }, [open, initialData]);
 
   // --- Map Interaction Handler ---
   const handleShapeDrawn = useCallback(
@@ -169,9 +175,13 @@ export function CropDialog({ open, onOpenChange, onSubmit, isSubmitting }: CropD
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[950px] md:max-w-[1100px] lg:max-w-[1200px] xl:max-w-7xl p-0 max-h-[90vh] flex flex-col">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="text-xl font-semibold">Create New Cropland</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            {isEditing ? "Edit Cropland" : "Create New Cropland"}
+          </DialogTitle>
           <DialogDescription>
-            Select a plant and draw the cropland boundary or mark its location on the map.
+            {isEditing
+              ? "Update the cropland details and location."
+              : "Select a plant and draw the cropland boundary or mark its location on the map."}
           </DialogDescription>
         </DialogHeader>
 
