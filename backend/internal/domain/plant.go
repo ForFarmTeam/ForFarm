@@ -45,6 +45,7 @@ func (p *Plant) Validate() error {
 type PlantRepository interface {
 	GetByUUID(context.Context, string) (Plant, error)
 	GetAll(context.Context) ([]Plant, error)
+	GetByName(context.Context, string) (Plant, error)
 	Create(context.Context, *Plant) error
 	Update(context.Context, *Plant) error
 	Delete(context.Context, string) error

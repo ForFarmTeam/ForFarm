@@ -59,7 +59,7 @@ func (r *postgresFarmAnalyticsRepository) GetFarmAnalytics(ctx context.Context, 
 		&analytics.OwnerID,
 		&farmType,
 		&totalSize,
-		&analytics.Latitude, // Scan directly into the struct fields
+		&analytics.Latitude,
 		&analytics.Longitude,
 		&weatherJSON,
 		&inventoryJSON,
@@ -228,16 +228,16 @@ func (r *postgresFarmAnalyticsRepository) GetCropAnalytics(ctx context.Context, 
 
 func (r *postgresFarmAnalyticsRepository) CreateOrUpdateFarmBaseData(ctx context.Context, farm *domain.Farm) error {
 	query := `
-        INSERT INTO farm_analytics (farm_id, farm_name, owner_id, farm_type, total_size, lat, lon, last_updated)
+        INSERT INTO farm_analytics (farm_id, farm_name, owner_id, farm_type, total_size, latitude, longitude, analytics_last_updated)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         ON CONFLICT (farm_id) DO UPDATE
         SET farm_name = EXCLUDED.farm_name,
             owner_id = EXCLUDED.owner_id,
             farm_type = EXCLUDED.farm_type,
             total_size = EXCLUDED.total_size,
-            lat = EXCLUDED.lat,
-            lon = EXCLUDED.lon,
-            last_updated = EXCLUDED.last_updated;`
+            latitude = EXCLUDED.latitude,
+            longitude = EXCLUDED.longitude,
+            analytics_last_updated = EXCLUDED.analytics_last_updated;`
 
 	_, err := r.conn.Exec(ctx, query,
 		farm.UUID,
@@ -259,158 +259,100 @@ func (r *postgresFarmAnalyticsRepository) CreateOrUpdateFarmBaseData(ctx context
 
 func (r *postgresFarmAnalyticsRepository) UpdateFarmAnalyticsWeather(ctx context.Context, farmID string, weatherData *domain.WeatherData) error {
 	if weatherData == nil {
-		return fmt.Errorf("weather data cannot be nil")
+		return errors.New("weather data cannot be nil for update")
 	}
-
-	weatherJSON, err := json.Marshal(weatherData)
-	if err != nil {
-		r.logger.Error("Failed to marshal weather data for analytics update", "farm_id", farmID, "error", err)
-		return fmt.Errorf("failed to marshal weather data: %w", err)
-	}
-
 	query := `
-        UPDATE farm_analytics
-        SET weather_data = $1,
-            last_updated = $2
-        WHERE farm_id = $3;`
+		UPDATE public.farm_analytics SET
+			weather_temp_celsius = $2,
+			weather_humidity = $3,
+			weather_description = $4,
+			weather_icon = $5,
+			weather_wind_speed = $6,
+			weather_rain_1h = $7,
+			weather_observed_at = $8,
+			weather_last_updated = NOW(), -- Use current time for the update time
+			analytics_last_updated = NOW()
+		WHERE farm_id = $1`
 
-	cmdTag, err := r.conn.Exec(ctx, query, weatherJSON, time.Now().UTC(), farmID)
+	_, err := r.conn.Exec(ctx, query,
+		farmID,
+		weatherData.TempCelsius,
+		weatherData.Humidity,
+		weatherData.Description,
+		weatherData.Icon,
+		weatherData.WindSpeed,
+		weatherData.RainVolume1h,
+		weatherData.ObservedAt,
+	)
 	if err != nil {
-		r.logger.Error("Failed to update farm analytics weather data", "farm_id", farmID, "error", err)
-		return fmt.Errorf("database update failed for weather data: %w", err)
+		r.logger.Error("Error updating farm weather analytics", "farm_id", farmID, "error", err)
+		return fmt.Errorf("failed to update weather analytics for farm %s: %w", farmID, err)
 	}
-	if cmdTag.RowsAffected() == 0 {
-		r.logger.Warn("No farm analytics record found to update weather data", "farm_id", farmID)
-		// Optionally, create the base record here if it should always exist
-		return domain.ErrNotFound // Or handle as appropriate
-	}
-
-	r.logger.Debug("Updated farm analytics weather data", "farm_id", farmID)
+	r.logger.Debug("Updated farm weather analytics", "farm_id", farmID)
 	return nil
 }
 
 // UpdateFarmAnalyticsCropStats needs to query the croplands table for the farm
 func (r *postgresFarmAnalyticsRepository) UpdateFarmAnalyticsCropStats(ctx context.Context, farmID string) error {
+	countQuery := `
+		SELECT
+			COUNT(*),
+			COUNT(*) FILTER (WHERE lower(status) = 'growing')
+		FROM public.croplands
+		WHERE farm_id = $1
+	`
 	var totalCount, growingCount int
-
-	// Query to count total and growing crops for the farm
-	query := `
-        SELECT
-            COUNT(*),
-            COUNT(*) FILTER (WHERE status = 'growing') -- Case-insensitive comparison if needed: LOWER(status) = 'growing'
-        FROM croplands
-        WHERE farm_id = $1;`
-
-	err := r.conn.QueryRow(ctx, query, farmID).Scan(&totalCount, &growingCount)
+	err := r.conn.QueryRow(ctx, countQuery, farmID).Scan(&totalCount, &growingCount)
 	if err != nil {
-		// Log error but don't fail the projection if stats can't be calculated temporarily
-		r.logger.Error("Failed to calculate crop stats for analytics", "farm_id", farmID, "error", err)
-		return fmt.Errorf("failed to calculate crop stats: %w", err)
+		if !errors.Is(err, pgx.ErrNoRows) {
+			r.logger.Error("Error calculating crop counts", "farm_id", farmID, "error", err)
+			return fmt.Errorf("failed to calculate crop stats for farm %s: %w", farmID, err)
+		}
 	}
 
-	// Construct the JSONB object for crop_data
-	cropInfo := map[string]interface{}{
-		"totalCount":   totalCount,
-		"growingCount": growingCount,
-		"lastUpdated":  time.Now().UTC(), // Timestamp of this calculation
-	}
-	cropJSON, err := json.Marshal(cropInfo)
-	if err != nil {
-		r.logger.Error("Failed to marshal crop stats data", "farm_id", farmID, "error", err)
-		return fmt.Errorf("failed to marshal crop stats: %w", err)
-	}
-
-	// Update the farm_analytics table
 	updateQuery := `
-        UPDATE farm_analytics
-        SET crop_data = $1,
-            last_updated = $2 -- Also update the main last_updated timestamp
-        WHERE farm_id = $3;`
+		UPDATE public.farm_analytics SET
+			crop_total_count = $2,
+			crop_growing_count = $3,
+			crop_last_updated = NOW(),
+			analytics_last_updated = NOW()
+		WHERE farm_id = $1`
 
-	cmdTag, err := r.conn.Exec(ctx, updateQuery, cropJSON, time.Now().UTC(), farmID)
+	cmdTag, err := r.conn.Exec(ctx, updateQuery, farmID, totalCount, growingCount)
 	if err != nil {
-		r.logger.Error("Failed to update farm analytics crop stats", "farm_id", farmID, "error", err)
-		return fmt.Errorf("database update failed for crop stats: %w", err)
+		r.logger.Error("Error updating farm crop stats", "farm_id", farmID, "error", err)
+		return fmt.Errorf("failed to update crop stats for farm %s: %w", farmID, err)
 	}
 	if cmdTag.RowsAffected() == 0 {
 		r.logger.Warn("No farm analytics record found to update crop stats", "farm_id", farmID)
-		// Optionally, create the base record here
-	} else {
-		r.logger.Debug("Updated farm analytics crop stats", "farm_id", farmID, "total", totalCount, "growing", growingCount)
+		// Optionally, create the base record here if it should always exist
+		return r.CreateOrUpdateFarmBaseData(ctx, &domain.Farm{UUID: farmID /* Fetch other details */})
 	}
+
+	r.logger.Debug("Updated farm crop stats", "farm_id", farmID, "total", totalCount, "growing", growingCount)
 	return nil
 }
 
 // UpdateFarmAnalyticsInventoryStats needs to query inventory_items
 func (r *postgresFarmAnalyticsRepository) UpdateFarmAnalyticsInventoryStats(ctx context.Context, farmID string) error {
-	var totalItems, lowStockCount int
-	var lastUpdated sql.NullTime
-
-	// Query to get inventory stats for the user owning the farm
-	// NOTE: This assumes inventory is linked by user_id, and we need the user_id for the farm owner.
-	// Step 1: Get Owner ID from farm_analytics table
-	var ownerID string
-	ownerQuery := `SELECT owner_id FROM farm_analytics WHERE farm_id = $1`
-	err := r.conn.QueryRow(ctx, ownerQuery, farmID).Scan(&ownerID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, pgx.ErrNoRows) {
-			r.logger.Warn("Cannot update inventory stats, farm analytics record not found", "farm_id", farmID)
-			return nil // Or return ErrNotFound if critical
-		}
-		r.logger.Error("Failed to get owner ID for inventory stats update", "farm_id", farmID, "error", err)
-		return fmt.Errorf("failed to get owner ID: %w", err)
-	}
-
-	// Step 2: Query inventory based on owner ID
 	query := `
-        SELECT
-            COUNT(*),
-            COUNT(*) FILTER (WHERE status_id = (SELECT id FROM inventory_status WHERE name = 'Low Stock')), -- Assumes 'Low Stock' status name
-            MAX(updated_at) -- Get the latest update timestamp from inventory items
-        FROM inventory_items
-        WHERE user_id = $1;`
+		UPDATE public.farm_analytics SET
+			-- inventory_total_items = (SELECT COUNT(*) FROM ... WHERE farm_id = $1), -- Example future logic
+			-- inventory_low_stock_count = (SELECT COUNT(*) FROM ... WHERE farm_id = $1 AND status = 'low'), -- Example
+			inventory_last_updated = NOW(),
+			analytics_last_updated = NOW()
+		WHERE farm_id = $1`
 
-	err = r.conn.QueryRow(ctx, query, ownerID).Scan(&totalItems, &lowStockCount, &lastUpdated)
+	cmdTag, err := r.conn.Exec(ctx, query, farmID)
 	if err != nil {
-		// Log error but don't fail the projection if stats can't be calculated temporarily
-		r.logger.Error("Failed to calculate inventory stats for analytics", "farm_id", farmID, "owner_id", ownerID, "error", err)
-		return fmt.Errorf("failed to calculate inventory stats: %w", err)
-	}
-
-	// Construct the JSONB object for inventory_data
-	inventoryInfo := map[string]interface{}{
-		"totalItems":    totalItems,
-		"lowStockCount": lowStockCount,
-		"lastUpdated":   nil, // Initialize as nil
-	}
-	// Only set lastUpdated if the MAX(updated_at) query returned a valid time
-	if lastUpdated.Valid {
-		inventoryInfo["lastUpdated"] = lastUpdated.Time.UTC()
-	}
-
-	inventoryJSON, err := json.Marshal(inventoryInfo)
-	if err != nil {
-		r.logger.Error("Failed to marshal inventory stats data", "farm_id", farmID, "error", err)
-		return fmt.Errorf("failed to marshal inventory stats: %w", err)
-	}
-
-	// Update the farm_analytics table
-	updateQuery := `
-        UPDATE farm_analytics
-        SET inventory_data = $1,
-            last_updated = $2 -- Also update the main last_updated timestamp
-        WHERE farm_id = $3;`
-
-	cmdTag, err := r.conn.Exec(ctx, updateQuery, inventoryJSON, time.Now().UTC(), farmID)
-	if err != nil {
-		r.logger.Error("Failed to update farm analytics inventory stats", "farm_id", farmID, "error", err)
-		return fmt.Errorf("database update failed for inventory stats: %w", err)
+		r.logger.Error("Error touching inventory timestamp in farm analytics", "farm_id", farmID, "error", err)
+		return fmt.Errorf("failed to update inventory stats timestamp for farm %s: %w", farmID, err)
 	}
 	if cmdTag.RowsAffected() == 0 {
-		r.logger.Warn("No farm analytics record found to update inventory stats", "farm_id", farmID)
-	} else {
-		r.logger.Debug("Updated farm analytics inventory stats", "farm_id", farmID, "total", totalItems, "lowStock", lowStockCount)
+		r.logger.Warn("No farm analytics record found to update inventory timestamp", "farm_id", farmID)
 	}
+
+	r.logger.Debug("Updated farm inventory timestamp", "farm_id", farmID)
 	return nil
 }
 
@@ -432,20 +374,18 @@ func (r *postgresFarmAnalyticsRepository) DeleteFarmAnalytics(ctx context.Contex
 
 func (r *postgresFarmAnalyticsRepository) UpdateFarmOverallStatus(ctx context.Context, farmID string, status string) error {
 	query := `
-        UPDATE farm_analytics
-        SET overall_status = $1,
-            last_updated = $2
-        WHERE farm_id = $3;`
+		UPDATE public.farm_analytics SET
+			overall_status = $2,
+			analytics_last_updated = NOW()
+		WHERE farm_id = $1`
 
-	cmdTag, err := r.conn.Exec(ctx, query, status, time.Now().UTC(), farmID)
+	cmdTag, err := r.conn.Exec(ctx, query, farmID, status)
 	if err != nil {
-		r.logger.Error("Failed to update farm overall status", "farm_id", farmID, "status", status, "error", err)
-		return fmt.Errorf("database update failed for overall status: %w", err)
+		r.logger.Error("Error updating farm overall status", "farm_id", farmID, "status", status, "error", err)
+		return fmt.Errorf("failed to update overall status for farm %s: %w", farmID, err)
 	}
 	if cmdTag.RowsAffected() == 0 {
 		r.logger.Warn("No farm analytics record found to update overall status", "farm_id", farmID)
-		// Optionally, create the base record here if needed
-		return domain.ErrNotFound
 	}
 	r.logger.Debug("Updated farm overall status", "farm_id", farmID, "status", status)
 	return nil

@@ -1,4 +1,3 @@
-// backend/internal/event/projection.go
 package event
 
 import (
@@ -35,11 +34,10 @@ func NewFarmAnalyticsProjection(
 
 func (p *FarmAnalyticsProjection) Start(ctx context.Context) error {
 	eventTypes := []string{
-		"farm.created", "farm.updated", "farm.deleted", // Farm lifecycle
-		"weather.updated",                                          // Weather updates
-		"cropland.created", "cropland.updated", "cropland.deleted", // Crop changes trigger count recalc
-		"inventory.item.created", "inventory.item.updated", "inventory.item.deleted", // Inventory changes trigger timestamp update
-		// Add other events that might influence FarmAnalytics, e.g., "pest.detected", "yield.recorded"
+		"farm.created", "farm.updated", "farm.deleted",
+		"weather.updated",
+		"cropland.created", "cropland.updated", "cropland.deleted",
+		"inventory.item.created", "inventory.item.updated", "inventory.item.deleted",
 	}
 
 	p.logger.Info("FarmAnalyticsProjection starting, subscribing to events", "types", eventTypes)
@@ -49,8 +47,6 @@ func (p *FarmAnalyticsProjection) Start(ctx context.Context) error {
 		if err := p.eventSubscriber.Subscribe(ctx, eventType, p.handleEvent); err != nil {
 			p.logger.Error("Failed to subscribe to event type", "type", eventType, "error", err)
 			errs = append(errs, fmt.Errorf("failed to subscribe to %s: %w", eventType, err))
-			// TODO: Decide if we should continue subscribing or fail hard
-			// return errors.Join(errs...) // Fail hard
 		} else {
 			p.logger.Info("Successfully subscribed to event type", "type", eventType)
 		}
@@ -65,33 +61,30 @@ func (p *FarmAnalyticsProjection) Start(ctx context.Context) error {
 }
 
 func (p *FarmAnalyticsProjection) handleEvent(event domain.Event) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second) // 10-second timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	p.logger.Debug("Handling event in FarmAnalyticsProjection", "type", event.Type, "aggregate_id", event.AggregateID, "event_id", event.ID)
 
-	farmID := event.AggregateID // Assume AggregateID is the Farm UUID for relevant events
+	farmID := event.AggregateID
 
-	// Special case: inventory events might use UserID as AggregateID.
-	// Need a way to map UserID to FarmID if necessary, or adjust event publishing.
-	// For now, we assume farmID can be derived or is directly in the payload for inventory events.
-
-	if farmID == "" {
+	// Try to get farmID from payload if AggregateID is empty or potentially not the farmID (e.g., user events)
+	if farmID == "" || event.Type == "inventory.item.created" || event.Type == "inventory.item.updated" || event.Type == "inventory.item.deleted" || event.Type == "cropland.created" || event.Type == "cropland.updated" || event.Type == "cropland.deleted" {
 		payloadMap, ok := event.Payload.(map[string]interface{})
 		if ok {
 			if idVal, ok := payloadMap["farm_id"].(string); ok && idVal != "" {
 				farmID = idVal
-			} else if idVal, ok := payloadMap["user_id"].(string); ok && idVal != "" {
-				// !! WARNING: Need mapping from user_id to farm_id here !!
-				// This is a temp - requires adding userRepo or similar lookup
-				p.logger.Warn("Inventory event received without direct farm_id, cannot update stats", "event_id", event.ID, "user_id", idVal)
-				// Skip inventory stats update if farm_id is missing
+			} else if event.Type != "farm.deleted" && event.Type != "farm.created" {
+				p.logger.Warn("Could not determine farm_id from event payload or AggregateID", "event_type", event.Type, "event_id", event.ID, "aggregate_id", event.AggregateID)
 				return nil
 			}
+		} else if event.Type != "farm.deleted" && event.Type != "farm.created" {
+			p.logger.Error("Event payload is not a map, cannot extract farm_id", "event_type", event.Type, "event_id", event.ID)
+			return nil
 		}
 	}
 
-	if farmID == "" && event.Type != "farm.deleted" { // farm.deleted uses AggregateID which is the farmID being deleted
+	if farmID == "" && event.Type != "farm.deleted" {
 		p.logger.Error("Cannot process event, missing farm_id", "event_type", event.Type, "event_id", event.ID, "aggregate_id", event.AggregateID)
 		return nil
 	}
@@ -99,22 +92,21 @@ func (p *FarmAnalyticsProjection) handleEvent(event domain.Event) error {
 	var err error
 	switch event.Type {
 	case "farm.created", "farm.updated":
-		// Need to get the full Farm domain object from the payload
 		var farmData domain.Farm
-		jsonData, _ := json.Marshal(event.Payload) // Convert payload map back to JSON
+		jsonData, _ := json.Marshal(event.Payload)
 		if err = json.Unmarshal(jsonData, &farmData); err != nil {
 			p.logger.Error("Failed to unmarshal farm data from event payload", "event_id", event.ID, "error", err)
-			// Nack or Ack based on error strategy? Ack for now.
 			return nil
 		}
-		// Ensure UUID is set from AggregateID if missing in payload itself
 		if farmData.UUID == "" {
 			farmData.UUID = event.AggregateID
 		}
+
+		p.logger.Info("Processing farm event", "event_type", event.Type, "farm_id", farmData.UUID, "owner_id", farmData.OwnerID)
 		err = p.repository.CreateOrUpdateFarmBaseData(ctx, &farmData)
 
 	case "farm.deleted":
-		farmID = event.AggregateID // Use AggregateID directly for delete
+		farmID = event.AggregateID
 		if farmID == "" {
 			p.logger.Error("Cannot process farm.deleted event, missing farm_id in AggregateID", "event_id", event.ID)
 			return nil
@@ -122,12 +114,11 @@ func (p *FarmAnalyticsProjection) handleEvent(event domain.Event) error {
 		err = p.repository.DeleteFarmAnalytics(ctx, farmID)
 
 	case "weather.updated":
-		// Extract weather data from payload
 		var weatherData domain.WeatherData
 		jsonData, _ := json.Marshal(event.Payload)
 		if err = json.Unmarshal(jsonData, &weatherData); err != nil {
 			p.logger.Error("Failed to unmarshal weather data from event payload", "event_id", event.ID, "error", err)
-			return nil // Acknowledge bad data
+			return nil
 		}
 		err = p.repository.UpdateFarmAnalyticsWeather(ctx, farmID, &weatherData)
 
@@ -146,8 +137,6 @@ func (p *FarmAnalyticsProjection) handleEvent(event domain.Event) error {
 		err = p.repository.UpdateFarmAnalyticsCropStats(ctx, farmID)
 
 	case "inventory.item.created", "inventory.item.updated", "inventory.item.deleted":
-		// farmID needs to be looked up or present in payload
-		// For now, we only touch the timestamp
 		if farmID != "" {
 			err = p.repository.UpdateFarmAnalyticsInventoryStats(ctx, farmID)
 		} else {
@@ -162,7 +151,6 @@ func (p *FarmAnalyticsProjection) handleEvent(event domain.Event) error {
 
 	if err != nil {
 		p.logger.Error("Failed to update farm analytics", "event_type", event.Type, "farm_id", farmID, "error", err)
-		// Decide whether to return the error (potentially causing requeue) or nil (ack)
 		return nil
 	}
 
