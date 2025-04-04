@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   devIndicators: {
     buildActivity: false,
   },
@@ -9,7 +8,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "static.wixstatic.com",
+      },
+      {
+        protocol: "http",
+        hostname: "static.wixstatic.com",
       },
     ],
   },

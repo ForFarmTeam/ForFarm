@@ -133,25 +133,25 @@ export default function BlogPage() {
           <div className="space-y-8">
             {/* Table of contents */}
             <div className="sticky top-24">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Table of Contents</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <nav className="space-y-2">
-                    {blog.tableOfContents?.map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => scrollToSection(item.id)}
-                        className={`text-left w-full px-2 py-1 text-sm rounded-md hover:bg-muted transition-colors ${
-                          item.level > 1 ? "ml-4" : ""
-                        }`}>
-                        {item.title}
-                      </button>
-                    ))}
-                  </nav>
-                </CardContent>
-              </Card>
+              {/*<Card>*/}
+              {/*  <CardHeader>*/}
+              {/*    <CardTitle>Table of Contents</CardTitle>*/}
+              {/*  </CardHeader>*/}
+              {/*  <CardContent>*/}
+              {/*    <nav className="space-y-2">*/}
+              {/*      {blog.tableOfContents?.map((item) => (*/}
+              {/*        <button*/}
+              {/*          key={item.id}*/}
+              {/*          onClick={() => scrollToSection(item.id)}*/}
+              {/*          className={`text-left w-full px-2 py-1 text-sm rounded-md hover:bg-muted transition-colors ${*/}
+              {/*            item.level > 1 ? "ml-4" : ""*/}
+              {/*          }`}>*/}
+              {/*          {item.title}*/}
+              {/*        </button>*/}
+              {/*      ))}*/}
+              {/*    </nav>*/}
+              {/*  </CardContent>*/}
+              {/*</Card>*/}
 
               {/* Related articles */}
               {blog.relatedArticles && (
