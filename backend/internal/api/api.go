@@ -20,6 +20,7 @@ import (
 	"github.com/forfarm/backend/internal/domain"
 	m "github.com/forfarm/backend/internal/middlewares"
 	"github.com/forfarm/backend/internal/repository"
+	"github.com/forfarm/backend/internal/services"
 	"github.com/forfarm/backend/internal/services/weather"
 	"github.com/forfarm/backend/internal/utilities"
 )
@@ -29,22 +30,22 @@ type api struct {
 	httpClient     *http.Client
 	eventPublisher domain.EventPublisher
 
-	userRepo      domain.UserRepository
-	cropRepo      domain.CroplandRepository
-	farmRepo      domain.FarmRepository
-	plantRepo     domain.PlantRepository
-	inventoryRepo domain.InventoryRepository
-	harvestRepo   domain.HarvestRepository
-	analyticsRepo domain.AnalyticsRepository
+	userRepo         domain.UserRepository
+	cropRepo         domain.CroplandRepository
+	farmRepo         domain.FarmRepository
+	plantRepo        domain.PlantRepository
+	inventoryRepo    domain.InventoryRepository
+	harvestRepo      domain.HarvestRepository
+	analyticsRepo    domain.AnalyticsRepository
 	knowledgeHubRepo domain.KnowledgeHubRepository
 
 	weatherFetcher domain.WeatherFetcher
+
+	chatService *services.ChatService
 }
 
-var weatherFetcherInstance domain.WeatherFetcher
-
-func GetWeatherFetcher() domain.WeatherFetcher {
-	return weatherFetcherInstance
+func (a *api) GetWeatherFetcher() domain.WeatherFetcher {
+	return a.weatherFetcher
 }
 
 func NewAPI(
@@ -76,22 +77,29 @@ func NewAPI(
 		cleanupInterval = 5 * time.Minute
 	}
 	cachedWeatherFetcher := weather.NewCachedWeatherFetcher(owmFetcher, cacheTTL, cleanupInterval, logger)
-	weatherFetcherInstance = cachedWeatherFetcher
+
+	chatService, chatErr := services.NewChatService(logger, analyticsRepo, farmRepo, croplandRepo, inventoryRepo, plantRepository)
+	if chatErr != nil {
+		logger.Error("Failed to initialize ChatService", "error", chatErr)
+		chatService = nil
+	}
 
 	return &api{
 		logger:         logger,
 		httpClient:     client,
 		eventPublisher: eventPublisher,
 
-		userRepo:      userRepository,
-		cropRepo:      croplandRepo,
-		farmRepo:      farmRepo,
-		plantRepo:     plantRepository,
-		inventoryRepo: inventoryRepo,
-		harvestRepo:   harvestRepository,
-		analyticsRepo: analyticsRepo,
+		userRepo:         userRepository,
+		cropRepo:         croplandRepo,
+		farmRepo:         farmRepo,
+		plantRepo:        plantRepository,
+		inventoryRepo:    inventoryRepo,
+		harvestRepo:      harvestRepository,
+		analyticsRepo:    analyticsRepo,
 		knowledgeHubRepo: knowledgeHubRepository,
-		weatherFetcher: cachedWeatherFetcher,
+		weatherFetcher:   cachedWeatherFetcher,
+
+		chatService: chatService,
 	}
 }
 
@@ -134,6 +142,7 @@ func (a *api) Routes() *chi.Mux {
 		a.registerPlantRoutes(r, api)
 		a.registerKnowledgeHubRoutes(r, api)
 		a.registerOauthRoutes(r, api)
+		a.registerChatRoutes(r, api)
 		a.registerInventoryRoutes(r, api)
 	})
 
@@ -142,7 +151,6 @@ func (a *api) Routes() *chi.Mux {
 		a.registerHelloRoutes(r, api)
 		a.registerFarmRoutes(r, api)
 		a.registerUserRoutes(r, api)
-		a.registerInventoryRoutes(r, api)
 		a.registerAnalyticsRoutes(r, api)
 	})
 
