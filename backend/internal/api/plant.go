@@ -31,7 +31,12 @@ func (a *api) getAllPlantHandler(ctx context.Context, input *struct{}) (*GetAllP
 	resp := &GetAllPlantsOutput{}
 	plants, err := a.plantRepo.GetAll(ctx)
 	if err != nil {
-		return nil, err
+		a.logger.Error("Failed to get all plants", "error", err)
+		return nil, huma.Error500InternalServerError("Failed to retrieve plants")
+	}
+
+	if plants == nil {
+		plants = []domain.Plant{}
 	}
 
 	resp.Body.Plants = plants

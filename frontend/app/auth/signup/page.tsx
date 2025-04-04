@@ -14,9 +14,18 @@ import type { z } from "zod";
 import { useRouter } from "next/navigation";
 import { registerUser } from "@/api/authentication";
 import { SessionContext } from "@/context/SessionContext";
-import { Eye, EyeOff, Leaf, ArrowRight, AlertCircle, Loader2, Check } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Leaf,
+  ArrowRight,
+  AlertCircle,
+  Loader2,
+  Check,
+} from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { GoogleSigninButton } from "../signin/google-oauth";
 
 export default function SignupPage() {
   const [serverError, setServerError] = useState<string | null>(null);
@@ -75,7 +84,9 @@ export default function SignupPage() {
       const data = await registerUser(values.email, values.password);
 
       if (!data) {
-        setServerError("An error occurred while registering. Please try again.");
+        setServerError(
+          "An error occurred while registering. Please try again."
+        );
         throw new Error("No data received from the server.");
       }
 
@@ -120,9 +131,12 @@ export default function SignupPage() {
                 </Link>
               </div>
               <div className="max-w-md">
-                <h2 className="text-3xl font-bold text-white mb-4">Join the farming revolution</h2>
+                <h2 className="text-3xl font-bold text-white mb-4">
+                  Join the farming revolution
+                </h2>
                 <p className="text-green-100 mb-6">
-                  Create your account today and discover how ForFarm can help you optimize your agricultural operations.
+                  Create your account today and discover how ForFarm can help
+                  you optimize your agricultural operations.
                 </p>
                 <div className="space-y-4">
                   {[
@@ -148,11 +162,18 @@ export default function SignupPage() {
         <div className="flex justify-center items-center p-6">
           <div className="w-full max-w-md">
             {/* Theme Selector Placeholder */}
-            <div className="mb-4 text-center text-sm text-gray-500 dark:text-gray-400">Theme Selector Placeholder</div>
+            <div className="mb-4 text-center text-sm text-gray-500 dark:text-gray-400">
+              Theme Selector Placeholder
+            </div>
 
             <div className="lg:hidden flex justify-center mb-8">
               <Link href="/" className="flex items-center gap-2">
-                <Image src="/forfarm-logo.png" alt="Forfarm" width={80} height={80} />
+                <Image
+                  src="/forfarm-logo.png"
+                  alt="Forfarm"
+                  width={80}
+                  height={80}
+                />
               </Link>
             </div>
 
@@ -160,7 +181,10 @@ export default function SignupPage() {
               <h1 className="text-3xl font-bold mb-2">Create your account</h1>
               <p className="text-gray-500 dark:text-gray-400">
                 Already have an account?{" "}
-                <Link href="/auth/signin" className="text-green-600 hover:text-green-700 font-medium">
+                <Link
+                  href="/auth/signin"
+                  className="text-green-600 hover:text-green-700 font-medium"
+                >
                   Sign in
                 </Link>
               </p>
@@ -184,7 +208,10 @@ export default function SignupPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium dark:text-gray-300">
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-medium dark:text-gray-300"
+                >
                   Email
                 </Label>
                 <div className="relative">
@@ -192,7 +219,11 @@ export default function SignupPage() {
                     type="email"
                     id="email"
                     placeholder="name@example.com"
-                    className={`h-12 px-4 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                    className={`h-12 px-4 ${
+                      errors.email
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }`}
                     {...register("email")}
                   />
                 </div>
@@ -206,7 +237,10 @@ export default function SignupPage() {
 
               {/* Password */}
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium dark:text-gray-300">
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium dark:text-gray-300"
+                >
                   Password
                 </Label>
                 <div className="relative">
@@ -214,15 +248,26 @@ export default function SignupPage() {
                     type={showPassword ? "text" : "password"}
                     id="password"
                     placeholder="••••••••"
-                    className={`h-12 px-4 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                    className={`h-12 px-4 ${
+                      errors.password
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }`}
                     {...register("password", { onChange: onPasswordChange })}
                   />
                   <button
                     type="button"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    onClick={() => setShowPassword(!showPassword)}>
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
 
@@ -230,7 +275,9 @@ export default function SignupPage() {
                 {password && (
                   <div className="mt-2 space-y-1">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Password strength</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        Password strength
+                      </span>
                       <span
                         className={`text-xs font-medium ${
                           passwordStrength <= 25
@@ -240,11 +287,15 @@ export default function SignupPage() {
                             : passwordStrength <= 75
                             ? "text-blue-500"
                             : "text-green-500"
-                        }`}>
+                        }`}
+                      >
                         {getPasswordStrengthText()}
                       </span>
                     </div>
-                    <Progress value={passwordStrength} className={`${getPasswordStrengthColor()} h-1`} />
+                    <Progress
+                      value={passwordStrength}
+                      className={`${getPasswordStrengthColor()} h-1`}
+                    />
                   </div>
                 )}
 
@@ -258,7 +309,10 @@ export default function SignupPage() {
 
               {/* Confirm Password */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium dark:text-gray-300">
+                <Label
+                  htmlFor="confirmPassword"
+                  className="text-sm font-medium dark:text-gray-300"
+                >
                   Confirm Password
                 </Label>
                 <div className="relative">
@@ -266,15 +320,26 @@ export default function SignupPage() {
                     type={showConfirmPassword ? "text" : "password"}
                     id="confirmPassword"
                     placeholder="••••••••"
-                    className={`h-12 px-4 ${errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                    className={`h-12 px-4 ${
+                      errors.confirmPassword
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }`}
                     {...register("confirmPassword")}
                   />
                   <button
                     type="button"
-                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showConfirmPassword ? "Hide password" : "Show password"
+                    }
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
                 {errors.confirmPassword && (
@@ -288,7 +353,8 @@ export default function SignupPage() {
               <Button
                 type="submit"
                 className="w-full h-12 rounded-full font-medium text-base bg-green-600 hover:bg-green-700 transition-all"
-                disabled={isLoading}>
+                disabled={isLoading}
+              >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -316,22 +382,23 @@ export default function SignupPage() {
               </div>
 
               <div className="mt-6">
-                <Button
-                  variant="outline"
-                  className="w-full h-12 rounded-full border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                  <Image src="/google-logo.png" alt="Google Logo" width={20} height={20} className="mr-2" />
-                  Sign up with Google
-                </Button>
+                <GoogleSigninButton />
               </div>
             </div>
 
             <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-8">
               By signing up, you agree to our{" "}
-              <Link href="/terms" className="text-green-600 hover:text-green-700">
+              <Link
+                href="/terms"
+                className="text-green-600 hover:text-green-700"
+              >
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link href="/privacy" className="text-green-600 hover:text-green-700">
+              <Link
+                href="/privacy"
+                className="text-green-600 hover:text-green-700"
+              >
                 Privacy Policy
               </Link>
             </p>

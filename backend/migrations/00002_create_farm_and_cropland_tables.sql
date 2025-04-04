@@ -12,7 +12,7 @@ CREATE TABLE soil_conditions (
 CREATE TABLE harvest_units (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL UNIQUE
-);  
+);
 
 CREATE TABLE plants (
     uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -45,7 +45,7 @@ CREATE TABLE farms (
     name TEXT NOT NULL,
     lat DOUBLE PRECISION[] NOT NULL,
     lon DOUBLE PRECISION[] NOT NULL,
-    plant_types UUID[],
+    plant_types UUID[], -- This column will be dropped in the next migration
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     owner_id UUID NOT NULL,
@@ -55,10 +55,10 @@ CREATE TABLE farms (
 CREATE TABLE croplands (
     uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
-    status TEXT NOT NULL,
+    status TEXT NOT NULL, -- Consider creating a status table if values are fixed
     priority INT NOT NULL,
     land_size DOUBLE PRECISION NOT NULL,
-    growth_stage TEXT NOT NULL,
+    growth_stage TEXT NOT NULL, -- Consider creating a growth_stage table
     plant_id UUID NOT NULL,
     farm_id UUID NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -66,3 +66,12 @@ CREATE TABLE croplands (
     CONSTRAINT fk_cropland_farm FOREIGN KEY (farm_id) REFERENCES farms(uuid) ON DELETE CASCADE,
     CONSTRAINT fk_cropland_plant FOREIGN KEY (plant_id) REFERENCES plants(uuid) ON DELETE CASCADE
 );
+
+
+-- +goose Down
+DROP TABLE IF EXISTS croplands;
+DROP TABLE IF EXISTS farms;
+DROP TABLE IF EXISTS plants;
+DROP TABLE IF EXISTS harvest_units;
+DROP TABLE IF EXISTS soil_conditions;
+DROP TABLE IF EXISTS light_profiles;

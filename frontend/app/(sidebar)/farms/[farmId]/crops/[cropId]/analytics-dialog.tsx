@@ -4,12 +4,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Sprout, Droplets, Sun } from "lucide-react";
-import type { Crop, CropAnalytics } from "@/types";
+import type { CropAnalytics, Cropland } from "@/types";
 
 interface AnalyticsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  crop: Crop;
+  crop: Cropland;
   analytics: CropAnalytics;
 }
 

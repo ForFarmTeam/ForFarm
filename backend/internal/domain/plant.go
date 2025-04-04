@@ -8,28 +8,28 @@ import (
 )
 
 type Plant struct {
-	UUID                 string
-	Name                 string
-	Variety              *string
-	RowSpacing           *float64
-	OptimalTemp          *float64
-	PlantingDepth        *float64
-	AverageHeight        *float64
-	LightProfileID       int
-	SoilConditionID      int
-	PlantingDetail       *string
-	IsPerennial          bool
-	DaysToEmerge         *int
-	DaysToFlower         *int
-	DaysToMaturity       *int
-	HarvestWindow        *int
-	PHValue              *float64
-	EstimateLossRate     *float64
-	EstimateRevenuePerHU *float64
-	HarvestUnitID        int
-	WaterNeeds           *float64
-	CreatedAt            time.Time
-	UpdatedAt            time.Time
+	UUID                 string    `json:"uuid"`
+	Name                 string    `json:"name"`
+	Variety              *string   `json:"variety,omitempty"`
+	RowSpacing           *float64  `json:"rowSpacing,omitempty"`
+	OptimalTemp          *float64  `json:"optimalTemp,omitempty"`
+	PlantingDepth        *float64  `json:"plantingDepth,omitempty"`
+	AverageHeight        *float64  `json:"averageHeight,omitempty"`
+	LightProfileID       int       `json:"lightProfileId"`
+	SoilConditionID      int       `json:"soilConditionId"`
+	PlantingDetail       *string   `json:"plantingDetail,omitempty"`
+	IsPerennial          bool      `json:"isPerennial"`
+	DaysToEmerge         *int      `json:"daysToEmerge,omitempty"`
+	DaysToFlower         *int      `json:"daysToFlower,omitempty"`
+	DaysToMaturity       *int      `json:"daysToMaturity,omitempty"`
+	HarvestWindow        *int      `json:"harvestWindow,omitempty"`
+	PHValue              *float64  `json:"phValue,omitempty"`
+	EstimateLossRate     *float64  `json:"estimateLossRate,omitempty"`
+	EstimateRevenuePerHU *float64  `json:"estimateRevenuePerHu,omitempty"`
+	HarvestUnitID        int       `json:"harvestUnitId"`
+	WaterNeeds           *float64  `json:"waterNeeds,omitempty"`
+	CreatedAt            time.Time `json:"createdAt"`
+	UpdatedAt            time.Time `json:"updatedAt"`
 }
 
 func (p *Plant) Validate() error {

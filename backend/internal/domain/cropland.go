@@ -2,22 +2,24 @@ package domain
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 type Cropland struct {
-	UUID        string
-	Name        string
-	Status      string
-	Priority    int
-	LandSize    float64
-	GrowthStage string
-	PlantID     string
-	FarmID      string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	UUID        string          `json:"uuid"`
+	Name        string          `json:"name"`
+	Status      string          `json:"status"`
+	Priority    int             `json:"priority"`
+	LandSize    float64         `json:"landSize"`
+	GrowthStage string          `json:"growthStage"`
+	PlantID     string          `json:"plantId"`
+	FarmID      string          `json:"farmId"`
+	GeoFeature  json.RawMessage `json:"geoFeature,omitempty"`
+	CreatedAt   time.Time       `json:"createdAt"`
+	UpdatedAt   time.Time       `json:"updatedAt"`
 }
 
 func (c *Cropland) Validate() error {
@@ -32,7 +34,8 @@ func (c *Cropland) Validate() error {
 type CroplandRepository interface {
 	GetByID(context.Context, string) (Cropland, error)
 	GetByFarmID(ctx context.Context, farmID string) ([]Cropland, error)
-	GetAll(ctx context.Context) ([]Cropland, error) // Add this method
+	GetAll(ctx context.Context) ([]Cropland, error)
 	CreateOrUpdate(context.Context, *Cropland) error
 	Delete(context.Context, string) error
+	SetEventPublisher(EventPublisher)
 }

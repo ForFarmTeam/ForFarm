@@ -1,116 +1,51 @@
-import { GoogleMap, LoadScript, DrawingManager } from "@react-google-maps/api";
-import { useState, useCallback } from "react";
+// google-map-with-drawing.tsx
+import React from "react";
+import { ControlPosition, Map, MapControl } from "@vis.gl/react-google-maps";
 
-const containerStyle = {
-  width: "100%",
-  height: "500px",
-};
+import { UndoRedoControl } from "@/components/map-component/undo-redo-control";
+// Import ShapeData and useDrawingManager from the correct path
+import { useDrawingManager, type ShapeData } from "@/components/map-component/use-drawing-manager"; // Adjust path if needed
 
-const center = { lat: 13.7563, lng: 100.5018 }; // Example: Bangkok, Thailand
+// Export the type so the form can use it
+export { type ShapeData };
 
+// Define props for the component
 interface GoogleMapWithDrawingProps {
-  onAreaSelected: (data: { lat: number; lng: number }[]) => void;
+  onShapeDrawn: (data: ShapeData) => void; // Callback prop
+  // Add any other props you might need, e.g., initialCenter, initialZoom
+  initialCenter?: { lat: number; lng: number };
+  initialZoom?: number;
 }
 
+// Rename DrawingExample to GoogleMapWithDrawing and accept props
 const GoogleMapWithDrawing = ({
-  onAreaSelected,
+  onShapeDrawn, // Destructure the callback prop
+  initialCenter = { lat: 13.7563, lng: 100.5018 }, // Default center
+  initialZoom = 10, // Default zoom
 }: GoogleMapWithDrawingProps) => {
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-
-  const onDrawingComplete = useCallback(
-    (overlay: google.maps.drawing.OverlayCompleteEvent) => {
-      const shape = overlay.overlay;
-
-      // check the shape of the drawing and extract lat/lng values
-      if (shape instanceof google.maps.Polygon) {
-        const path = shape.getPath();
-        const coordinates = path.getArray().map((latLng) => ({
-          lat: latLng.lat(),
-          lng: latLng.lng(),
-        }));
-        console.log("Polygon coordinates:", coordinates);
-        onAreaSelected(coordinates);
-      } else if (shape instanceof google.maps.Rectangle) {
-        const bounds = shape.getBounds();
-        if (bounds) {
-          const northEast = bounds.getNorthEast();
-          const southWest = bounds.getSouthWest();
-          const coordinates = [
-            { lat: northEast.lat(), lng: northEast.lng() },
-            { lat: southWest.lat(), lng: southWest.lng() },
-          ];
-          console.log("Rectangle coordinates:", coordinates);
-          onAreaSelected(coordinates);
-        }
-      } else if (shape instanceof google.maps.Circle) {
-        const center = shape.getCenter();
-        const radius = shape.getRadius();
-        if (center) {
-          const coordinates = [
-            {
-              lat: center.lat(),
-              lng: center.lng(),
-              radius: radius, // circle's radius in meters
-            },
-          ];
-          console.log("Circle center:", coordinates);
-          onAreaSelected(coordinates);
-        }
-      } else if (shape instanceof google.maps.Polyline) {
-        const path = shape.getPath();
-        const coordinates = path.getArray().map((latLng) => ({
-          lat: latLng.lat(),
-          lng: latLng.lng(),
-        }));
-        console.log("Polyline coordinates:", coordinates);
-        onAreaSelected(coordinates);
-      } else {
-        console.log("Unknown shape detected:", shape);
-      }
-    },
-    [onAreaSelected]
-  );
+  // Pass the onShapeDrawn callback directly to the hook
+  const drawingManager = useDrawingManager(onShapeDrawn);
 
   return (
-    <LoadScript
-      googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
-      libraries={["drawing"]}
-    >
-      <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={center}
-        zoom={10}
-        onLoad={(map) => setMap(map)}
-      >
-        {map && (
-          <DrawingManager
-            onOverlayComplete={onDrawingComplete}
-            options={{
-              drawingControl: true,
-              drawingControlOptions: {
-                position: google.maps.ControlPosition.TOP_CENTER,
-                drawingModes: [
-                  google.maps.drawing.OverlayType.POLYGON,
-                  google.maps.drawing.OverlayType.RECTANGLE,
-                  google.maps.drawing.OverlayType.CIRCLE,
-                  google.maps.drawing.OverlayType.POLYLINE,
-                ],
-              },
-              polygonOptions: {
-                fillColor: "#FF0000",
-                fillOpacity: 0.5,
-                strokeWeight: 2,
-              },
-              rectangleOptions: {
-                fillColor: "#00FF00",
-                fillOpacity: 0.5,
-                strokeWeight: 2,
-              },
-            }}
-          />
-        )}
-      </GoogleMap>
-    </LoadScript>
+    <>
+      {/* Use props for map defaults */}
+      <Map
+        defaultZoom={initialZoom}
+        defaultCenter={initialCenter}
+        gestureHandling={"greedy"}
+        disableDefaultUI={true}
+        mapId={"YOUR_MAP_ID"} // Recommended: Add a Map ID
+      />
+
+      {/* Render controls only if drawingManager is available */}
+      {drawingManager && (
+        <MapControl position={ControlPosition.TOP_LEFT}>
+          {/* Pass drawingManager to UndoRedoControl */}
+          <UndoRedoControl drawingManager={drawingManager} />
+        </MapControl>
+      )}
+      {/* The drawing controls (marker, polygon etc.) are added by useDrawingManager */}
+    </>
   );
 };
 

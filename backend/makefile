@@ -8,3 +8,6 @@ run:
 
 migrate:
 	go run cmd/forfarm/main.go migrate
+
+rollback:
+	go run cmd/forfarm/main.go rollback $(VERSION)

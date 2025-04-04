@@ -77,10 +77,10 @@ type InventoryItemResponse struct {
 	Category  InventoryCategory `json:"category"`
 	Quantity  float64           `json:"quantity"`
 	Unit      HarvestUnit       `json:"unit"`
-	DateAdded time.Time         `json:"date_added"`
+	DateAdded time.Time         `json:"dateAdded"`
 	Status    InventoryStatus   `json:"status"`
-	CreatedAt time.Time         `json:"created_at,omitempty"`
-	UpdatedAt time.Time         `json:"updated_at,omitempty"`
+	CreatedAt time.Time         `json:"createdAt,omitempty"`
+	UpdatedAt time.Time         `json:"updatedAt,omitempty"`
 }
 
 type InventoryStatus struct {
@@ -100,14 +100,13 @@ type HarvestUnit struct {
 
 type CreateInventoryItemInput struct {
 	Header string `header:"Authorization" required:"true" example:"Bearer token"`
-	UserID string `header:"user_id" required:"true" example:"user-uuid"`
 	Body   struct {
 		Name       string    `json:"name" required:"true"`
-		CategoryID int       `json:"category_id" required:"true"`
+		CategoryID int       `json:"categoryId" required:"true"`
 		Quantity   float64   `json:"quantity" required:"true"`
-		UnitID     int       `json:"unit_id" required:"true"`
-		DateAdded  time.Time `json:"date_added" required:"true"`
-		StatusID   int       `json:"status_id" required:"true"`
+		UnitID     int       `json:"unitId" required:"true"`
+		DateAdded  time.Time `json:"dateAdded" required:"true"`
+		StatusID   int       `json:"statusId" required:"true"`
 	}
 }
 
@@ -119,15 +118,14 @@ type CreateInventoryItemOutput struct {
 
 type UpdateInventoryItemInput struct {
 	Header string `header:"Authorization" required:"true" example:"Bearer token"`
-	UserID string `header:"user_id" required:"true" example:"user-uuid"`
 	ID     string `path:"id"`
 	Body   struct {
 		Name       string    `json:"name"`
-		CategoryID int       `json:"category_id"`
+		CategoryID int       `json:"categoryId"`
 		Quantity   float64   `json:"quantity"`
-		UnitID     int       `json:"unit_id"`
-		DateAdded  time.Time `json:"date_added"`
-		StatusID   int       `json:"status_id"`
+		UnitID     int       `json:"unitId"`
+		DateAdded  time.Time `json:"dateAdded"`
+		StatusID   int       `json:"statusId"`
 	}
 }
 
@@ -137,14 +135,13 @@ type UpdateInventoryItemOutput struct {
 
 type GetInventoryItemsInput struct {
 	Header      string    `header:"Authorization" required:"true" example:"Bearer token"`
-	UserID      string    `header:"user_id" required:"true" example:"user-uuid"`
-	CategoryID  int       `query:"category_id"`
-	StatusID    int       `query:"status_id"`
-	StartDate   time.Time `query:"start_date" format:"date-time"`
-	EndDate     time.Time `query:"end_date" format:"date-time"`
+	CategoryID  int       `query:"categoryId"`
+	StatusID    int       `query:"statusId"`
+	StartDate   time.Time `query:"startDate" format:"date-time"`
+	EndDate     time.Time `query:"endDate" format:"date-time"`
 	SearchQuery string    `query:"search"`
-	SortBy      string    `query:"sort_by" enum:"name,quantity,date_added,created_at"`
-	SortOrder   string    `query:"sort_order" enum:"asc,desc" default:"desc"`
+	SortBy      string    `query:"sortBy" enum:"name,quantity,dateAdded,createdAt"`
+	SortOrder   string    `query:"sortOrder" enum:"asc,desc" default:"desc"`
 }
 
 type GetInventoryItemsOutput struct {
@@ -153,7 +150,7 @@ type GetInventoryItemsOutput struct {
 
 type GetInventoryItemInput struct {
 	Header string `header:"Authorization" required:"true" example:"Bearer token"`
-	UserID string `header:"user_id" required:"true" example:"user-uuid"`
+	UserID string `header:"userId" required:"true" example:"user-uuid"`
 	ID     string `path:"id"`
 }
 
@@ -163,7 +160,6 @@ type GetInventoryItemOutput struct {
 
 type DeleteInventoryItemInput struct {
 	Header string `header:"Authorization" required:"true" example:"Bearer token"`
-	UserID string `header:"user_id" required:"true" example:"user-uuid"`
 	ID     string `path:"id"`
 }
 
@@ -186,8 +182,9 @@ type GetHarvestUnitsOutput struct {
 }
 
 func (a *api) createInventoryItemHandler(ctx context.Context, input *CreateInventoryItemInput) (*CreateInventoryItemOutput, error) {
+	userID, err := a.getUserIDFromHeader(input.Header)
 	item := &domain.InventoryItem{
-		UserID:     input.UserID,
+		UserID:     userID,
 		Name:       input.Body.Name,
 		CategoryID: input.Body.CategoryID,
 		Quantity:   input.Body.Quantity,
@@ -200,7 +197,7 @@ func (a *api) createInventoryItemHandler(ctx context.Context, input *CreateInven
 		return nil, huma.Error422UnprocessableEntity(err.Error())
 	}
 
-	err := a.inventoryRepo.CreateOrUpdate(ctx, item)
+	err = a.inventoryRepo.CreateOrUpdate(ctx, item)
 	if err != nil {
 		return nil, err
 	}
@@ -211,8 +208,9 @@ func (a *api) createInventoryItemHandler(ctx context.Context, input *CreateInven
 }
 
 func (a *api) getInventoryItemsByUserHandler(ctx context.Context, input *GetInventoryItemsInput) (*GetInventoryItemsOutput, error) {
+	userID, err := a.getUserIDFromHeader(input.Header)
 	filter := domain.InventoryFilter{
-		UserID:      input.UserID,
+		UserID:      userID,
 		CategoryID:  input.CategoryID,
 		StatusID:    input.StatusID,
 		StartDate:   input.StartDate,
@@ -225,7 +223,7 @@ func (a *api) getInventoryItemsByUserHandler(ctx context.Context, input *GetInve
 		Direction: input.SortOrder,
 	}
 
-	items, err := a.inventoryRepo.GetByUserID(ctx, input.UserID, filter, sort)
+	items, err := a.inventoryRepo.GetByUserID(ctx, userID, filter, sort)
 	if err != nil {
 		return nil, err
 	}
@@ -286,7 +284,8 @@ func (a *api) getInventoryItemHandler(ctx context.Context, input *GetInventoryIt
 }
 
 func (a *api) updateInventoryItemHandler(ctx context.Context, input *UpdateInventoryItemInput) (*UpdateInventoryItemOutput, error) {
-	item, err := a.inventoryRepo.GetByID(ctx, input.ID, input.UserID)
+	userID, err := a.getUserIDFromHeader(input.Header)
+	item, err := a.inventoryRepo.GetByID(ctx, input.ID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +318,7 @@ func (a *api) updateInventoryItemHandler(ctx context.Context, input *UpdateInven
 		return nil, err
 	}
 
-	updatedItem, err := a.inventoryRepo.GetByID(ctx, input.ID, input.UserID)
+	updatedItem, err := a.inventoryRepo.GetByID(ctx, input.ID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -347,7 +346,8 @@ func (a *api) updateInventoryItemHandler(ctx context.Context, input *UpdateInven
 }
 
 func (a *api) deleteInventoryItemHandler(ctx context.Context, input *DeleteInventoryItemInput) (*DeleteInventoryItemOutput, error) {
-	err := a.inventoryRepo.Delete(ctx, input.ID, input.UserID)
+	userID, err := a.getUserIDFromHeader(input.Header)
+	err = a.inventoryRepo.Delete(ctx, input.ID, userID)
 	if err != nil {
 		return nil, err
 	}
