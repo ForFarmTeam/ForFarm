@@ -11,6 +11,8 @@ import (
 	"github.com/forfarm/backend/internal/domain"
 	"github.com/forfarm/backend/internal/utilities"
 	"github.com/go-chi/chi/v5"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/jackc/pgx/v5"
 )
 
 func (a *api) registerUserRoutes(_ chi.Router, api huma.API) {
@@ -29,8 +31,20 @@ type getSelfDataInput struct {
 	Authorization string `header:"Authorization" required:"true" example:"Bearer token"`
 }
 
-// getSelfDataOutput uses domain.User which now has camelCase tags
 type getSelfDataOutput struct {
+	Body struct {
+		User domain.User `json:"user"`
+	}
+}
+
+type UpdateSelfDataInput struct {
+	Authorization string `header:"Authorization" required:"true" example:"Bearer token"`
+	Body          struct {
+		Username *string `json:"username,omitempty"`
+	}
+}
+
+type UpdateSelfDataOutput struct {
 	Body struct {
 		User domain.User `json:"user"`
 	}
@@ -70,4 +84,71 @@ func (a *api) getSelfData(ctx context.Context, input *getSelfDataInput) (*getSel
 
 	resp.Body.User = user
 	return resp, nil
+}
+
+func (a *api) updateSelfData(ctx context.Context, input *UpdateSelfDataInput) (*UpdateSelfDataOutput, error) {
+	userID, err := a.getUserIDFromHeader(input.Authorization)
+	if err != nil {
+		return nil, huma.Error401Unauthorized("Authentication failed", err)
+	}
+
+	user, err := a.userRepo.GetByUUID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) || errors.Is(err, pgx.ErrNoRows) {
+			a.logger.Warn("Attempt to update non-existent user", "user_uuid", userID)
+			return nil, huma.Error404NotFound("User not found")
+		}
+		a.logger.Error("Failed to get user for update", "user_uuid", userID, "error", err)
+		return nil, huma.Error500InternalServerError("Failed to retrieve user for update")
+	}
+
+	updated := false
+	if input.Body.Username != nil {
+		trimmedUsername := strings.TrimSpace(*input.Body.Username)
+		if trimmedUsername != user.Username {
+			err := validation.Validate(trimmedUsername,
+				validation.Required.Error("username cannot be empty if provided"),
+				validation.Length(3, 30).Error("username must be between 3 and 30 characters"),
+			)
+			if err != nil {
+				return nil, huma.Error422UnprocessableEntity("Invalid username", err)
+			}
+			user.Username = trimmedUsername
+			updated = true
+		}
+	}
+	// Check other field here la
+
+	if !updated {
+		a.logger.Info("No changes detected for user update", "user_uuid", userID)
+		return &UpdateSelfDataOutput{Body: struct {
+			User domain.User `json:"user"`
+		}{User: user}}, nil
+	}
+
+	// Validate the *entire* user object after updates (optional but good practice)
+	// if err := user.Validate(); err != nil {
+	// 	return nil, huma.Error422UnprocessableEntity("Validation failed after update", err)
+	// }
+
+	// Save updated user
+	err = a.userRepo.CreateOrUpdate(ctx, &user)
+	if err != nil {
+		a.logger.Error("Failed to update user in database", "user_uuid", userID, "error", err)
+		return nil, huma.Error500InternalServerError("Failed to save user profile")
+	}
+
+	a.logger.Info("User profile updated successfully", "user_uuid", userID)
+
+	updatedUser, fetchErr := a.userRepo.GetByUUID(ctx, userID)
+	if fetchErr != nil {
+		a.logger.Error("Failed to fetch user data after update", "user_uuid", userID, "error", fetchErr)
+		return &UpdateSelfDataOutput{Body: struct {
+			User domain.User `json:"user"`
+		}{User: user}}, nil
+	}
+
+	return &UpdateSelfDataOutput{Body: struct {
+		User domain.User `json:"user"`
+	}{User: updatedUser}}, nil
 }
