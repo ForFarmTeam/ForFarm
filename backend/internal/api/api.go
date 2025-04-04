@@ -63,6 +63,7 @@ func NewAPI(
 	userRepository := repository.NewPostgresUser(pool)
 	plantRepository := repository.NewPostgresPlant(pool)
 	knowledgeHubRepository := repository.NewPostgresKnowledgeHub(pool)
+	inventoryRepository := repository.NewPostgresInventory(pool)
 	harvestRepository := repository.NewPostgresHarvest(pool)
 
 	owmFetcher := weather.NewOpenWeatherMapFetcher(config.OPENWEATHER_API_KEY, client, logger)
@@ -142,7 +143,6 @@ func (a *api) Routes() *chi.Mux {
 		a.registerHelloRoutes(r, api)
 		a.registerFarmRoutes(r, api)
 		a.registerUserRoutes(r, api)
-		a.registerInventoryRoutes(r, api)
 		a.registerAnalyticsRoutes(r, api)
 	})
 
