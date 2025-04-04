@@ -168,7 +168,7 @@ export type UpdateInventoryItemInput = Partial<CreateInventoryItemInput> & {
 };
 
 export interface Blog {
-  id: number;
+  id: string;
   title: string;
   description: string;
   date: string;
@@ -180,7 +180,7 @@ export interface Blog {
   content?: string;
   tableOfContents?: { id: string; title: string; level: number }[];
   relatedArticles?: {
-    id: number;
+    id: string;
     title: string;
     topic: string;
     image: string;
@@ -242,32 +242,54 @@ export interface SetOverlayAction {
 
 export type Action = ActionWithTypeOnly | SetOverlayAction;
 
-export function isCircle(
-  overlay: OverlayGeometry
-): overlay is google.maps.Circle {
+export function isCircle(overlay: OverlayGeometry): overlay is google.maps.Circle {
   return (overlay as google.maps.Circle).getCenter !== undefined;
 }
 
-export function isMarker(
-  overlay: OverlayGeometry
-): overlay is google.maps.Marker {
+export function isMarker(overlay: OverlayGeometry): overlay is google.maps.Marker {
   return (overlay as google.maps.Marker).getPosition !== undefined;
 }
 
-export function isPolygon(
-  overlay: OverlayGeometry
-): overlay is google.maps.Polygon {
+export function isPolygon(overlay: OverlayGeometry): overlay is google.maps.Polygon {
   return (overlay as google.maps.Polygon).getPath !== undefined;
 }
 
-export function isPolyline(
-  overlay: OverlayGeometry
-): overlay is google.maps.Polyline {
+export function isPolyline(overlay: OverlayGeometry): overlay is google.maps.Polyline {
   return (overlay as google.maps.Polyline).getPath !== undefined;
 }
 
-export function isRectangle(
-  overlay: OverlayGeometry
-): overlay is google.maps.Rectangle {
+export function isRectangle(overlay: OverlayGeometry): overlay is google.maps.Rectangle {
   return (overlay as google.maps.Rectangle).getBounds !== undefined;
+}
+
+export interface KnowledgeArticle {
+  UUID: string;
+  Title: string;
+  Content: string;
+  Author: string;
+  PublishDate: string;
+  ReadTime: string;
+  Categories: string[];
+  ImageURL: string;
+  CreatedAt: string;
+  UpdatedAt: string;
+}
+
+export interface TableOfContent {
+  UUID: string;
+  ArticleID: string;
+  Title: string;
+  Level: number;
+  Order: number;
+  CreatedAt: string;
+  UpdatedAt: string;
+}
+
+export interface RelatedArticle {
+  UUID: string;
+  ArticleID: string;
+  RelatedTitle: string;
+  RelatedTag: string;
+  CreatedAt: string;
+  UpdatedAt: string;
 }
