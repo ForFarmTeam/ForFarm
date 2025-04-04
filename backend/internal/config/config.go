@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -21,6 +22,9 @@ var (
 	OPENWEATHER_CACHE_TTL  string
 	WEATHER_FETCH_INTERVAL string
 	GEMINI_API_KEY         string
+	RATE_LIMIT_ENABLED     bool
+	RATE_LIMIT_RPS         int
+	RATE_LIMIT_TTL         time.Duration
 )
 
 func Load() {
@@ -38,6 +42,9 @@ func Load() {
 	viper.SetDefault("OPENWEATHER_CACHE_TTL", "15m")
 	viper.SetDefault("WEATHER_FETCH_INTERVAL", "15m")
 	viper.SetDefault("GEMINI_API_KEY", "gemini_api_key")
+	viper.SetDefault("RATE_LIMIT_ENABLED", true)
+	viper.SetDefault("RATE_LIMIT_RPS", 10)
+	viper.SetDefault("RATE_LIMIT_TTL", 5*time.Minute)
 
 	viper.SetConfigFile(".env")
 	viper.AddConfigPath("../../.")
@@ -62,4 +69,7 @@ func Load() {
 	OPENWEATHER_CACHE_TTL = viper.GetString("OPENWEATHER_CACHE_TTL")
 	WEATHER_FETCH_INTERVAL = viper.GetString("WEATHER_FETCH_INTERVAL")
 	GEMINI_API_KEY = viper.GetString("GEMINI_API_KEY")
+	RATE_LIMIT_ENABLED = viper.GetBool("RATE_LIMIT_ENABLED")
+	RATE_LIMIT_RPS = viper.GetInt("RATE_LIMIT_RPS")
+	RATE_LIMIT_TTL = viper.GetDuration("RATE_LIMIT_TTL")
 }
