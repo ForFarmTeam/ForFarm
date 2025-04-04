@@ -124,20 +124,19 @@ func (p *postgresCroplandRepository) CreateOrUpdate(ctx context.Context, c *doma
 		if c.GeoFeature != nil {
 			_ = json.Unmarshal(c.GeoFeature, &geoFeatureMap)
 		}
-
 		payload := map[string]interface{}{
-			"crop_id":      c.UUID,
-			"name":         c.Name,
-			"status":       c.Status,
-			"priority":     c.Priority,
-			"land_size":    c.LandSize,
-			"growth_stage": c.GrowthStage,
-			"plant_id":     c.PlantID,
-			"farm_id":      c.FarmID,
-			"geo_feature":  geoFeatureMap,
-			"created_at":   c.CreatedAt,
-			"updated_at":   c.UpdatedAt,
-			"event_type":   eventType,
+			"uuid":        c.UUID,
+			"name":        c.Name,
+			"status":      c.Status,
+			"priority":    c.Priority,
+			"landSize":    c.LandSize,
+			"growthStage": c.GrowthStage,
+			"plantId":     c.PlantID,
+			"farmId":      c.FarmID,
+			"geoFeature":  geoFeatureMap,
+			"createdAt":   c.CreatedAt,
+			"updatedAt":   c.UpdatedAt,
+			"event_type":  eventType,
 		}
 
 		event := domain.Event{

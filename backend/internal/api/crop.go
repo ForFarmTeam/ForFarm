@@ -15,10 +15,8 @@ import (
 
 func (a *api) registerCropRoutes(_ chi.Router, api huma.API) {
 	tags := []string{"crop"}
-
 	prefix := "/crop"
 
-	// Register GET /crop
 	huma.Register(api, huma.Operation{
 		OperationID: "getAllCroplands",
 		Method:      http.MethodGet,
@@ -26,7 +24,6 @@ func (a *api) registerCropRoutes(_ chi.Router, api huma.API) {
 		Tags:        tags,
 	}, a.getAllCroplandsHandler)
 
-	// Register GET /crop/{uuid}
 	huma.Register(api, huma.Operation{
 		OperationID: "getCroplandByID",
 		Method:      http.MethodGet,
@@ -34,7 +31,6 @@ func (a *api) registerCropRoutes(_ chi.Router, api huma.API) {
 		Tags:        tags,
 	}, a.getCroplandByIDHandler)
 
-	// Register GET /crop/farm/{farm_id}
 	huma.Register(api, huma.Operation{
 		OperationID: "getAllCroplandsByFarmID",
 		Method:      http.MethodGet,
@@ -42,14 +38,22 @@ func (a *api) registerCropRoutes(_ chi.Router, api huma.API) {
 		Tags:        tags,
 	}, a.getAllCroplandsByFarmIDHandler)
 
-	// Register POST /crop (Create or Update)
 	huma.Register(api, huma.Operation{
-		OperationID: "createOrUpdateCropland",
+		OperationID: "createCropland",
 		Method:      http.MethodPost,
 		Path:        prefix,
 		Tags:        tags,
-	}, a.createOrUpdateCroplandHandler)
+	}, a.createCroplandHandler)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "updateCropland",
+		Method:      http.MethodPut,
+		Path:        prefix + "/{uuid}",
+		Tags:        tags,
+	}, a.updateCroplandHandler)
 }
+
+// --- Common Output Structs ---
 
 type GetCroplandsOutput struct {
 	Body struct {
@@ -63,22 +67,45 @@ type GetCroplandByIDOutput struct {
 	}
 }
 
-type CreateOrUpdateCroplandInput struct {
+// --- Create Structs ---
+
+type CreateCroplandInput struct {
 	Header string `header:"Authorization" required:"true" example:"Bearer token"`
 	Body   struct {
-		UUID        string          `json:"uuid,omitempty"`
-		Name        string          `json:"name"`
-		Status      string          `json:"status"`
+		Name        string          `json:"name" required:"true"`
+		Status      string          `json:"status" required:"true"`
 		Priority    int             `json:"priority"`
 		LandSize    float64         `json:"landSize"`
-		GrowthStage string          `json:"growthStage"`
-		PlantID     string          `json:"plantId"`
-		FarmID      string          `json:"farmId"`
+		GrowthStage string          `json:"growthStage" required:"true"`
+		PlantID     string          `json:"plantId" required:"true" example:"a1b2c3d4-e5f6-7890-1234-567890abcdef"`
+		FarmID      string          `json:"farmId" required:"true" example:"b2c3d4e5-f6a7-8901-2345-67890abcdef0"`
 		GeoFeature  json.RawMessage `json:"geoFeature,omitempty"`
 	}
 }
 
-type CreateOrUpdateCroplandOutput struct {
+type CreateCroplandOutput struct {
+	Body struct {
+		Cropland domain.Cropland `json:"cropland"`
+	}
+}
+
+// --- Update Structs ---
+
+type UpdateCroplandInput struct {
+	Header string `header:"Authorization" required:"true" example:"Bearer token"`
+	UUID   string `path:"uuid" required:"true" example:"c3d4e5f6-a7b8-9012-3456-7890abcdef01"`
+	Body   struct {
+		Name        string          `json:"name" required:"true"`
+		Status      string          `json:"status" required:"true"`
+		Priority    int             `json:"priority"`
+		LandSize    float64         `json:"landSize"`
+		GrowthStage string          `json:"growthStage" required:"true"`
+		PlantID     string          `json:"plantId" required:"true" example:"a1b2c3d4-e5f6-7890-1234-567890abcdef"`
+		GeoFeature  json.RawMessage `json:"geoFeature,omitempty"`
+	}
+}
+
+type UpdateCroplandOutput struct {
 	Body struct {
 		Cropland domain.Cropland `json:"cropland"`
 	}
@@ -90,8 +117,7 @@ func (a *api) getAllCroplandsHandler(ctx context.Context, input *struct {
 	Header string `header:"Authorization" required:"true" example:"Bearer token"`
 }) (*GetCroplandsOutput, error) {
 	// Note: This currently fetches ALL croplands. Might need owner filtering later.
-	// For now, ensure authentication happens.
-	_, err := a.getUserIDFromHeader(input.Header) // Verify token
+	_, err := a.getUserIDFromHeader(input.Header)
 	if err != nil {
 		return nil, huma.Error401Unauthorized("Authentication failed", err)
 	}
@@ -112,7 +138,7 @@ func (a *api) getCroplandByIDHandler(ctx context.Context, input *struct {
 	Header string `header:"Authorization" required:"true" example:"Bearer token"`
 	UUID   string `path:"uuid" example:"550e8400-e29b-41d4-a716-446655440000"`
 }) (*GetCroplandByIDOutput, error) {
-	userID, err := a.getUserIDFromHeader(input.Header) // Verify token and get user ID
+	userID, err := a.getUserIDFromHeader(input.Header)
 	if err != nil {
 		return nil, huma.Error401Unauthorized("Authentication failed", err)
 	}
@@ -120,15 +146,15 @@ func (a *api) getCroplandByIDHandler(ctx context.Context, input *struct {
 	resp := &GetCroplandByIDOutput{}
 
 	if input.UUID == "" {
-		return nil, huma.Error400BadRequest("UUID parameter is required")
+		return nil, huma.Error400BadRequest("UUID path parameter is required")
 	}
 
-	_, err = uuid.FromString(input.UUID)
+	croplandUUID, err := uuid.FromString(input.UUID)
 	if err != nil {
 		return nil, huma.Error400BadRequest("Invalid UUID format")
 	}
 
-	cropland, err := a.cropRepo.GetByID(ctx, input.UUID)
+	cropland, err := a.cropRepo.GetByID(ctx, croplandUUID.String())
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) || errors.Is(err, sql.ErrNoRows) {
 			a.logger.Warn("Cropland not found", "croplandId", input.UUID, "requestingUserId", userID)
@@ -138,12 +164,10 @@ func (a *api) getCroplandByIDHandler(ctx context.Context, input *struct {
 		return nil, huma.Error500InternalServerError("Failed to retrieve cropland")
 	}
 
-	// Authorization check: User must own the farm this cropland belongs to
-	farm, err := a.farmRepo.GetByID(ctx, cropland.FarmID) // Fetch the farm
+	farm, err := a.farmRepo.GetByID(ctx, cropland.FarmID)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) || errors.Is(err, sql.ErrNoRows) {
 			a.logger.Error("Farm associated with cropland not found", "farmId", cropland.FarmID, "croplandId", input.UUID)
-			// This indicates a data integrity issue if the cropland exists but farm doesn't
 			return nil, huma.Error404NotFound("Associated farm not found for cropland")
 		}
 		a.logger.Error("Failed to fetch farm for cropland authorization", "farmId", cropland.FarmID, "error", err)
@@ -171,7 +195,7 @@ func (a *api) getAllCroplandsByFarmIDHandler(ctx context.Context, input *struct 
 	resp := &GetCroplandsOutput{}
 
 	if input.FarmID == "" {
-		return nil, huma.Error400BadRequest("farm_id parameter is required")
+		return nil, huma.Error400BadRequest("farmId path parameter is required")
 	}
 
 	farmUUID, err := uuid.FromString(input.FarmID)
@@ -179,7 +203,6 @@ func (a *api) getAllCroplandsByFarmIDHandler(ctx context.Context, input *struct 
 		return nil, huma.Error400BadRequest("Invalid farmId format")
 	}
 
-	// Authorization check: User must own the farm they are requesting crops for
 	farm, err := a.farmRepo.GetByID(ctx, farmUUID.String())
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) || errors.Is(err, sql.ErrNoRows) {
@@ -208,83 +231,41 @@ func (a *api) getAllCroplandsByFarmIDHandler(ctx context.Context, input *struct 
 	return resp, nil
 }
 
-func (a *api) createOrUpdateCroplandHandler(ctx context.Context, input *CreateOrUpdateCroplandInput) (*CreateOrUpdateCroplandOutput, error) {
+func (a *api) createCroplandHandler(ctx context.Context, input *CreateCroplandInput) (*CreateCroplandOutput, error) {
 	userID, err := a.getUserIDFromHeader(input.Header)
 	if err != nil {
 		return nil, huma.Error401Unauthorized("Authentication failed", err)
 	}
 
-	resp := &CreateOrUpdateCroplandOutput{}
+	resp := &CreateCroplandOutput{}
 
-	// --- Input Validation ---
-	if input.Body.Name == "" {
-		return nil, huma.Error400BadRequest("name is required")
-	}
-	if input.Body.Status == "" {
-		return nil, huma.Error400BadRequest("status is required")
-	}
-	if input.Body.GrowthStage == "" {
-		return nil, huma.Error400BadRequest("growthStage is required")
-	}
-	if input.Body.PlantID == "" {
-		return nil, huma.Error400BadRequest("plantId is required")
-	}
-	if input.Body.FarmID == "" {
-		return nil, huma.Error400BadRequest("farmId is required")
-	}
-
-	// Validate UUID formats
-	if input.Body.UUID != "" {
-		if _, err := uuid.FromString(input.Body.UUID); err != nil {
-			return nil, huma.Error400BadRequest("invalid cropland UUID format")
-		}
-	}
 	if _, err := uuid.FromString(input.Body.PlantID); err != nil {
 		return nil, huma.Error400BadRequest("invalid plantId UUID format")
 	}
 	farmUUID, err := uuid.FromString(input.Body.FarmID)
 	if err != nil {
-		return nil, huma.Error400BadRequest("invalid farm_id UUID format")
+		return nil, huma.Error400BadRequest("invalid farmId UUID format")
 	}
 
-	// Validate JSON format if GeoFeature is provided
 	if input.Body.GeoFeature != nil && !json.Valid(input.Body.GeoFeature) {
 		return nil, huma.Error400BadRequest("invalid JSON format for geoFeature")
 	}
 
-	// --- Authorization Check ---
-	// User must own the farm they are adding/updating a crop for
 	farm, err := a.farmRepo.GetByID(ctx, farmUUID.String())
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) || errors.Is(err, sql.ErrNoRows) {
-			a.logger.Warn("Attempt to create/update crop for non-existent farm", "farmId", input.Body.FarmID, "requestingUserId", userID)
+			a.logger.Warn("Attempt to create crop for non-existent farm", "farmId", input.Body.FarmID, "requestingUserId", userID)
 			return nil, huma.Error404NotFound("Target farm not found")
 		}
-		a.logger.Error("Failed to fetch farm for create/update cropland authorization", "farmId", input.Body.FarmID, "error", err)
+		a.logger.Error("Failed to fetch farm for create cropland authorization", "farmId", input.Body.FarmID, "error", err)
 		return nil, huma.Error500InternalServerError("Failed to verify ownership")
 	}
 	if farm.OwnerID != userID {
-		a.logger.Warn("Unauthorized attempt to create/update crop on farm", "farmId", input.Body.FarmID, "requestingUserId", userID, "farmOwnerId", farm.OwnerID)
-		return nil, huma.Error403Forbidden("You are not authorized to modify crops on this farm")
+		a.logger.Warn("Unauthorized attempt to create crop on farm", "farmId", input.Body.FarmID, "requestingUserId", userID, "farmOwnerId", farm.OwnerID)
+		return nil, huma.Error403Forbidden("You are not authorized to add crops to this farm")
 	}
 
-	// If updating, ensure the user also owns the existing cropland (redundant if farm check passes, but good practice)
-	if input.Body.UUID != "" {
-		existingCrop, err := a.cropRepo.GetByID(ctx, input.Body.UUID)
-		if err != nil && !errors.Is(err, domain.ErrNotFound) && !errors.Is(err, sql.ErrNoRows) { // Ignore not found for creation
-			a.logger.Error("Failed to get existing cropland for update authorization check", "croplandId", input.Body.UUID, "error", err)
-			return nil, huma.Error500InternalServerError("Failed to verify existing cropland")
-		}
-		// If cropland exists and its FarmID doesn't match the input/authorized FarmID, deny.
-		if err == nil && existingCrop.FarmID != farmUUID.String() {
-			a.logger.Warn("Attempt to update cropland belonging to a different farm", "croplandId", input.Body.UUID, "inputFarmId", input.Body.FarmID, "actualFarmId", existingCrop.FarmID)
-			return nil, huma.Error403Forbidden("Cropland does not belong to the specified farm")
-		}
-	}
-
-	// --- Prepare and Save Cropland ---
 	cropland := &domain.Cropland{
-		UUID:        input.Body.UUID,
 		Name:        input.Body.Name,
 		Status:      input.Body.Status,
 		Priority:    input.Body.Priority,
@@ -295,15 +276,84 @@ func (a *api) createOrUpdateCroplandHandler(ctx context.Context, input *CreateOr
 		GeoFeature:  input.Body.GeoFeature,
 	}
 
-	// Use the repository's CreateOrUpdate which handles assigning UUID if needed
 	err = a.cropRepo.CreateOrUpdate(ctx, cropland)
 	if err != nil {
-		a.logger.Error("Failed to save cropland to database", "farm_id", input.Body.FarmID, "plantId", input.Body.PlantID, "error", err)
+		a.logger.Error("Failed to create cropland in database", "farmId", input.Body.FarmID, "plantId", input.Body.PlantID, "error", err)
 		return nil, huma.Error500InternalServerError("Failed to save cropland")
 	}
 
-	a.logger.Info("Cropland created/updated successfully", "croplandId", cropland.UUID, "farmId", cropland.FarmID)
+	a.logger.Info("Cropland created successfully", "croplandId", cropland.UUID, "farmId", cropland.FarmID)
 
 	resp.Body.Cropland = *cropland
+	return resp, nil
+}
+
+func (a *api) updateCroplandHandler(ctx context.Context, input *UpdateCroplandInput) (*UpdateCroplandOutput, error) {
+	userID, err := a.getUserIDFromHeader(input.Header)
+	if err != nil {
+		return nil, huma.Error401Unauthorized("Authentication failed", err)
+	}
+
+	resp := &UpdateCroplandOutput{}
+
+	croplandUUID, err := uuid.FromString(input.UUID)
+	if err != nil {
+		return nil, huma.Error400BadRequest("Invalid cropland UUID format in path")
+	}
+
+	if _, err := uuid.FromString(input.Body.PlantID); err != nil {
+		return nil, huma.Error400BadRequest("invalid plantId UUID format in body")
+	}
+
+	if input.Body.GeoFeature != nil && !json.Valid(input.Body.GeoFeature) {
+		return nil, huma.Error400BadRequest("invalid JSON format for geoFeature")
+	}
+
+	existingCrop, err := a.cropRepo.GetByID(ctx, croplandUUID.String())
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) || errors.Is(err, sql.ErrNoRows) {
+			a.logger.Warn("Attempt to update non-existent cropland", "croplandId", input.UUID, "requestingUserId", userID)
+			return nil, huma.Error404NotFound("Cropland not found")
+		}
+		a.logger.Error("Failed to get existing cropland for update", "croplandId", input.UUID, "error", err)
+		return nil, huma.Error500InternalServerError("Failed to retrieve cropland for update")
+	}
+
+	farm, err := a.farmRepo.GetByID(ctx, existingCrop.FarmID)
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) || errors.Is(err, sql.ErrNoRows) {
+			a.logger.Error("Farm associated with existing cropland not found during update", "farmId", existingCrop.FarmID, "croplandId", input.UUID)
+			return nil, huma.Error500InternalServerError("Associated farm data inconsistent")
+		}
+		a.logger.Error("Failed to fetch farm for update cropland authorization", "farmId", existingCrop.FarmID, "error", err)
+		return nil, huma.Error500InternalServerError("Failed to verify ownership for update")
+	}
+	if farm.OwnerID != userID {
+		a.logger.Warn("Unauthorized attempt to update crop on farm", "croplandId", input.UUID, "farmId", existingCrop.FarmID, "requestingUserId", userID, "farmOwnerId", farm.OwnerID)
+		return nil, huma.Error403Forbidden("You are not authorized to modify this cropland")
+	}
+
+	updatedCropland := &domain.Cropland{
+		UUID:        existingCrop.UUID,
+		FarmID:      existingCrop.FarmID,
+		Name:        input.Body.Name,
+		Status:      input.Body.Status,
+		Priority:    input.Body.Priority,
+		LandSize:    input.Body.LandSize,
+		GrowthStage: input.Body.GrowthStage,
+		PlantID:     input.Body.PlantID,
+		GeoFeature:  input.Body.GeoFeature,
+		CreatedAt:   existingCrop.CreatedAt,
+	}
+
+	err = a.cropRepo.CreateOrUpdate(ctx, updatedCropland)
+	if err != nil {
+		a.logger.Error("Failed to update cropland in database", "croplandId", updatedCropland.UUID, "error", err)
+		return nil, huma.Error500InternalServerError("Failed to update cropland")
+	}
+
+	a.logger.Info("Cropland updated successfully", "croplandId", updatedCropland.UUID, "farmId", updatedCropland.FarmID)
+
+	resp.Body.Cropland = *updatedCropland
 	return resp, nil
 }

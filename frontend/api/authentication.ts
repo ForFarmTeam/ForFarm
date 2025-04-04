@@ -17,8 +17,8 @@ export interface RegisterResponse {
 export async function registerUser(email: string, password: string): Promise<RegisterResponse> {
   try {
     const response = await axiosInstance.post("/auth/register", {
-      Email: email,
-      Password: password,
+      email: email,
+      password: password,
     });
     return response.data;
   } catch (error: any) {
@@ -35,8 +35,8 @@ export async function registerUser(email: string, password: string): Promise<Reg
 export async function loginUser(email: string, password: string): Promise<LoginResponse> {
   try {
     const response = await axiosInstance.post("/auth/login", {
-      Email: email,
-      Password: password,
+      email: email,
+      password: password,
     });
     return response.data;
   } catch (error: any) {

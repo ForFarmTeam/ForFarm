@@ -2,11 +2,13 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
 	"github.com/forfarm/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type postgresFarmRepository struct {
@@ -94,11 +96,52 @@ func (p *postgresFarmRepository) fetchCroplandsByFarmIDs(ctx context.Context, fa
 	return croplandsByFarmID, nil
 }
 
+func (p *postgresFarmRepository) GetAll(ctx context.Context) ([]domain.Farm, error) {
+	// Query to select all farms, ordered by creation date for consistency
+	query := `
+        SELECT uuid, name, lat, lon, farm_type, total_size, created_at, updated_at, owner_id
+        FROM farms
+        ORDER BY created_at DESC`
+
+	// Use the existing fetch method without specific arguments for filtering
+	farms, err := p.fetch(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	if len(farms) == 0 {
+		return []domain.Farm{}, nil // Return empty slice, not nil
+	}
+
+	// --- Fetch associated crops (optional but good for consistency) ---
+	farmIDs := make([]string, 0, len(farms))
+	farmMap := make(map[string]*domain.Farm, len(farms))
+	for i := range farms {
+		farmIDs = append(farmIDs, farms[i].UUID)
+		farmMap[farms[i].UUID] = &farms[i]
+	}
+
+	croplandsByFarmID, err := p.fetchCroplandsByFarmIDs(ctx, farmIDs)
+	if err != nil {
+		// Log the warning but return the farms fetched so far
+		// Depending on requirements, you might want to return the error instead
+		println("Warning: Failed to fetch associated croplands during GetAll:", err.Error())
+	} else {
+		for farmID, croplands := range croplandsByFarmID {
+			if farm, ok := farmMap[farmID]; ok {
+				farm.Crops = croplands
+			}
+		}
+	}
+	// --- End Fetch associated crops ---
+
+	return farms, nil
+}
+
 func (p *postgresFarmRepository) GetByID(ctx context.Context, farmId string) (*domain.Farm, error) {
 	query := `
-		SELECT uuid, name, lat, lon, farm_type, total_size, created_at, updated_at, owner_id
-		FROM farms
-		WHERE uuid = $1`
+        SELECT uuid, name, lat, lon, farm_type, total_size, created_at, updated_at, owner_id
+        FROM farms
+        WHERE uuid = $1`
 	var f domain.Farm
 	err := p.conn.QueryRow(ctx, query, farmId).Scan(
 		&f.UUID,
@@ -112,8 +155,21 @@ func (p *postgresFarmRepository) GetByID(ctx context.Context, farmId string) (*d
 		&f.OwnerID,
 	)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, pgx.ErrNoRows) { // Check for pgx specific error
+			return nil, domain.ErrNotFound
+		}
+		return nil, err // Return other errors
 	}
+
+	// Fetch associated crops (optional, depends if GetByID needs them)
+	cropsMap, err := p.fetchCroplandsByFarmIDs(ctx, []string{f.UUID})
+	if err != nil {
+		println("Warning: Failed to fetch croplands for GetByID:", err.Error())
+		// Decide whether to return the farm without crops or return the error
+	} else if crops, ok := cropsMap[f.UUID]; ok {
+		f.Crops = crops
+	}
+
 	return &f, nil
 }
 
@@ -192,14 +248,16 @@ func (p *postgresFarmRepository) CreateOrUpdate(ctx context.Context, f *domain.F
 			Timestamp:   time.Now(),
 			AggregateID: f.UUID,
 			Payload: map[string]interface{}{
-				"farm_id":    f.UUID,
-				"name":       f.Name,
-				"location":   map[string]float64{"lat": f.Lat, "lon": f.Lon},
-				"farm_type":  f.FarmType,
-				"total_size": f.TotalSize,
-				"owner_id":   f.OwnerID,
-				"created_at": f.CreatedAt,
-				"updated_at": f.UpdatedAt,
+				"uuid":      f.UUID,
+				"name":      f.Name,
+				"lat":       f.Lat,
+				"lon":       f.Lon,
+				"location":  map[string]float64{"lat": f.Lat, "lon": f.Lon},
+				"farmType":  f.FarmType,
+				"totalSize": f.TotalSize,
+				"ownerId":   f.OwnerID,
+				"createdAt": f.CreatedAt,
+				"updatedAt": f.UpdatedAt,
 			},
 		}
 

@@ -268,15 +268,15 @@ func (p *postgresInventoryRepository) CreateOrUpdate(ctx context.Context, item *
 		}
 
 		payload := map[string]interface{}{
-			"item_id":     item.ID,
-			"user_id":     item.UserID, // Include user ID for potential farm lookup in projection
-			"name":        item.Name,
-			"category_id": item.CategoryID,
-			"quantity":    item.Quantity,
-			"unit_id":     item.UnitID,
-			"status_id":   item.StatusID,
-			"date_added":  item.DateAdded,
-			"updated_at":  item.UpdatedAt,
+			"id":         item.ID,
+			"userId":     item.UserID, // Include user ID for potential farm lookup in projection
+			"name":       item.Name,
+			"categoryId": item.CategoryID,
+			"quantity":   item.Quantity,
+			"unitId":     item.UnitID,
+			"statusId":   item.StatusID,
+			"dateAdded":  item.DateAdded,
+			"updatedAt":  item.UpdatedAt,
 			// NO farm_id easily available here without extra lookup
 		}
 

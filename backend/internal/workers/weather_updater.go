@@ -3,6 +3,7 @@ package workers
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"sync"
 	"time"
@@ -27,13 +28,23 @@ func NewWeatherUpdater(
 	eventPublisher domain.EventPublisher,
 	logger *slog.Logger,
 	fetchInterval time.Duration,
-) *WeatherUpdater {
+) (*WeatherUpdater, error) {
 	if logger == nil {
 		logger = slog.Default()
 	}
 	if fetchInterval <= 0 {
-		fetchInterval = 15 * time.Minute
+		fetchInterval = 60 * time.Minute
 	}
+	if farmRepo == nil {
+		return nil, fmt.Errorf("farmRepo cannot be nil")
+	}
+	if weatherFetcher == nil {
+		return nil, fmt.Errorf("weatherFetcher cannot be nil")
+	}
+	if eventPublisher == nil {
+		return nil, fmt.Errorf("eventPublisher cannot be nil")
+	}
+
 	return &WeatherUpdater{
 		farmRepo:       farmRepo,
 		weatherFetcher: weatherFetcher,
@@ -41,7 +52,7 @@ func NewWeatherUpdater(
 		logger:         logger,
 		fetchInterval:  fetchInterval,
 		stopChan:       make(chan struct{}),
-	}
+	}, nil
 }
 
 func (w *WeatherUpdater) Start(ctx context.Context) {
@@ -75,20 +86,22 @@ func (w *WeatherUpdater) Start(ctx context.Context) {
 
 func (w *WeatherUpdater) Stop() {
 	w.logger.Info("Attempting to stop Weather Updater worker...")
-	close(w.stopChan)
-	w.wg.Wait()
+	select {
+	case <-w.stopChan:
+	default:
+		close(w.stopChan)
+	}
+	w.wg.Wait() // Wait for the goroutine to finish
 	w.logger.Info("Weather Updater worker stopped")
 }
 
 func (w *WeatherUpdater) fetchAndUpdateAllFarms(ctx context.Context) {
-	// Use a background context for the repository call if the main context might cancel prematurely
-	// repoCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second) // Example timeout
-	// defer cancel()
+	repoCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second) // Use separate context for DB query
+	defer cancel()
 
-	// TODO: Need a GetAllFarms method in the FarmRepository or a way to efficiently get all farm locations.
-	farms, err := w.farmRepo.GetByOwnerID(ctx, "") // !! REPLACE with a proper GetAll method !!
+	farms, err := w.farmRepo.GetAll(repoCtx) // <-- Changed method call
 	if err != nil {
-		w.logger.Error("Failed to get farms for weather update", "error", err)
+		w.logger.Error("Failed to get all farms for weather update", "error", err)
 		return
 	}
 	if len(farms) == 0 {
@@ -96,11 +109,14 @@ func (w *WeatherUpdater) fetchAndUpdateAllFarms(ctx context.Context) {
 		return
 	}
 
-	w.logger.Info("Found farms for weather update", "count", len(farms))
+	w.logger.Info("Processing farms for weather update", "count", len(farms))
 
 	var fetchWg sync.WaitGroup
 	fetchCtx, cancelFetches := context.WithCancel(ctx)
 	defer cancelFetches()
+
+	concurrencyLimit := 5
+	sem := make(chan struct{}, concurrencyLimit)
 
 	for _, farm := range farms {
 		if farm.Lat == 0 && farm.Lon == 0 {
@@ -109,10 +125,14 @@ func (w *WeatherUpdater) fetchAndUpdateAllFarms(ctx context.Context) {
 		}
 
 		fetchWg.Add(1)
+		sem <- struct{}{}
 		go func(f domain.Farm) {
 			defer fetchWg.Done()
+			defer func() { <-sem }()
+
 			select {
 			case <-fetchCtx.Done():
+				w.logger.Info("Weather fetch cancelled for farm", "farm_id", f.UUID, "reason", fetchCtx.Err())
 				return
 			default:
 				w.fetchAndPublishWeather(fetchCtx, f)
@@ -121,7 +141,7 @@ func (w *WeatherUpdater) fetchAndUpdateAllFarms(ctx context.Context) {
 	}
 
 	fetchWg.Wait()
-	w.logger.Info("Finished weather fetch cycle for farms", "count", len(farms))
+	w.logger.Debug("Finished weather fetch cycle for farms", "count", len(farms)) // Use Debug for cycle completion
 }
 
 func (w *WeatherUpdater) fetchAndPublishWeather(ctx context.Context, farm domain.Farm) {
@@ -136,17 +156,17 @@ func (w *WeatherUpdater) fetchAndPublishWeather(ctx context.Context, farm domain
 	}
 
 	payloadMap := map[string]interface{}{
-		"farm_id":              farm.UUID,
-		"lat":                  farm.Lat,
-		"lon":                  farm.Lon,
-		"temp_celsius":         weatherData.TempCelsius,
-		"humidity":             weatherData.Humidity,
-		"description":          weatherData.Description,
-		"icon":                 weatherData.Icon,
-		"wind_speed":           weatherData.WindSpeed,
-		"rain_volume_1h":       weatherData.RainVolume1h,
-		"observed_at":          weatherData.ObservedAt,
-		"weather_last_updated": weatherData.WeatherLastUpdated,
+		"farm_id":            farm.UUID,
+		"lat":                farm.Lat,
+		"lon":                farm.Lon,
+		"tempCelsius":        weatherData.TempCelsius,
+		"humidity":           weatherData.Humidity,
+		"description":        weatherData.Description,
+		"icon":               weatherData.Icon,
+		"windSpeed":          weatherData.WindSpeed,
+		"rainVolume1h":       weatherData.RainVolume1h,
+		"observedAt":         weatherData.ObservedAt,
+		"weatherLastUpdated": weatherData.WeatherLastUpdated,
 	}
 
 	event := domain.Event{
