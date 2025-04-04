@@ -134,7 +134,6 @@ func (a *api) Routes() *chi.Mux {
 		a.registerPlantRoutes(r, api)
 		a.registerKnowledgeHubRoutes(r, api)
 		a.registerOauthRoutes(r, api)
-		
 		a.registerInventoryRoutes(r, api)
 	})
 
