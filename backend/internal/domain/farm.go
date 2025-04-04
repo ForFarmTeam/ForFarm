@@ -32,6 +32,7 @@ func (f *Farm) Validate() error {
 type FarmRepository interface {
 	GetByID(context.Context, string) (*Farm, error)
 	GetByOwnerID(context.Context, string) ([]Farm, error)
+	GetAll(context.Context) ([]Farm, error)
 	CreateOrUpdate(context.Context, *Farm) error
 	Delete(context.Context, string) error
 	SetEventPublisher(EventPublisher)

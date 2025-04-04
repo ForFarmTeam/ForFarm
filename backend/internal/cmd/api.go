@@ -68,17 +68,20 @@ func APICmd(ctx context.Context) *cobra.Command {
 			}()
 			logger.Info("Farm Analytics Projection started")
 
-			weatherFetcher := api.GetWeatherFetcher() // Get fetcher instance from API setup
+			apiInstance := api.NewAPI(ctx, logger, pool, eventBus, analyticsRepo, inventoryRepo, croplandRepo, farmRepo)
+
+			weatherFetcher := apiInstance.GetWeatherFetcher()
 			weatherInterval, err := time.ParseDuration(config.WEATHER_FETCH_INTERVAL)
 			if err != nil {
 				logger.Warn("Invalid WEATHER_FETCH_INTERVAL, using default 15m", "value", config.WEATHER_FETCH_INTERVAL, "error", err)
 				weatherInterval = 15 * time.Minute
 			}
-			weatherUpdater := workers.NewWeatherUpdater(farmRepo, weatherFetcher, eventBus, logger, weatherInterval)
-			weatherUpdater.Start(ctx) // Pass the main context
+			weatherUpdater, err := workers.NewWeatherUpdater(farmRepo, weatherFetcher, eventBus, logger, weatherInterval)
+			if err != nil {
+				logger.Error("failed to create WeatherUpdater", "error", err)
+			}
+			weatherUpdater.Start(ctx)
 			logger.Info("Weather Updater worker started", "interval", weatherInterval)
-
-			apiInstance := api.NewAPI(ctx, logger, pool, eventBus, analyticsRepo, inventoryRepo, croplandRepo, farmRepo) // Pass new repo
 
 			server := apiInstance.Server(port)
 
@@ -87,7 +90,7 @@ func APICmd(ctx context.Context) *cobra.Command {
 				logger.Info("starting API server", "port", port)
 				if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 					logger.Error("API server failed", "error", err)
-					serverErrChan <- err // Send error to channel
+					serverErrChan <- err
 				}
 				close(serverErrChan)
 			}()
@@ -98,11 +101,10 @@ func APICmd(ctx context.Context) *cobra.Command {
 			case <-ctx.Done():
 				logger.Info("Shutdown signal received, initiating graceful shutdown...")
 
-				shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second) // 15-second grace period
+				shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 				defer cancel()
 
-				weatherUpdater.Stop() // Signal and wait
-
+				weatherUpdater.Stop()
 				if err := server.Shutdown(shutdownCtx); err != nil {
 					logger.Error("HTTP server graceful shutdown failed", "error", err)
 				} else {

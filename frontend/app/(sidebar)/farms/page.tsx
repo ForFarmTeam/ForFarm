@@ -20,11 +20,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import { FarmCard } from "./farm-card";
 import { AddFarmForm } from "./add-farm-form";
+import { EditFarmForm } from "./edit-farm-form";
 import type { Farm } from "@/types";
-import { fetchFarms, createFarm } from "@/api/farm";
+import { fetchFarms, createFarm, updateFarm, deleteFarm } from "@/api/farm";
+import { toast } from "sonner";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function FarmSetupPage() {
   const router = useRouter();
@@ -33,27 +47,68 @@ export default function FarmSetupPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "alphabetical">("newest");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for edit dialog
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false); // State for delete dialog
+  const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null); // Farm to edit/delete
 
+  // --- Fetch Farms ---
   const {
-    data: farms, // Type is Farm[] now
+    data: farms,
     isLoading,
     isError,
     error,
   } = useQuery<Farm[]>({
-    // Use Farm[] type
     queryKey: ["farms"],
     queryFn: fetchFarms,
     staleTime: 60 * 1000,
   });
 
-  const mutation = useMutation({
-    // Pass the correct type to createFarm
+  // --- Create Farm Mutation ---
+  const createMutation = useMutation({
     mutationFn: (data: Partial<Omit<Farm, "uuid" | "createdAt" | "updatedAt" | "crops" | "ownerId">>) =>
       createFarm(data),
-    onSuccess: () => {
+    onSuccess: (newFarm) => {
       queryClient.invalidateQueries({ queryKey: ["farms"] });
-      setIsDialogOpen(false);
+      setIsAddDialogOpen(false);
+      toast.success(`Farm "${newFarm.name}" created successfully!`);
+    },
+    onError: (error) => {
+      toast.error(`Failed to create farm: ${(error as Error).message}`);
+    },
+  });
+
+  // --- Update Farm Mutation ---
+  const updateMutation = useMutation({
+    mutationFn: (data: {
+      farmId: string;
+      payload: Partial<Omit<Farm, "uuid" | "createdAt" | "updatedAt" | "crops" | "ownerId">>;
+    }) => updateFarm(data.farmId, data.payload),
+    onSuccess: (updatedFarm) => {
+      queryClient.invalidateQueries({ queryKey: ["farms"] });
+      setIsEditDialogOpen(false);
+      setSelectedFarm(null);
+      toast.success(`Farm "${updatedFarm.name}" updated successfully!`);
+    },
+    onError: (error) => {
+      toast.error(`Failed to update farm: ${(error as Error).message}`);
+    },
+  });
+
+  // --- Delete Farm Mutation ---
+  const deleteMutation = useMutation({
+    mutationFn: (farmId: string) => deleteFarm(farmId),
+    onSuccess: (_, farmId) => {
+      // Second arg is the variable passed to mutate
+      queryClient.invalidateQueries({ queryKey: ["farms"] });
+      // Optionally remove specific farm query if cached elsewhere: queryClient.removeQueries({ queryKey: ["farm", farmId] });
+      setIsDeleteDialogOpen(false);
+      setSelectedFarm(null);
+      toast.success(`Farm deleted successfully.`);
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete farm: ${(error as Error).message}`);
+      setIsDeleteDialogOpen(false); // Close dialog even on error
     },
   });
 
@@ -69,6 +124,35 @@ export default function FarmSetupPage() {
   //   UpdatedAt: string;
   // }
 
+  const handleAddFarmSubmit = async (data: Partial<Farm>) => {
+    await createMutation.mutateAsync(data);
+  };
+
+  const handleEditFarmSubmit = async (
+    data: Partial<Omit<Farm, "uuid" | "createdAt" | "updatedAt" | "crops" | "ownerId">>
+  ) => {
+    if (!selectedFarm) return;
+    await updateMutation.mutateAsync({ farmId: selectedFarm.uuid, payload: data });
+  };
+
+  const openEditDialog = (farm: Farm, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    setSelectedFarm(farm);
+    setIsEditDialogOpen(true);
+  };
+
+  const openDeleteDialog = (farm: Farm, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    setSelectedFarm(farm);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!selectedFarm) return;
+    deleteMutation.mutate(selectedFarm.uuid);
+  };
+
+  // --- Filtering and Sorting Logic ---
   const filteredAndSortedFarms = (farms || [])
     .filter(
       (farm) =>
@@ -90,10 +174,6 @@ export default function FarmSetupPage() {
   // Get distinct farm types.
   const farmTypes = ["all", ...new Set((farms || []).map((farm) => farm.farmType))]; // Use camelCase farmType
 
-  const handleAddFarm = async (data: Partial<Farm>) => {
-    await mutation.mutateAsync(data);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b">
       <div className="container max-w-7xl p-6 mx-auto">
@@ -114,7 +194,7 @@ export default function FarmSetupPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Button onClick={() => setIsDialogOpen(true)} className="gap-2 bg-green-600 hover:bg-green-700">
+              <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2 bg-green-600 hover:bg-green-700">
                 <Plus className="h-4 w-4" />
                 Add Farm
               </Button>
@@ -128,8 +208,9 @@ export default function FarmSetupPage() {
                 <Badge
                   key={type}
                   variant={activeFilter === type ? "default" : "outline"}
-                  className={`capitalize cursor-pointer ${
-                    activeFilter === type ? "bg-green-600" : "hover:bg-green-100"
+                  className={`capitalize cursor-pointer rounded-full px-3 py-1 text-sm ${
+                    // Made rounded-full
+                    activeFilter === type ? "bg-primary text-primary-foreground" : "hover:bg-accent" // Adjusted colors
                   }`}
                   onClick={() => setActiveFilter(type)}>
                   {type === "all" ? "All Farms" : type}
@@ -148,25 +229,25 @@ export default function FarmSetupPage() {
                 <DropdownMenuLabel>Sort by</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className={sortOrder === "newest" ? "bg-green-50" : ""}
+                  className={sortOrder === "newest" ? "bg-accent" : ""} // Use accent for selection
                   onClick={() => setSortOrder("newest")}>
                   <Calendar className="h-4 w-4 mr-2" />
                   Newest first
-                  {sortOrder === "newest" && <Check className="h-4 w-4 ml-2" />}
+                  {sortOrder === "newest" && <Check className="h-4 w-4 ml-auto" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className={sortOrder === "oldest" ? "bg-green-50" : ""}
+                  className={sortOrder === "oldest" ? "bg-accent" : ""}
                   onClick={() => setSortOrder("oldest")}>
                   <Calendar className="h-4 w-4 mr-2" />
                   Oldest first
-                  {sortOrder === "oldest" && <Check className="h-4 w-4 ml-2" />}
+                  {sortOrder === "oldest" && <Check className="h-4 w-4 ml-auto" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className={sortOrder === "alphabetical" ? "bg-green-50" : ""}
+                  className={sortOrder === "alphabetical" ? "bg-accent" : ""}
                   onClick={() => setSortOrder("alphabetical")}>
                   <Filter className="h-4 w-4 mr-2" />
                   Alphabetical
-                  {sortOrder === "alphabetical" && <Check className="h-4 w-4 ml-2" />}
+                  {sortOrder === "alphabetical" && <Check className="h-4 w-4 ml-auto" />}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -178,21 +259,40 @@ export default function FarmSetupPage() {
           {isError && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
+              <AlertTitle>Error Loading Farms</AlertTitle>
               <AlertDescription>{(error as Error)?.message}</AlertDescription>
             </Alert>
           )}
 
           {/* Loading state */}
           {isLoading && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 text-green-600 animate-spin mb-4" />
-              <p className="text-muted-foreground">Loading your farms...</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(4)].map(
+                (
+                  _,
+                  i // Render skeleton cards
+                ) => (
+                  <Card key={i} className="w-full h-[250px]">
+                    <CardHeader className="p-4 pb-0">
+                      <Skeleton className="h-4 w-1/3" />
+                    </CardHeader>
+                    <CardContent className="p-4 space-y-3">
+                      <Skeleton className="h-6 w-2/3" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-4/5" />
+                    </CardContent>
+                    <CardFooter className="p-4 pt-0">
+                      <Skeleton className="h-8 w-24 ml-auto" />
+                    </CardFooter>
+                  </Card>
+                )
+              )}
             </div>
           )}
 
           {/* Empty state */}
           {!isLoading && !isError && filteredAndSortedFarms.length === 0 && (
+            // ... (Empty state remains the same) ...
             <div className="flex flex-col items-center justify-center py-12 bg-muted/20 rounded-lg border border-dashed">
               <div className="bg-green-100 p-3 rounded-full mb-4">
                 <Leaf className="h-6 w-6 text-green-600" />
@@ -204,7 +304,7 @@ export default function FarmSetupPage() {
                 </p>
               ) : (
                 <p className="text-muted-foreground text-center max-w-md mb-6">
-                  You haven&apos;t added any farms yet. Get started by adding your first farm.
+                  You haven't added any farms yet. Get started by adding your first farm.
                 </p>
               )}
               <Button
@@ -212,7 +312,7 @@ export default function FarmSetupPage() {
                   setSearchQuery("");
                   setActiveFilter("all");
                   if (!farms || farms.length === 0) {
-                    setIsDialogOpen(true);
+                    setIsAddDialogOpen(true);
                   }
                 }}
                 className="gap-2">
@@ -232,17 +332,31 @@ export default function FarmSetupPage() {
           {!isLoading && !isError && filteredAndSortedFarms.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               <AnimatePresence>
-                <motion.div /* ... */>
-                  <FarmCard variant="add" onClick={() => setIsDialogOpen(true)} />
+                {/* Add Farm Card */}
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}>
+                  <FarmCard variant="add" onClick={() => setIsAddDialogOpen(true)} />
                 </motion.div>
+                {/* Existing Farm Cards */}
                 {filteredAndSortedFarms.map((farm, index) => (
                   <motion.div
-                    key={farm.uuid} // Use camelCase uuid                    initial={{ opacity: 0, y: 20 }}
+                    layout // Add layout animation
+                    key={farm.uuid}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.2, delay: index * 0.05 }}
                     className="col-span-1">
-                    <FarmCard variant="farm" farm={farm} onClick={() => router.push(`/farms/${farm.uuid}`)} />
+                    <FarmCard
+                      variant="farm"
+                      farm={farm}
+                      onClick={() => router.push(`/farms/${farm.uuid}`)}
+                      onEditClick={(e) => openEditDialog(farm, e)} // Pass handler
+                      onDeleteClick={(e) => openDeleteDialog(farm, e)} // Pass handler
+                    />
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -252,16 +366,57 @@ export default function FarmSetupPage() {
       </div>
 
       {/* Add Farm Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[800px] md:max-w-[900px] lg:max-w-[1000px] xl:max-w-5xl">
           <DialogHeader>
             <DialogTitle>Add New Farm</DialogTitle>
             <DialogDescription>Fill out the details below to add a new farm to your account.</DialogDescription>
           </DialogHeader>
-          {/* Pass handleAddFarm (which now expects Partial<Farm>) */}
-          <AddFarmForm onSubmit={handleAddFarm} onCancel={() => setIsDialogOpen(false)} />
+          <AddFarmForm onSubmit={handleAddFarmSubmit} onCancel={() => setIsAddDialogOpen(false)} />
         </DialogContent>
       </Dialog>
+
+      {/* Edit Farm Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[800px] md:max-w-[900px] lg:max-w-[1000px] xl:max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>Edit Farm: {selectedFarm?.name}</DialogTitle>
+            <DialogDescription>Update the details for this farm.</DialogDescription>
+          </DialogHeader>
+          {/* Create or use an EditFarmForm component */}
+          {selectedFarm && (
+            <EditFarmForm
+              initialData={selectedFarm}
+              onSubmit={handleEditFarmSubmit}
+              onCancel={() => setIsEditDialogOpen(false)}
+              isSubmitting={updateMutation.isPending} // Pass submitting state
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the farm "{selectedFarm?.name}" and all
+              associated crops and data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete Farm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -4,9 +4,6 @@ import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import DynamicBreadcrumb from "./dynamic-breadcrumb";
-import { extractRoute } from "@/lib/utils";
-import { usePathname } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
 import { useForm, FormProvider } from "react-hook-form";
 import { APIProvider } from "@vis.gl/react-google-maps";
@@ -16,8 +13,7 @@ export default function AppLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = usePathname();
-  const currentPathname = extractRoute(pathname);
+  // const pathname = usePathname();
   const form = useForm();
 
   return (
@@ -31,7 +27,7 @@ export default function AppLayout({
                 <SidebarTrigger className="-ml-1" />
                 <ThemeToggle />
                 <Separator orientation="vertical" className="mr-2 h-4" />
-                <DynamicBreadcrumb pathname={currentPathname} />
+                {/* <DynamicBreadcrumb pathname={currentPathname} /> */}
               </div>
             </header>
             {children}

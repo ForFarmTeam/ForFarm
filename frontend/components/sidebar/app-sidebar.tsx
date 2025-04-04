@@ -10,21 +10,21 @@ import {
   GalleryVerticalEnd,
   Map,
   PieChart,
-  Settings2,
+  Settings,
   SquareTerminal,
-  User,
+  UserCircle,
 } from "lucide-react";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
-import { TeamSwitcher } from "./team-switcher";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "@/components/ui/sidebar";
-import { NavCrops } from "./nav-crops";
+import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from "@/components/ui/sidebar";
+// import { NavCrops } from "./nav-crops";
 import { fetchUserMe } from "@/api/user";
+import { usePathname } from "next/navigation";
 
 interface Team {
   name: string;
-  logo: React.ComponentType;
+  logo: React.ComponentType<{ className?: string }>; // Ensure logo type accepts className
   plan: string;
 }
 
@@ -34,12 +34,13 @@ interface NavItem {
   title: string;
   url: string;
   icon: LucideIcon;
+  isActive?: boolean; // Add isActive property
 }
 
 interface SidebarConfig {
   teams: Team[];
   navMain: NavItem[];
-  crops: NavItem[];
+  // crops: NavItem[];
 }
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -69,27 +70,28 @@ function UserErrorFallback({ message }: { message: string }) {
   );
 }
 
+const defaultNavMain: NavItem[] = [
+  { title: "Farms", url: "/farms", icon: Map },
+  { title: "Inventory", url: "/inventory", icon: SquareTerminal },
+  { title: "Marketplace", url: "/marketplace", icon: PieChart }, // Updated title and icon
+  { title: "Knowledge Hub", url: "/hub", icon: BookOpen },
+  { title: "AI Chatbot", url: "/chatbot", icon: Bot },
+  { title: "Profile", url: "/profile", icon: UserCircle }, // Added Profile
+  { title: "Settings", url: "/settings", icon: Settings }, // Kept Settings
+];
+
 export function AppSidebar({ config, ...props }: AppSidebarProps) {
+  const pathname = usePathname();
   const defaultConfig: SidebarConfig = {
     teams: [
       { name: "Farm 1", logo: GalleryVerticalEnd, plan: "Hatyai" },
       { name: "Farm 2", logo: AudioWaveform, plan: "Songkla" },
       { name: "Farm 3", logo: Command, plan: "Layong" },
     ],
-    navMain: [
-      { title: "Farms", url: "/farms", icon: Map },
-      { title: "Inventory", url: "/inventory", icon: SquareTerminal },
-      { title: "Marketplace Information", url: "/marketplace", icon: PieChart },
-      { title: "Knowledge Hub", url: "/hub", icon: BookOpen },
-      { title: "Users", url: "/users", icon: User },
-      { title: "AI Chatbot", url: "/chatbot", icon: Bot },
-      { title: "Settings", url: "/settings", icon: Settings2 },
-    ],
-    crops: [
-      { title: "Crops 1", url: "/farms/[farmId]/crops/1", icon: Map },
-      { title: "Crops 2", url: "/farms/[farmId]/crops/2", icon: Map },
-      { title: "Crops 3", url: "/farms/[farmId]/crops/3", icon: Map },
-    ],
+    navMain: defaultNavMain.map((item) => ({
+      ...item,
+      isActive: pathname.startsWith(item.url) && (item.url !== "/" || pathname === "/"),
+    })),
   };
 
   // Allow external configuration override
@@ -107,17 +109,18 @@ export function AppSidebar({ config, ...props }: AppSidebarProps) {
     async function getUser() {
       try {
         const data = await fetchUserMe();
-        console.log(data);
+        console.log("Fetched user data:", data);
         setUser({
-          name: data.user.uuid,
+          name: data.user.username || data.user.email.split("@")[0] || `User ${data.user.uuid.substring(0, 6)}`,
           email: data.user.email,
-          avatar: data.user.avatar || "/avatars/avatar.webp",
+          avatar: data.user.avatar || `https://api.dicebear.com/9.x/initials/svg?seed=${data.user.email}`,
         });
       } catch (err: unknown) {
+        console.error("Failed to fetch user for sidebar:", err);
         if (err instanceof Error) {
           setError(err.message);
         } else {
-          setError("An unexpected error occurred");
+          setError("An unexpected error occurred fetching user data");
         }
       } finally {
         setLoading(false);
@@ -129,17 +132,14 @@ export function AppSidebar({ config, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={sidebarConfig.teams} />
+        {loading ? <UserSkeleton /> : error ? <UserErrorFallback message={error} /> : <NavUser user={user} />}
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={sidebarConfig.navMain} />
-        <div className="mt-6">
-          <NavCrops crops={sidebarConfig.crops} />
-        </div>
       </SidebarContent>
-      <SidebarFooter>
+      {/* <SidebarFooter>
         {loading ? <UserSkeleton /> : error ? <UserErrorFallback message={error} /> : <NavUser user={user} />}
-      </SidebarFooter>
+      </SidebarFooter> */}
       <SidebarRail />
     </Sidebar>
   );

@@ -51,6 +51,15 @@ func (p *postgresPlantRepository) GetByUUID(ctx context.Context, uuid string) (d
 	return plants[0], nil
 }
 
+func (p *postgresPlantRepository) GetByName(ctx context.Context, name string) (domain.Plant, error) {
+	query := `SELECT * FROM plants WHERE name = $1`
+	plants, err := p.fetch(ctx, query, name)
+	if err != nil || len(plants) == 0 {
+		return domain.Plant{}, domain.ErrNotFound
+	}
+	return plants[0], nil
+}
+
 func (p *postgresPlantRepository) GetAll(ctx context.Context) ([]domain.Plant, error) {
 	query := `SELECT * FROM plants`
 	return p.fetch(ctx, query)

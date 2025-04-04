@@ -1,4 +1,3 @@
-// backend/internal/services/weather/openweathermap_fetcher.go
 package weather
 
 import (
@@ -14,45 +13,57 @@ import (
 	"github.com/forfarm/backend/internal/domain"
 )
 
-const openWeatherMapOneCallAPIURL = "https://api.openweathermap.org/data/3.0/onecall"
+const openWeatherMapCurrentAPIURL = "https://api.openweathermap.org/data/2.5/weather"
 
-type openWeatherMapOneCallResponse struct {
-	Lat            float64 `json:"lat"`
-	Lon            float64 `json:"lon"`
-	Timezone       string  `json:"timezone"`
-	TimezoneOffset int     `json:"timezone_offset"`
-	Current        *struct {
-		Dt         int64   `json:"dt"` // Current time, Unix, UTC
-		Sunrise    int64   `json:"sunrise"`
-		Sunset     int64   `json:"sunset"`
-		Temp       float64 `json:"temp"`       // Kelvin by default, 'units=metric' for Celsius
-		FeelsLike  float64 `json:"feels_like"` // Kelvin by default
-		Pressure   int     `json:"pressure"`   // hPa
-		Humidity   int     `json:"humidity"`   // %
-		DewPoint   float64 `json:"dew_point"`
-		Uvi        float64 `json:"uvi"`
-		Clouds     int     `json:"clouds"`     // %
-		Visibility int     `json:"visibility"` // meters
-		WindSpeed  float64 `json:"wind_speed"` // meter/sec by default
-		WindDeg    int     `json:"wind_deg"`
-		WindGust   float64 `json:"wind_gust,omitempty"`
-		Rain       *struct {
-			OneH float64 `json:"1h"` // Rain volume for the last 1 hour, mm
-		} `json:"rain,omitempty"`
-		Snow *struct {
-			OneH float64 `json:"1h"` // Snow volume for the last 1 hour, mm
-		} `json:"snow,omitempty"`
-		Weather []struct {
-			ID          int    `json:"id"`
-			Main        string `json:"main"`
-			Description string `json:"description"`
-			Icon        string `json:"icon"`
-		} `json:"weather"`
-	} `json:"current,omitempty"`
-	// Minutely []...
-	// Hourly   []...
-	// Daily    []...
-	// Alerts   []...
+type openWeatherMapCurrentResponse struct {
+	Coord struct {
+		Lon float64 `json:"lon"`
+		Lat float64 `json:"lat"`
+	} `json:"coord"`
+	Weather []struct {
+		ID          int    `json:"id"`
+		Main        string `json:"main"`
+		Description string `json:"description"`
+		Icon        string `json:"icon"`
+	} `json:"weather"`
+	Base string `json:"base"`
+	Main *struct {
+		Temp      float64 `json:"temp"`
+		FeelsLike float64 `json:"feels_like"`
+		TempMin   float64 `json:"temp_min"`
+		TempMax   float64 `json:"temp_max"`
+		Pressure  int     `json:"pressure"`
+		Humidity  int     `json:"humidity"`
+		SeaLevel  int     `json:"sea_level,omitempty"`
+		GrndLevel int     `json:"grnd_level,omitempty"`
+	} `json:"main"`
+	Visibility int `json:"visibility"`
+	Wind       *struct {
+		Speed float64 `json:"speed"`
+		Deg   int     `json:"deg"`
+		Gust  float64 `json:"gust,omitempty"`
+	} `json:"wind"`
+	Rain *struct {
+		OneH float64 `json:"1h"`
+	} `json:"rain,omitempty"`
+	Snow *struct {
+		OneH float64 `json:"1h"`
+	} `json:"snow,omitempty"`
+	Clouds *struct {
+		All int `json:"all"`
+	} `json:"clouds"`
+	Dt  int64 `json:"dt"`
+	Sys *struct {
+		Type    int    `json:"type,omitempty"`
+		ID      int    `json:"id,omitempty"`
+		Country string `json:"country"`
+		Sunrise int64  `json:"sunrise"`
+		Sunset  int64  `json:"sunset"`
+	} `json:"sys"`
+	Timezone int    `json:"timezone"`
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Cod      int    `json:"cod"`
 }
 
 type OpenWeatherMapFetcher struct {
@@ -80,11 +91,10 @@ func (f *OpenWeatherMapFetcher) GetCurrentWeatherByCoords(ctx context.Context, l
 	queryParams.Set("lat", fmt.Sprintf("%.4f", lat))
 	queryParams.Set("lon", fmt.Sprintf("%.4f", lon))
 	queryParams.Set("appid", f.apiKey)
-	queryParams.Set("units", "metric")                         // Request Celsius and m/s
-	queryParams.Set("exclude", "minutely,hourly,daily,alerts") // Exclude parts we don't need now
+	queryParams.Set("units", "metric")
 
-	fullURL := fmt.Sprintf("%s?%s", openWeatherMapOneCallAPIURL, queryParams.Encode())
-	f.logger.Debug("Fetching weather from OpenWeatherMap OneCall API", "url", fullURL)
+	fullURL := fmt.Sprintf("%s?%s", openWeatherMapCurrentAPIURL, queryParams.Encode())
+	f.logger.Debug("Fetching weather from OpenWeatherMap Current API", "url", fullURL)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil)
 	if err != nil {
@@ -100,7 +110,6 @@ func (f *OpenWeatherMapFetcher) GetCurrentWeatherByCoords(ctx context.Context, l
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		// TODO: Read resp.Body to get error message from OpenWeatherMap
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		f.logger.Error("OpenWeatherMap API returned non-OK status",
 			"url", fullURL,
@@ -109,46 +118,60 @@ func (f *OpenWeatherMapFetcher) GetCurrentWeatherByCoords(ctx context.Context, l
 		return nil, fmt.Errorf("weather API request failed with status: %s", resp.Status)
 	}
 
-	var owmResp openWeatherMapOneCallResponse
+	var owmResp openWeatherMapCurrentResponse
 	if err := json.NewDecoder(resp.Body).Decode(&owmResp); err != nil {
-		f.logger.Error("Failed to decode OpenWeatherMap OneCall response", "error", err)
+		f.logger.Error("Failed to decode OpenWeatherMap Current response", "error", err)
 		return nil, fmt.Errorf("failed to decode weather response: %w", err)
 	}
 
-	if owmResp.Current == nil {
-		f.logger.Warn("OpenWeatherMap OneCall response missing 'current' weather data", "lat", lat, "lon", lon)
-		return nil, fmt.Errorf("current weather data not found in API response")
-	}
-	current := owmResp.Current
+	// --- Data Mapping from openWeatherMapCurrentResponse to domain.WeatherData ---
 
-	if len(current.Weather) == 0 {
-		f.logger.Warn("OpenWeatherMap response missing weather description details", "lat", lat, "lon", lon)
-		return nil, fmt.Errorf("weather data description not found in response")
+	if owmResp.Main == nil {
+		f.logger.Error("OpenWeatherMap Current response missing 'main' data block", "lat", lat, "lon", lon)
+		return nil, fmt.Errorf("main weather data block not found in API response")
 	}
 
-	// Create domain object using pointers for optional fields
-	weatherData := &domain.WeatherData{} // Initialize empty struct first
+	weatherData := &domain.WeatherData{}
 
-	// Assign values using pointers, checking for nil where appropriate
-	weatherData.TempCelsius = &current.Temp
-	humidityFloat := float64(current.Humidity)
+	weatherData.TempCelsius = &owmResp.Main.Temp
+	humidityFloat := float64(owmResp.Main.Humidity)
 	weatherData.Humidity = &humidityFloat
-	weatherData.Description = &current.Weather[0].Description
-	weatherData.Icon = &current.Weather[0].Icon
-	weatherData.WindSpeed = &current.WindSpeed
-	if current.Rain != nil {
-		weatherData.RainVolume1h = &current.Rain.OneH
+
+	if len(owmResp.Weather) > 0 {
+		weatherData.Description = &owmResp.Weather[0].Description
+		weatherData.Icon = &owmResp.Weather[0].Icon
+	} else {
+		f.logger.Warn("OpenWeatherMap Current response missing 'weather' description details", "lat", lat, "lon", lon)
 	}
-	observedTime := time.Unix(current.Dt, 0).UTC()
+
+	if owmResp.Wind != nil {
+		weatherData.WindSpeed = &owmResp.Wind.Speed
+	} else {
+		f.logger.Warn("OpenWeatherMap Current response missing 'wind' data block", "lat", lat, "lon", lon)
+	}
+
+	if owmResp.Rain != nil {
+		weatherData.RainVolume1h = &owmResp.Rain.OneH
+	}
+
+	observedTime := time.Unix(owmResp.Dt, 0).UTC()
 	weatherData.ObservedAt = &observedTime
 	now := time.Now().UTC()
 	weatherData.WeatherLastUpdated = &now
 
-	f.logger.Debug("Successfully fetched weather data",
+	logTemp := "nil"
+	if weatherData.TempCelsius != nil {
+		logTemp = fmt.Sprintf("%.2f", *weatherData.TempCelsius)
+	}
+	logDesc := "nil"
+	if weatherData.Description != nil {
+		logDesc = *weatherData.Description
+	}
+	f.logger.Debug("Successfully fetched and mapped weather data",
 		"lat", lat,
 		"lon", lon,
-		"temp", *weatherData.TempCelsius,
-		"description", *weatherData.Description)
+		"temp", logTemp,
+		"description", logDesc)
 
 	return weatherData, nil
 }
