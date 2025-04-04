@@ -20,6 +20,7 @@ var (
 	OPENWEATHER_API_KEY    string
 	OPENWEATHER_CACHE_TTL  string
 	WEATHER_FETCH_INTERVAL string
+	GEMINI_API_KEY         string
 )
 
 func Load() {
@@ -36,6 +37,7 @@ func Load() {
 	viper.SetDefault("OPENWEATHER_API_KEY", "openweather_api_key")
 	viper.SetDefault("OPENWEATHER_CACHE_TTL", "15m")
 	viper.SetDefault("WEATHER_FETCH_INTERVAL", "15m")
+	viper.SetDefault("GEMINI_API_KEY", "gemini_api_key")
 
 	viper.SetConfigFile(".env")
 	viper.AddConfigPath("../../.")
@@ -59,4 +61,5 @@ func Load() {
 	OPENWEATHER_API_KEY = viper.GetString("OPENWEATHER_API_KEY")
 	OPENWEATHER_CACHE_TTL = viper.GetString("OPENWEATHER_CACHE_TTL")
 	WEATHER_FETCH_INTERVAL = viper.GetString("WEATHER_FETCH_INTERVAL")
+	GEMINI_API_KEY = viper.GetString("GEMINI_API_KEY")
 }

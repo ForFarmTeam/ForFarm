@@ -20,6 +20,7 @@ import (
 	"github.com/forfarm/backend/internal/domain"
 	m "github.com/forfarm/backend/internal/middlewares"
 	"github.com/forfarm/backend/internal/repository"
+	"github.com/forfarm/backend/internal/services"
 	"github.com/forfarm/backend/internal/services/weather"
 	"github.com/forfarm/backend/internal/utilities"
 )
@@ -38,12 +39,12 @@ type api struct {
 	analyticsRepo domain.AnalyticsRepository
 
 	weatherFetcher domain.WeatherFetcher
+
+	chatService *services.ChatService
 }
 
-var weatherFetcherInstance domain.WeatherFetcher
-
-func GetWeatherFetcher() domain.WeatherFetcher {
-	return weatherFetcherInstance
+func (a *api) GetWeatherFetcher() domain.WeatherFetcher {
+	return a.weatherFetcher
 }
 
 func NewAPI(
@@ -60,8 +61,8 @@ func NewAPI(
 	client := &http.Client{}
 
 	userRepository := repository.NewPostgresUser(pool)
-	plantRepository := repository.NewPostgresPlant(pool)
 	harvestRepository := repository.NewPostgresHarvest(pool)
+	plantRepository := repository.NewPostgresPlant(pool)
 
 	owmFetcher := weather.NewOpenWeatherMapFetcher(config.OPENWEATHER_API_KEY, client, logger)
 	cacheTTL, err := time.ParseDuration(config.OPENWEATHER_CACHE_TTL)
@@ -74,7 +75,12 @@ func NewAPI(
 		cleanupInterval = 5 * time.Minute
 	}
 	cachedWeatherFetcher := weather.NewCachedWeatherFetcher(owmFetcher, cacheTTL, cleanupInterval, logger)
-	weatherFetcherInstance = cachedWeatherFetcher
+
+	chatService, chatErr := services.NewChatService(logger, analyticsRepo, farmRepo, croplandRepo, inventoryRepo, plantRepository)
+	if chatErr != nil {
+		logger.Error("Failed to initialize ChatService", "error", chatErr)
+		chatService = nil
+	}
 
 	return &api{
 		logger:         logger,
@@ -90,6 +96,8 @@ func NewAPI(
 		analyticsRepo: analyticsRepo,
 
 		weatherFetcher: cachedWeatherFetcher,
+
+		chatService: chatService,
 	}
 }
 
@@ -131,6 +139,8 @@ func (a *api) Routes() *chi.Mux {
 		a.registerCropRoutes(r, api)
 		a.registerPlantRoutes(r, api)
 		a.registerOauthRoutes(r, api)
+		a.registerChatRoutes(r, api)
+		a.registerInventoryRoutes(r, api)
 	})
 
 	router.Group(func(r chi.Router) {
@@ -138,7 +148,6 @@ func (a *api) Routes() *chi.Mux {
 		a.registerHelloRoutes(r, api)
 		a.registerFarmRoutes(r, api)
 		a.registerUserRoutes(r, api)
-		a.registerInventoryRoutes(r, api)
 		a.registerAnalyticsRoutes(r, api)
 	})
 
