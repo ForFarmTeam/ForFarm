@@ -94,7 +94,7 @@ export default function InventoryPage() {
     staleTime: 60 * 1000,
   });
   //////////////////////////////
-  console.table(inventoryItems);
+  // console.table(inventoryItems);
   // console.table(inventoryStatus);
   // console.table(harvestUnits);
 
