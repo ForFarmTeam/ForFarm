@@ -22,11 +22,13 @@ type api struct {
 	logger     *slog.Logger
 	httpClient *http.Client
 
-	userRepo         domain.UserRepository
-	cropRepo         domain.CroplandRepository
-	farmRepo         domain.FarmRepository
-	plantRepo        domain.PlantRepository
-	knowledgeHubRepo domain.KnowledgeHubRepository
+	userRepo      domain.UserRepository
+	cropRepo      domain.CroplandRepository
+	farmRepo      domain.FarmRepository
+	plantRepo     domain.PlantRepository
+	inventoryRepo domain.InventoryRepository
+	harvestRepo   domain.HarvestRepository
+  knowledgeHubRepo domain.KnowledgeHubRepository
 }
 
 func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
@@ -38,16 +40,20 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
 	farmRepository := repository.NewPostgresFarm(pool)
 	plantRepository := repository.NewPostgresPlant(pool)
 	knowledgeHubRepository := repository.NewPostgresKnowledgeHub(pool)
+	inventoryRepository := repository.NewPostgresInventory(pool)
+	harvestRepository := repository.NewPostgresHarvest(pool)
 
 	return &api{
 		logger:     logger,
 		httpClient: client,
 
-		userRepo:         userRepository,
-		cropRepo:         croplandRepository,
-		farmRepo:         farmRepository,
-		plantRepo:        plantRepository,
-		knowledgeHubRepo: knowledgeHubRepository,
+		userRepo:      userRepository,
+		cropRepo:      croplandRepository,
+		farmRepo:      farmRepository,
+		plantRepo:     plantRepository,
+		inventoryRepo: inventoryRepository,
+		harvestRepo:   harvestRepository,
+    knowledgeHubRepo: knowledgeHubRepository,
 	}
 }
 
@@ -88,6 +94,7 @@ func (a *api) Routes() *chi.Mux {
 		a.registerHelloRoutes(r, api)
 		a.registerFarmRoutes(r, api)
 		a.registerUserRoutes(r, api)
+		a.registerInventoryRoutes(r, api)
 	})
 
 	return router

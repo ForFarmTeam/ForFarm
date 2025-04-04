@@ -18,7 +18,13 @@ import {
   CloudRain,
   Wind,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
@@ -26,7 +32,11 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatbotDialog } from "./chatbot-dialog";
 import { AnalyticsDialog } from "./analytics-dialog";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Crop, CropAnalytics } from "@/types";
 import GoogleMapWithDrawing from "@/components/google-map-with-drawing";
@@ -37,7 +47,11 @@ interface CropDetailPageParams {
   cropId: string;
 }
 
-export default function CropDetailPage({ params }: { params: Promise<CropDetailPageParams> }) {
+export default function CropDetailPage({
+  params,
+}: {
+  params: Promise<CropDetailPageParams>;
+}) {
   const router = useRouter();
   const [crop, setCrop] = useState<Crop | null>(null);
   const [analytics, setAnalytics] = useState<CropAnalytics | null>(null);
@@ -57,7 +71,9 @@ export default function CropDetailPage({ params }: { params: Promise<CropDetailP
 
   if (!crop || !analytics) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        Loading...
+      </div>
     );
   }
 
@@ -87,7 +103,8 @@ export default function CropDetailPage({ params }: { params: Promise<CropDetailP
       icon: ListCollapse,
       description: "View detailed information",
       onClick: () => console.log("Details clicked"),
-      color: "bg-purple-50 dark:bg-purple-900 text-purple-600 dark:text-purple-300",
+      color:
+        "bg-purple-50 dark:bg-purple-900 text-purple-600 dark:text-purple-300",
     },
     {
       title: "Settings",
@@ -107,7 +124,8 @@ export default function CropDetailPage({ params }: { params: Promise<CropDetailP
             <Button
               variant="ghost"
               className="gap-2 text-green-700 dark:text-green-300 hover:text-green-800 dark:hover:text-green-200 hover:bg-green-100/50 dark:hover:bg-green-800/50"
-              onClick={() => router.back()}>
+              onClick={() => router.back()}
+            >
               <ArrowLeft className="h-4 w-4" /> Back to Farm
             </Button>
             <HoverCard>
@@ -126,7 +144,9 @@ export default function CropDetailPage({ params }: { params: Promise<CropDetailP
                   </Avatar>
                   <div className="space-y-1">
                     <h4 className="text-sm font-semibold">Growth Timeline</h4>
-                    <p className="text-sm text-muted-foreground">Planted on {crop.plantedDate.toLocaleDateString()}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Planted on {crop.plantedDate.toLocaleDateString()}
+                    </p>
                     <div className="flex items-center pt-2">
                       <Separator className="w-full" />
                       <span className="mx-2 text-xs text-muted-foreground">
@@ -150,19 +170,28 @@ export default function CropDetailPage({ params }: { params: Promise<CropDetailP
             <div className="flex items-center gap-4">
               <div className="flex flex-col items-end">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className={`${healthColors[analytics.plantHealth]} border`}>
+                  <Badge
+                    variant="outline"
+                    className={`${healthColors[analytics.plantHealth]} border`}
+                  >
                     Health Score: {crop.healthScore}%
                   </Badge>
-                  <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
+                  <Badge
+                    variant="outline"
+                    className="bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300"
+                  >
                     Growing
                   </Badge>
                 </div>
                 {crop.expectedHarvest ? (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Expected harvest: {crop.expectedHarvest.toLocaleDateString()}
+                    Expected harvest:{" "}
+                    {crop.expectedHarvest.toLocaleDateString()}
                   </p>
                 ) : (
-                  <p className="text-sm text-muted-foreground mt-1">Expected harvest date not available</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Expected harvest date not available
+                  </p>
                 )}
               </div>
             </div>
@@ -180,13 +209,18 @@ export default function CropDetailPage({ params }: { params: Promise<CropDetailP
                   key={action.title}
                   variant="outline"
                   className={`h-auto p-4 flex flex-col items-center gap-3 transition-all group ${action.color} hover:scale-105`}
-                  onClick={action.onClick}>
-                  <div className={`p-3 rounded-lg ${action.color} group-hover:scale-110 transition-transform`}>
+                  onClick={action.onClick}
+                >
+                  <div
+                    className={`p-3 rounded-lg ${action.color} group-hover:scale-110 transition-transform`}
+                  >
                     <action.icon className="h-5 w-5" />
                   </div>
                   <div className="text-center">
                     <div className="font-medium mb-1">{action.title}</div>
-                    <p className="text-xs text-muted-foreground">{action.description}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {action.description}
+                    </p>
                   </div>
                 </Button>
               ))}
@@ -196,7 +230,9 @@ export default function CropDetailPage({ params }: { params: Promise<CropDetailP
             <Card className="border-green-100 dark:border-green-700">
               <CardHeader>
                 <CardTitle>Environmental Conditions</CardTitle>
-                <CardDescription>Real-time monitoring of growing conditions</CardDescription>
+                <CardDescription>
+                  Real-time monitoring of growing conditions
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-6">
@@ -247,15 +283,22 @@ export default function CropDetailPage({ params }: { params: Promise<CropDetailP
                     ].map((metric) => (
                       <Card
                         key={metric.label}
-                        className="border-none shadow-none bg-gradient-to-br from-white to-gray-50/50 dark:from-slate-800 dark:to-slate-700/50">
+                        className="border-none shadow-none bg-gradient-to-br from-white to-gray-50/50 dark:from-slate-800 dark:to-slate-700/50"
+                      >
                         <CardContent className="p-4">
                           <div className="flex items-start gap-4">
                             <div className={`p-2 rounded-lg ${metric.bg}`}>
-                              <metric.icon className={`h-4 w-4 ${metric.color}`} />
+                              <metric.icon
+                                className={`h-4 w-4 ${metric.color}`}
+                              />
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-muted-foreground">{metric.label}</p>
-                              <p className="text-2xl font-semibold tracking-tight">{metric.value}</p>
+                              <p className="text-sm font-medium text-muted-foreground">
+                                {metric.label}
+                              </p>
+                              <p className="text-2xl font-semibold tracking-tight">
+                                {metric.value}
+                              </p>
                             </div>
                           </div>
                         </CardContent>
@@ -269,9 +312,14 @@ export default function CropDetailPage({ params }: { params: Promise<CropDetailP
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="font-medium">Growth Progress</span>
-                      <span className="text-muted-foreground">{analytics.growthProgress}%</span>
+                      <span className="text-muted-foreground">
+                        {analytics.growthProgress}%
+                      </span>
                     </div>
-                    <Progress value={analytics.growthProgress} className="h-2" />
+                    <Progress
+                      value={analytics.growthProgress}
+                      className="h-2"
+                    />
                   </div>
 
                   {/* Next Action Card */}
@@ -282,10 +330,15 @@ export default function CropDetailPage({ params }: { params: Promise<CropDetailP
                           <Timer className="h-4 w-4 text-green-600 dark:text-green-300" />
                         </div>
                         <div>
-                          <p className="font-medium mb-1">Next Action Required</p>
-                          <p className="text-sm text-muted-foreground">{analytics.nextAction}</p>
+                          <p className="font-medium mb-1">
+                            Next Action Required
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {analytics.nextAction}
+                          </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Due by {analytics.nextActionDue.toLocaleDateString()}
+                            Due by{" "}
+                            {analytics.nextActionDue.toLocaleDateString()}
                           </p>
                         </div>
                       </div>
@@ -337,9 +390,14 @@ export default function CropDetailPage({ params }: { params: Promise<CropDetailP
                     <div key={nutrient.name} className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="font-medium">{nutrient.name}</span>
-                        <span className="text-muted-foreground">{nutrient.value}%</span>
+                        <span className="text-muted-foreground">
+                          {nutrient.value}%
+                        </span>
                       </div>
-                      <Progress value={nutrient.value} className={`h-2 ${nutrient.color}`} />
+                      <Progress
+                        value={nutrient.value}
+                        className={`h-2 ${nutrient.color}`}
+                      />
                     </div>
                   ))}
                 </div>
@@ -372,10 +430,14 @@ export default function CropDetailPage({ params }: { params: Promise<CropDetailP
                               ][i]
                             }
                           </p>
-                          <p className="text-xs text-muted-foreground">2 hours ago</p>
+                          <p className="text-xs text-muted-foreground">
+                            2 hours ago
+                          </p>
                         </div>
                       </div>
-                      {i < 4 && <Separator className="my-4 dark:bg-slate-700" />}
+                      {i < 4 && (
+                        <Separator className="my-4 dark:bg-slate-700" />
+                      )}
                     </div>
                   ))}
                 </ScrollArea>
@@ -385,8 +447,17 @@ export default function CropDetailPage({ params }: { params: Promise<CropDetailP
         </div>
 
         {/* Dialogs */}
-        <ChatbotDialog open={isChatOpen} onOpenChange={setIsChatOpen} cropName={crop.name} />
-        <AnalyticsDialog open={isAnalyticsOpen} onOpenChange={setIsAnalyticsOpen} crop={crop} analytics={analytics} />
+        <ChatbotDialog
+          open={isChatOpen}
+          onOpenChange={setIsChatOpen}
+          cropName={crop.name}
+        />
+        <AnalyticsDialog
+          open={isAnalyticsOpen}
+          onOpenChange={setIsAnalyticsOpen}
+          crop={crop}
+          analytics={analytics}
+        />
       </div>
     </div>
   );
@@ -399,9 +470,15 @@ function Activity({ icon }: { icon: number }) {
   const icons = [
     <Droplets key="0" className="h-4 w-4 text-blue-500 dark:text-blue-300" />,
     <Leaf key="1" className="h-4 w-4 text-green-500 dark:text-green-300" />,
-    <LineChart key="2" className="h-4 w-4 text-purple-500 dark:text-purple-300" />,
+    <LineChart
+      key="2"
+      className="h-4 w-4 text-purple-500 dark:text-purple-300"
+    />,
     <Sprout key="3" className="h-4 w-4 text-yellow-500 dark:text-yellow-300" />,
-    <ThermometerSun key="4" className="h-4 w-4 text-orange-500 dark:text-orange-300" />,
+    <ThermometerSun
+      key="4"
+      className="h-4 w-4 text-orange-500 dark:text-orange-300"
+    />,
   ];
   return icons[icon];
 }

@@ -1,11 +1,29 @@
 import axiosInstance from "./config";
-import type { InventoryItem, CreateInventoryItemInput } from "@/types";
+import type {
+  InventoryItem,
+  CreateInventoryItemInput,
+  InventoryItemStatus,
+} from "@/types";
 
 /**
  * Simulates an API call to fetch inventory items.
  * Waits for a simulated delay and then attempts an axios GET request.
  * If the request fails, returns fallback dummy data.
+ * 
+ * 
  */
+export async function fetchInventoryStatus(): Promise<InventoryItemStatus[]> {
+  try {
+    const response = await axiosInstance.get<InventoryItemStatus[]>(
+      "/inventory/status"
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching inventory status:", error);
+    return [];
+  }
+}
+
 export async function fetchInventoryItems(): Promise<InventoryItem[]> {
   try {
     const response = await axiosInstance.get<InventoryItem[]>("/api/inventory");
@@ -51,7 +69,7 @@ export async function fetchInventoryItems(): Promise<InventoryItem[]> {
         quantity: 150,
         unit: "kg",
         lastUpdated: "2023-03-15",
-        status: "In Stock",
+        status: "Out Of Stock",
       },
       {
         id: 5,
@@ -79,7 +97,10 @@ export async function createInventoryItem(
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 500));
   try {
-    const response = await axiosInstance.post<InventoryItem>("/api/inventory", item);
+    const response = await axiosInstance.post<InventoryItem>(
+      "/api/inventory",
+      item
+    );
     return response.data;
   } catch (error) {
     // Simulate successful creation if API endpoint is not available
