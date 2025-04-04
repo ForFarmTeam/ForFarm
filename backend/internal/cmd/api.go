@@ -55,11 +55,6 @@ func APICmd(ctx context.Context) *cobra.Command {
 			farmRepo := repository.NewPostgresFarm(pool)
 			farmRepo.SetEventPublisher(eventBus)
 
-			inventoryRepo := repository.NewPostgresInventory(pool, eventBus)
-
-			croplandRepo := repository.NewPostgresCropland(pool)
-			croplandRepo.SetEventPublisher(eventBus)
-
 			projection := event.NewFarmAnalyticsProjection(eventBus, analyticsRepo, logger)
 			go func() {
 				if err := projection.Start(ctx); err != nil {
@@ -68,7 +63,7 @@ func APICmd(ctx context.Context) *cobra.Command {
 			}()
 			logger.Info("Farm Analytics Projection started")
 
-			apiInstance := api.NewAPI(ctx, logger, pool, eventBus, analyticsRepo, inventoryRepo, croplandRepo, farmRepo)
+			apiInstance := api.NewAPI(ctx, logger, pool, eventBus, analyticsRepo, farmRepo)
 
 			weatherFetcher := apiInstance.GetWeatherFetcher()
 			weatherInterval, err := time.ParseDuration(config.WEATHER_FETCH_INTERVAL)

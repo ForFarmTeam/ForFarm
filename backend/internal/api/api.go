@@ -16,6 +16,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/forfarm/backend/internal/cache"
 	"github.com/forfarm/backend/internal/config"
 	"github.com/forfarm/backend/internal/domain"
 	m "github.com/forfarm/backend/internal/middlewares"
@@ -29,6 +30,7 @@ type api struct {
 	logger         *slog.Logger
 	httpClient     *http.Client
 	eventPublisher domain.EventPublisher
+	cache          cache.Cache
 
 	userRepo         domain.UserRepository
 	cropRepo         domain.CroplandRepository
@@ -54,17 +56,21 @@ func NewAPI(
 	pool *pgxpool.Pool,
 	eventPublisher domain.EventPublisher,
 	analyticsRepo domain.AnalyticsRepository,
-	inventoryRepo domain.InventoryRepository,
-	croplandRepo domain.CroplandRepository,
 	farmRepo domain.FarmRepository,
 ) *api {
 
 	client := &http.Client{}
 
+	logger.Info("creating memory cache")
+	memoryCache := cache.NewMemoryCache(1*time.Hour, 2*time.Hour)
+
 	userRepository := repository.NewPostgresUser(pool)
-	plantRepository := repository.NewPostgresPlant(pool)
+	plantRepository := repository.NewPostgresPlant(pool, memoryCache)
+	inventoryRepo := repository.NewPostgresInventory(pool, eventPublisher, memoryCache)
+	harvestRepository := repository.NewPostgresHarvest(pool, memoryCache)
 	knowledgeHubRepository := repository.NewPostgresKnowledgeHub(pool)
-	harvestRepository := repository.NewPostgresHarvest(pool)
+	croplandRepo := repository.NewPostgresCropland(pool)
+	croplandRepo.SetEventPublisher(eventPublisher)
 
 	owmFetcher := weather.NewOpenWeatherMapFetcher(config.OPENWEATHER_API_KEY, client, logger)
 	cacheTTL, err := time.ParseDuration(config.OPENWEATHER_CACHE_TTL)
@@ -88,6 +94,7 @@ func NewAPI(
 		logger:         logger,
 		httpClient:     client,
 		eventPublisher: eventPublisher,
+		cache:          memoryCache,
 
 		userRepo:         userRepository,
 		cropRepo:         croplandRepo,
