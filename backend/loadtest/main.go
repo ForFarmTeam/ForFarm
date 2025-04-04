@@ -81,8 +81,8 @@ func hitEndpoint(wg *sync.WaitGroup, url string, metrics *Metrics) {
 }
 
 func main() {
-	baseURL := "http://localhost:8000/inventory/status"
-	concurrentUsers := 1000
+	baseURL := "http://localhost:8000/plant"
+	concurrentUsers := 200
 
 	var wg sync.WaitGroup
 	metrics := &Metrics{}
