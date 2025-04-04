@@ -28,6 +28,7 @@ type api struct {
 	plantRepo     domain.PlantRepository
 	inventoryRepo domain.InventoryRepository
 	harvestRepo   domain.HarvestRepository
+  knowledgeHubRepo domain.KnowledgeHubRepository
 }
 
 func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
@@ -38,6 +39,7 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
 	croplandRepository := repository.NewPostgresCropland(pool)
 	farmRepository := repository.NewPostgresFarm(pool)
 	plantRepository := repository.NewPostgresPlant(pool)
+	knowledgeHubRepository := repository.NewPostgresKnowledgeHub(pool)
 	inventoryRepository := repository.NewPostgresInventory(pool)
 	harvestRepository := repository.NewPostgresHarvest(pool)
 
@@ -51,6 +53,7 @@ func NewAPI(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool) *api {
 		plantRepo:     plantRepository,
 		inventoryRepo: inventoryRepository,
 		harvestRepo:   harvestRepository,
+    knowledgeHubRepo: knowledgeHubRepository,
 	}
 }
 
@@ -83,6 +86,7 @@ func (a *api) Routes() *chi.Mux {
 		a.registerCropRoutes(r, api)
 		a.registerPlantRoutes(r, api)
 		a.registerOauthRoutes(r, api)
+		a.registerKnowledgeHubRoutes(r, api)
 	})
 
 	router.Group(func(r chi.Router) {
