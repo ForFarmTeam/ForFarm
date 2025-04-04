@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Send, MessageSquare, Sparkles, Loader2, User, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"; // Assuming Avatar is in ui folder
 import { sendChatMessage } from "@/api/chat"; // Import the API function
+
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 // Interface for chat messages
 interface ChatMessage {
@@ -157,9 +159,9 @@ export default function GeneralChatbotPage() {
                 className={`max-w-[80%] rounded-lg p-3 shadow-sm ${
                   message.role === "user"
                     ? "bg-green-600 text-white dark:bg-green-700"
-                    : "bg-white dark:bg-gray-800 border dark:border-gray-700"
+                    : "prose prose-sm dark:prose-invert bg-white dark:bg-gray-800 border dark:border-gray-700 max-w-none" // Use prose styles
                 }`}>
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
                 <p
                   className={`mt-1 text-xs opacity-70 ${
                     message.role === "user" ? "text-green-100" : "text-gray-500 dark:text-gray-400"

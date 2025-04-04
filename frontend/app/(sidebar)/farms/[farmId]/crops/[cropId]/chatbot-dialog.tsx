@@ -10,6 +10,8 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useParams } from "next/navigation";
 import { sendChatMessage } from "@/api/chat";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   id: string;
@@ -142,9 +144,9 @@ export function ChatbotDialog({ open, onOpenChange, cropName }: ChatbotDialogPro
                       className={`rounded-lg px-4 py-2 max-w-[80%] shadow-sm ${
                         message.role === "user"
                           ? "bg-primary text-primary-foreground dark:bg-primary dark:text-primary-foreground"
-                          : "bg-muted dark:bg-muted dark:text-muted-foreground"
+                          : "prose prose-sm dark:prose-invert bg-muted dark:bg-muted dark:text-muted-foreground max-w-none"
                       }`}>
-                      <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
                       <p
                         className={`mt-1 text-xs opacity-70 ${
                           message.role === "user" ? "text-green-100" : "text-gray-500 dark:text-gray-400"
