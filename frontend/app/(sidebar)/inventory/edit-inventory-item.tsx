@@ -1,12 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -92,9 +88,11 @@ export function EditInventoryItem({
 
     const category = fetchedInventoryCategory.find(
       (c) => c.name === itemCategory
-    );
-    const unit = fetchedHarvestUnits.find((u) => u.name === itemUnit);
-    const status = fetchedInventoryStatus.find((s) => s.name === itemStatus);
+    )?.id;
+    const unit = fetchedHarvestUnits.find((u) => u.name === itemUnit)?.id;
+    const status = fetchedInventoryStatus.find(
+      (s) => s.name === itemStatus
+    )?.id;
 
     if (!category || !unit || !status) {
       setError(
@@ -103,16 +101,13 @@ export function EditInventoryItem({
       return;
     }
     // console.log("Mutate called");
-    console.log(item.id);
+    // console.log(item.id);
     mutation.mutate({
       name: itemName,
-      categoryId: item.categoryId ?? 0,
+      categoryId: category,
       quantity: itemQuantity ?? 0,
-      unitId:
-        fetchedHarvestUnits.find((unit) => unit.name === itemUnit)?.id ?? 0,
-      statusId:
-        fetchedInventoryStatus.find((status) => status.name === itemStatus)
-          ?.id ?? 0,
+      unitId: unit,
+      statusId: status,
       dateAdded: new Date().toISOString(),
     });
   };
